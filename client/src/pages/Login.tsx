@@ -9,7 +9,7 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { BrandCarousel } from '@/components/BrandCarousel';
-import logo from '@assets/KittyPaw_app_logo_icon_4a2bd296.png';
+import logo from '@assets/generated_images/KittyPaw_app_logo_icon_4a2bd296.png';
 import { Checkbox } from '@/components/ui/checkbox';
 
 const loginSchema = z.object({

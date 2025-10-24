@@ -1,22 +1,32 @@
 import { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import carousel1 from '@assets/generated_images/Happy_dog_with_smart_feeder_71b15682.png';
-import carousel2 from '@assets/generated_images/Orange_cat_with_automatic_feeder_52d8ca7e.png';
-import carousel3 from '@assets/generated_images/Pet_owner_using_smart_app_a0e38c58.png';
+import carousel1 from '@assets/20251023_1957_Infomercial Retro KittyPaw_simple_compose_01k89mj0v1endv40j3f7gr7dnp_1761267872800.png';
+import carousel2 from '@assets/20251023_1957_Infomercial Retro KittyPaw_simple_compose_01k89mj0v2fw284k0h04v0n1r1_1761267872801.png';
+import carousel3 from '@assets/37708583-2711-4687-a42a-1c791feb659c_1761267872802.png';
+import carousel4 from '@assets/62e7ed80-5f18-4d14-8572-ea0e8fec0537_1761267872800.png';
+import carousel5 from '@assets/d9808fd2-abbb-4893-9c27-f8bacb24827b_1761267872803.png';
 
 const carouselImages = [
   {
     src: carousel1,
-    alt: 'Perro feliz con comedero inteligente',
+    alt: 'Before and After - Revoluciona la alimentación de tu mascota',
   },
   {
     src: carousel2,
-    alt: 'Gato con comedero automático',
+    alt: 'Stop risking their health - Cuida la salud de tus mascotas',
   },
   {
     src: carousel3,
-    alt: 'Dueño usando la app',
+    alt: 'Deje de poner en riesgo su salud',
+  },
+  {
+    src: carousel4,
+    alt: 'Desde Estados Unidos - KittyPaw el plato inteligente',
+  },
+  {
+    src: carousel5,
+    alt: 'KittyPaw - Revoluciona la alimentación',
   },
 ];
 

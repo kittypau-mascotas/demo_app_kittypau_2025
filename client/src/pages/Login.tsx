@@ -60,6 +60,17 @@ export default function Login() {
             <p className="text-muted-foreground">
               Ingresa tus credenciales para acceder a tu cuenta
             </p>
+            <div className="p-3 bg-muted/50 rounded-md border border-muted-foreground/20">
+              <p className="text-sm text-muted-foreground">
+                <strong>Credenciales por defecto:</strong>
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Usuario: <code className="px-1 py-0.5 bg-muted rounded">admin</code>
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Contraseña: <code className="px-1 py-0.5 bg-muted rounded">1234</code>
+              </p>
+            </div>
           </div>
 
           <Form {...form}>

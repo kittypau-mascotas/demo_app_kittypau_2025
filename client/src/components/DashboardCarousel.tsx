@@ -2,64 +2,59 @@
 import { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import carousel1 from '@assets/20251023_1957_Infomercial Retro KittyPaw_simple_compose_01k89mj0v1endv40j3f7gr7dnp_1761267872800.png';
-import carousel2 from '@assets/20251023_1957_Infomercial Retro KittyPaw_simple_compose_01k89mj0v2fw284k0h04v0n1r1_1761267872801.png';
-import carousel3 from '@assets/37708583-2711-4687-a42a-1c791feb659c_1761267872802.png';
-import carousel4 from '@assets/62e7ed80-5f18-4d14-8572-ea0e8fec0537_1761267872800.png';
-import carousel5 from '@assets/d9808fd2-abbb-4893-9c27-f8bacb24827b_1761267872803.png';
+import petImage1 from '@assets/generated_images/Happy_dog_with_smart_feeder_71b15682.png';
+import petImage2 from '@assets/generated_images/Orange_cat_with_automatic_feeder_52d8ca7e.png';
+import petImage3 from '@assets/generated_images/Pet_owner_using_smart_app_a0e38c58.png';
+import petImage4 from '@assets/generated_images/Smart_feeder_device_6415df93.png';
 
-const carouselImages = [
+const dashboardImages = [
   {
-    src: carousel1,
-    alt: 'Before and After - Revoluciona la alimentación de tu mascota',
+    src: petImage1,
+    alt: 'Perro feliz con comedero inteligente',
   },
   {
-    src: carousel2,
-    alt: 'Stop risking their health - Cuida la salud de tus mascotas',
+    src: petImage2,
+    alt: 'Gato naranja con comedero automático',
   },
   {
-    src: carousel3,
-    alt: 'Deje de poner en riesgo su salud',
+    src: petImage3,
+    alt: 'Dueño usando la app inteligente',
   },
   {
-    src: carousel4,
-    alt: 'Desde Estados Unidos - KittyPaw el plato inteligente',
-  },
-  {
-    src: carousel5,
-    alt: 'KittyPaw - Revoluciona la alimentación',
+    src: petImage4,
+    alt: 'Dispositivo dispensador inteligente',
   },
 ];
 
-export function BrandCarousel() {
+export function DashboardCarousel() {
   const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setCurrentIndex((prevIndex) => (prevIndex + 1) % carouselImages.length);
-    }, 5000);
+      setCurrentIndex((prevIndex) => (prevIndex + 1) % dashboardImages.length);
+    }, 4000);
 
     return () => clearInterval(timer);
   }, []);
 
   const goToPrevious = () => {
     setCurrentIndex((prevIndex) => 
-      prevIndex === 0 ? carouselImages.length - 1 : prevIndex - 1
+      prevIndex === 0 ? dashboardImages.length - 1 : prevIndex - 1
     );
   };
 
   const goToNext = () => {
-    setCurrentIndex((prevIndex) => (prevIndex + 1) % carouselImages.length);
+    setCurrentIndex((prevIndex) => (prevIndex + 1) % dashboardImages.length);
   };
 
   return (
     <div className="relative w-full">
       <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-card shadow-lg">
         <img
-          src={carouselImages[currentIndex].src}
-          alt={carouselImages[currentIndex].alt}
+          src={dashboardImages[currentIndex].src}
+          alt={dashboardImages[currentIndex].alt}
           className="w-full h-full object-contain transition-opacity duration-500"
-          data-testid={`img-carousel-${currentIndex}`}
+          data-testid={`img-dashboard-carousel-${currentIndex}`}
         />
         
         <div className="absolute inset-0 flex items-center justify-between p-4">
@@ -68,7 +63,7 @@ export function BrandCarousel() {
             variant="secondary"
             className="bg-background/80 backdrop-blur-sm hover-elevate"
             onClick={goToPrevious}
-            data-testid="button-carousel-prev"
+            data-testid="button-dashboard-carousel-prev"
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
@@ -77,7 +72,7 @@ export function BrandCarousel() {
             variant="secondary"
             className="bg-background/80 backdrop-blur-sm hover-elevate"
             onClick={goToNext}
-            data-testid="button-carousel-next"
+            data-testid="button-dashboard-carousel-next"
           >
             <ChevronRight className="h-4 w-4" />
           </Button>
@@ -85,14 +80,14 @@ export function BrandCarousel() {
       </div>
 
       <div className="flex justify-center gap-2 mt-4">
-        {carouselImages.map((_, index) => (
+        {dashboardImages.map((_, index) => (
           <button
             key={index}
             className={`h-2 rounded-full transition-all ${
               index === currentIndex ? 'w-8 bg-primary' : 'w-2 bg-muted-foreground/30'
             }`}
             onClick={() => setCurrentIndex(index)}
-            data-testid={`button-carousel-dot-${index}`}
+            data-testid={`button-dashboard-carousel-dot-${index}`}
           />
         ))}
       </div>

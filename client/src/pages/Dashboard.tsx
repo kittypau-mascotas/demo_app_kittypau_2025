@@ -3,7 +3,7 @@ import DeviceCard from '@/components/DeviceCard';
 import ActivityChart from '@/components/ActivityChart';
 import ConsumptionChart from '@/components/ConsumptionChart';
 import PetAvatar from '@/components/PetAvatar';
-import { BrandCarousel } from '@/components/BrandCarousel';
+import { DashboardCarousel } from '@/components/DashboardCarousel';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Activity, Home, AlertTriangle, Heart, Fish, Droplets } from 'lucide-react';
 import catAvatar from '@assets/generated_images/Orange_cat_avatar_7c8d31d8.png';
@@ -44,7 +44,7 @@ export default function Dashboard() {
         
         <div className="lg:col-span-1">
           <div className="sticky top-6">
-            <BrandCarousel />
+            <DashboardCarousel />
           </div>
         </div>
       </div>

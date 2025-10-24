@@ -22,9 +22,9 @@ export default function Header({ onMenuToggle }: HeaderProps) {
       <div className="flex items-center justify-between w-full max-w-screen-2xl mx-auto">
         <div className="flex items-center gap-3">
           <img 
-            src="/kitty-logo.svg" 
+            src="/kitty-logo.jpg" 
             alt="KittyPaw Logo" 
-            className="w-12 h-12 object-contain"
+            className="w-16 h-16 object-contain"
           />
           <h1 className="titulo text-2xl lg:text-3xl">KittyPaw</h1>
         </div>

@@ -164,9 +164,9 @@ export default function Login() {
         <div className="w-full max-w-lg space-y-8">
           <div className="flex flex-col items-center space-y-6">
             <img 
-              src="/kitty-logo.svg" 
+              src="/kitty-logo.jpg" 
               alt="KittyPaw Logo" 
-              className="w-32 h-32 object-contain"
+              className="w-40 h-40 object-contain"
               data-testid="img-logo"
             />
             <h2 className="text-4xl font-semibold text-center" data-testid="text-brand-name">

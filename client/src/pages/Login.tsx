@@ -8,9 +8,10 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { BrandCarousel } from '@/components/BrandCarousel';
+
 import logo from '@assets/generated_images/KittyPaw_app_logo_icon_4a2bd296.png';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Instagram, Youtube, Linkedin, Mail } from 'lucide-react'; // Añadir esta línea
 
 const loginSchema = z.object({
   username: z.string().min(1, 'El nombre de usuario es requerido'),
@@ -19,7 +20,7 @@ const loginSchema = z.object({
 
 export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
   const { login } = useAuth();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
@@ -27,8 +28,8 @@ export default function Login() {
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      username: '',
-      password: '',
+      username: 'admin',
+      password: '1234',
     },
   });
 
@@ -50,31 +51,55 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen grid lg:grid-cols-2">
-      <div className="flex items-center justify-center p-8 lg:p-12">
-        <div className="w-full max-w-md space-y-8">
+    <div className="min-h-screen flex items-center justify-center bg-muted/30 p-4 lg:p-8">
+      <div className="w-full max-w-md space-y-2">
+        
+<div className="flex flex-col items-center space-y-1 bg-white p-4 rounded-lg shadow-md">
+          <img 
+            src="/kitty-logo.jpg" 
+            alt="KittyPaw Logo" 
+            className="w-24 h-24 object-contain"
+            data-testid="img-logo"
+          />
+          <h2 className="text-2xl font-semibold text-center" data-testid="text-brand-name">
+            Kittypau
+          </h2>
+          <p className="text-base text-muted-foreground text-center">Demo App <span className="text-sm">version _1a</span></p>
+          <div className="flex items-center space-x-2 mt-2">
+            <a href="https://www.instagram.com/kittypau.mascotas/" target="_blank" rel="noopener noreferrer" className="flex items-center text-sm text-primary hover:underline">
+              <Instagram className="h-4 w-4 mr-1" />
+              Instagram
+            </a>
+            <a href="https://www.youtube.com/channel/UCYrN8v3Lb5n1B0L2QeOEcx" target="_blank" rel="noopener noreferrer" className="flex items-center text-sm text-primary hover:underline">
+              <Youtube className="h-4 w-4 mr-1" />
+              YouTube
+            </a>
+            <a href="https://www.linkedin.com/in/kittypau-mascotas-26289539a/" target="_blank" rel="noopener noreferrer" className="flex items-center text-sm text-primary hover:underline">
+              <Linkedin className="h-4 w-4 mr-1" />
+              LinkedIn
+            </a>
+          </div>
+          <div className="flex justify-center mt-2"> {/* Nuevo div para el correo, con margen superior */}
+            <a href="mailto:kittypau.mascotas@gmail.com" target="_blank" rel="noopener noreferrer" className="flex items-center text-sm text-primary hover:underline">
+              <Mail className="h-4 w-4 mr-1" />
+              kittypau.mascotas@gmail.com
+            </a>
+          </div>
+        </div>
+
+        <div className="bg-white p-4 rounded-lg shadow-md space-y-2">
           <div className="space-y-2">
-            <h1 className="text-3xl font-semibold tracking-tight" data-testid="text-heading">
+            <h1 className="text-2xl font-semibold tracking-tight text-center" data-testid="text-heading">
               Iniciar Sesión
             </h1>
-            <p className="text-muted-foreground">
+            <p className="text-sm text-muted-foreground text-center">
               Ingresa tus credenciales para acceder a tu cuenta
             </p>
-            <div className="p-3 bg-muted/50 rounded-md border border-muted-foreground/20">
-              <p className="text-sm text-muted-foreground">
-                <strong>Credenciales por defecto:</strong>
-              </p>
-              <p className="text-sm text-muted-foreground">
-                Usuario: <code className="px-1 py-0.5 bg-muted rounded">admin</code>
-              </p>
-              <p className="text-sm text-muted-foreground">
-                Contraseña: <code className="px-1 py-0.5 bg-muted rounded">1234</code>
-              </p>
-            </div>
+            
           </div>
 
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-2">
               <FormField
                 control={form.control}
                 name="username"
@@ -146,35 +171,17 @@ export default function Login() {
               </Button>
             </form>
           </Form>
-
-          <div className="text-sm text-center text-muted-foreground">
-            ¿No tienes cuenta?{' '}
-            <a 
-              href="/register" 
-              className="text-primary hover:underline font-medium" 
-              data-testid="link-register"
-            >
-              Regístrate aquí
-            </a>
-          </div>
         </div>
-      </div>
 
-      <div className="hidden lg:flex items-center justify-center p-12 bg-muted/30">
-        <div className="w-full max-w-lg space-y-8">
-          <div className="flex flex-col items-center space-y-6">
-            <img 
-              src="/kitty-logo.jpg" 
-              alt="KittyPaw Logo" 
-              className="w-40 h-40 object-contain"
-              data-testid="img-logo"
-            />
-            <h2 className="text-4xl font-semibold text-center" data-testid="text-brand-name">
-              KittyPaw
-            </h2>
-          </div>
-          
-          <BrandCarousel />
+        <div className="text-sm text-center text-muted-foreground">
+          ¿No tienes cuenta?{' '}
+          <a 
+            href="/register" 
+            className="text-primary hover:underline font-medium" 
+            data-testid="link-register"
+          >
+            Regístrate aquí
+          </a>
         </div>
       </div>
     </div>

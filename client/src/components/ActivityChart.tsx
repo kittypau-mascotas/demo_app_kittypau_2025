@@ -8,13 +8,13 @@ interface ActivityChartProps {
 export default function ActivityChart({ data }: ActivityChartProps) {
   //todo: remove mock functionality
   const mockData = data || [
-    { name: 'Lun', Luna: 65, Max: 45 },
-    { name: 'Mar', Luna: 59, Max: 52 },
-    { name: 'Mié', Luna: 80, Max: 68 },
-    { name: 'Jue', Luna: 81, Max: 72 },
-    { name: 'Vie', Luna: 56, Max: 48 },
-    { name: 'Sáb', Luna: 55, Max: 60 },
-    { name: 'Dom', Luna: 40, Max: 38 },
+    { name: 'Lun', Bandida: 65, Bruno: 45 },
+    { name: 'Mar', Bandida: 59, Bruno: 52 },
+    { name: 'Mié', Bandida: 80, Bruno: 68 },
+    { name: 'Jue', Bandida: 81, Bruno: 72 },
+    { name: 'Vie', Bandida: 56, Bruno: 48 },
+    { name: 'Sáb', Bandida: 55, Bruno: 60 },
+    { name: 'Dom', Bandida: 40, Bruno: 38 },
   ];
 
   return (
@@ -31,8 +31,8 @@ export default function ActivityChart({ data }: ActivityChartProps) {
             <YAxis />
             <Tooltip />
             <Legend />
-            <Line type="monotone" dataKey="Luna" stroke="hsl(var(--chart-1))" strokeWidth={2} name="Luna (Gato)" />
-            <Line type="monotone" dataKey="Max" stroke="hsl(var(--chart-3))" strokeWidth={2} name="Max (Perro)" />
+            <Line type="monotone" dataKey="Bandida" stroke="hsl(var(--chart-1))" strokeWidth={2} name="Bandida (Gato)" />
+            <Line type="monotone" dataKey="Bruno" stroke="hsl(var(--chart-3))" strokeWidth={2} name="Bruno (Perro)" />
           </LineChart>
         </ResponsiveContainer>
       </CardContent>

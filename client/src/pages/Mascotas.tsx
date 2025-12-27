@@ -2,30 +2,28 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import PetAvatar from '@/components/PetAvatar';
 import AddPetModal from '@/components/AddPetModal';
 import { Badge } from '@/components/ui/badge';
-import catAvatar from '@assets/generated_images/Orange_cat_avatar_7c8d31d8.png';
-import dogAvatar from '@assets/generated_images/Golden_dog_avatar_cfd73a5f.png';
 
 export default function Mascotas() {
   //todo: remove mock functionality
   const mockPets = [
     {
       id: 1,
-      name: 'Luna',
+      name: 'Bandida',
       type: 'Gato',
       breed: 'Siamés',
       age: 3,
       weight: '4.2 kg',
-      imageUrl: catAvatar,
+      imageUrl: '/bandida.jpg',
       status: 'Saludable',
     },
     {
       id: 2,
-      name: 'Max',
+      name: 'Bruno',
       type: 'Perro',
       breed: 'Golden Retriever',
       age: 5,
       weight: '28 kg',
-      imageUrl: dogAvatar,
+      imageUrl: '/bruno.jpg',
       status: 'Saludable',
     },
     {
@@ -50,7 +48,7 @@ export default function Mascotas() {
         {mockPets.map((pet) => (
           <Card key={pet.id} className="hover-elevate active-elevate-2" data-testid={`card-pet-${pet.id}`}>
             <CardHeader className="flex flex-col items-center space-y-4">
-              <PetAvatar name={pet.name} imageUrl={pet.imageUrl} size="lg" />
+              <PetAvatar name={pet.name} imageUrl={pet.imageUrl} size="responsive" />
               <CardTitle>{pet.name}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">

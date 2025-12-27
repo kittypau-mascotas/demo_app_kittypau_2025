@@ -60,10 +60,10 @@ export default function Register() {
       <Card className="w-full max-w-md shadow-lg">
         <CardHeader className="space-y-3 text-center pb-4">
           <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-2">
-            <img src={logo} alt="KittyPaw Logo" className="h-10 w-10" />
+            <img src={logo} alt="KittyPau Logo" className="h-10 w-10" />
           </div>
           <CardTitle className="text-3xl titulo">
-            Únete a KittyPaw
+            Únete a KittyPau
           </CardTitle>
           <CardDescription className="text-base">
             Completa el formulario para registrarte

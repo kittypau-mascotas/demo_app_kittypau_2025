@@ -1,7 +1,7 @@
-# KittyPaw - Sistema IoT de Cuidado de Mascotas
+# KittyPau - Sistema IoT de Cuidado de Mascotas
 
 ## Descripción del Proyecto
-KittyPaw es una aplicación web completa para el monitoreo y control de dispositivos IoT diseñados para el cuidado de mascotas. Permite a los usuarios gestionar comederos automáticos, bebederos, areneros inteligentes, cámaras y rastreadores GPS para sus mascotas.
+KittyPau es una aplicación web completa para el monitoreo y control de dispositivos IoT diseñados para el cuidado de mascotas. Permite a los usuarios gestionar comederos automáticos, bebederos, areneros inteligentes, cámaras y rastreadores GPS para sus mascotas.
 
 ## Características Principales
 

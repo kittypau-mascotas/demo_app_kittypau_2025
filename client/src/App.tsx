@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { Switch, Route, useLocation } from 'wouter';
 import { queryClient } from './lib/queryClient';
 import { QueryClientProvider } from '@tanstack/react-query';
@@ -6,6 +7,7 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import { AuthProvider } from '@/contexts/AuthContext';
 import AppLayout from '@/components/AppLayout';
 import PrivateRoute from '@/components/PrivateRoute';
+import { WelcomeModal } from '@/components/WelcomeModal';
 
 import NotFound from '@/pages/not-found';
 import Login from '@/pages/Login';
@@ -76,10 +78,28 @@ function Router() {
 }
 
 function App() {
+  const [isWelcomeModalOpen, setIsWelcomeModalOpen] = useState(false);
+
+  useEffect(() => {
+    // Show the modal only if the user is not on a public page,
+    // and prevent it from showing on every navigation.
+    const hasVisitedBefore = sessionStorage.getItem('hasVisitedKittyPauDemo');
+    
+    if (!hasVisitedBefore) {
+      const timer = setTimeout(() => {
+        setIsWelcomeModalOpen(true);
+        sessionStorage.setItem('hasVisitedKittyPauDemo', 'true');
+      }, 2000); // 2 seconds
+
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <AuthProvider>
+          <WelcomeModal isOpen={isWelcomeModalOpen} onOpenChange={setIsWelcomeModalOpen} />
           <Router />
           <Toaster />
         </AuthProvider>

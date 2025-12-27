@@ -9,7 +9,7 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 
-import logo from '@assets/generated_images/KittyPaw_app_logo_icon_4a2bd296.png';
+import logo from '@assets/generated_images/KittyPau_app_logo_icon_4a2bd296.png';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Instagram, Youtube, Linkedin, Mail } from 'lucide-react'; // Añadir esta línea
 
@@ -57,7 +57,7 @@ export default function Login() {
 <div className="flex flex-col items-center space-y-1 bg-white p-4 rounded-lg shadow-md">
           <img 
             src="/kitty-logo.jpg" 
-            alt="KittyPaw Logo" 
+            alt="KittyPau Logo" 
             className="w-24 h-24 object-contain"
             data-testid="img-logo"
           />

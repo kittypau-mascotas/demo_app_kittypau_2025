@@ -1,4 +1,4 @@
-# Design Guidelines: KittyPaw Login Page Redesign
+# Design Guidelines: KittyPau Login Page Redesign
 
 ## Design Approach: Split-Screen Authentication Pattern
 
@@ -89,7 +89,7 @@ Primary spacing units: **4, 6, 8, 12, 16** (Tailwind units)
    - Margin bottom: `mb-6` or `mb-8`
 
 2. **Brand Name**
-   - "KittyPaw" text
+   - "KittyPau" text
    - Typography: `text-4xl` or `text-5xl`, `font-semibold`
    - Centered: `text-center`
    - Margin bottom: `mb-12`
@@ -114,7 +114,7 @@ Primary spacing units: **4, 6, 8, 12, 16** (Tailwind units)
 ### Carousel Images
 **Placement**: Right column, below brand name
 **Specifications**:
-- High-quality brand imagery showcasing KittyPaw's identity
+- High-quality brand imagery showcasing KittyPau's identity
 - Suggested themes: Product shots, happy customers/pets, lifestyle imagery, app screenshots
 - Dimensions: Minimum 1200x800px
 - Format: WebP with JPG fallback

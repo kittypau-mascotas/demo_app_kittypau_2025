@@ -29,11 +29,11 @@ export default function Settings() {
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="name">Nombre</Label>
-            <Input id="name" defaultValue="Usuario KittyPaw" data-testid="input-name" />
+            <Input id="name" defaultValue="Usuario KittyPau" data-testid="input-name" />
           </div>
           <div className="space-y-2">
             <Label htmlFor="email">Correo Electrónico</Label>
-            <Input id="email" type="email" defaultValue="usuario@kittypaw.com" data-testid="input-email" />
+            <Input id="email" type="email" defaultValue="usuario@kittypau.com" data-testid="input-email" />
           </div>
         </CardContent>
       </Card>

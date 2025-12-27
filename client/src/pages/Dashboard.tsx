@@ -3,50 +3,39 @@ import DeviceCard from '@/components/DeviceCard';
 import ActivityChart from '@/components/ActivityChart';
 import ConsumptionChart from '@/components/ConsumptionChart';
 import PetAvatar from '@/components/PetAvatar';
-import { DashboardCarousel } from '@/components/DashboardCarousel';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Activity, Home, AlertTriangle, Heart, Fish, Droplets } from 'lucide-react';
-import catAvatar from '@assets/generated_images/Orange_cat_avatar_7c8d31d8.png';
-import dogAvatar from '@assets/generated_images/Golden_dog_avatar_cfd73a5f.png';
 
 export default function Dashboard() {
   // Mock data - en producción vendría del backend
   const mockPets = [
     {
       id: 1,
-      name: 'Luna',
+      name: 'Bandida',
       type: 'Gato',
       lastActivity: 'Hace 15 min',
       foodLevel: '75%',
       waterLevel: '60%',
-      imageUrl: catAvatar,
+      imageUrl: '/bandida.jpg',
     },
     {
       id: 2,
-      name: 'Max',
+      name: 'Bruno',
       type: 'Perro',
       lastActivity: 'Hace 5 min',
       foodLevel: '45%',
       waterLevel: '80%',
-      imageUrl: dogAvatar,
+      imageUrl: '/bruno.jpg',
     },
   ];
 
   return (
     <div className="p-6 lg:p-8 space-y-8 max-w-screen-2xl mx-auto">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
-        <div className="lg:col-span-2 space-y-2">
-          <h2 className="text-4xl font-bold titulo">Dashboard</h2>
-          <p className="text-lg text-muted-foreground">
-            Resumen del estado de tus mascotas
-          </p>
-        </div>
-        
-        <div className="lg:col-span-1">
-          <div className="sticky top-6">
-            <DashboardCarousel />
-          </div>
-        </div>
+      <div className="space-y-2">
+        <h2 className="text-4xl font-bold titulo">Dashboard</h2>
+        <p className="text-lg text-muted-foreground">
+          Resumen del estado de tus mascotas
+        </p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
@@ -85,13 +74,11 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
           {mockPets.map((pet) => (
             <Card key={pet.id} className="card-info border-0 hover-elevate">
-              <CardHeader>
-                <div className="flex items-center gap-4">
-                  <PetAvatar name={pet.name} imageUrl={pet.imageUrl} size="md" />
-                  <div>
-                    <CardTitle>{pet.name}</CardTitle>
-                    <p className="text-sm text-muted-foreground">{pet.type}</p>
-                  </div>
+              <CardHeader className="flex flex-col items-center text-center">
+                <PetAvatar name={pet.name} imageUrl={pet.imageUrl} size="responsive" />
+                <div className="mt-4">
+                  <CardTitle>{pet.name}</CardTitle>
+                  <p className="text-sm text-muted-foreground">{pet.type}</p>
                 </div>
               </CardHeader>
               <CardContent className="space-y-3">

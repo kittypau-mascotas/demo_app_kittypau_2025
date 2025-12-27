@@ -32,7 +32,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
     <div className="flex flex-col h-screen">
       <Header onMenuToggle={toggleSidebar} />
 
-      <div className="flex flex-1 overflow-hidden pt-16">
+      <div className="flex flex-1 overflow-hidden pt-28">
         <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
         <main className="flex-1 overflow-y-auto p-4 lg:p-6 pb-20 lg:pb-6">

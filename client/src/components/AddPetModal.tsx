@@ -43,7 +43,7 @@ export default function AddPetModal() {
               id="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Ej: Luna"
+              placeholder="Ej: Bandida"
               data-testid="input-pet-name"
               required
             />

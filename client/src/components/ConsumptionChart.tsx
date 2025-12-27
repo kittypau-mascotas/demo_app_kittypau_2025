@@ -8,13 +8,13 @@ interface ConsumptionChartProps {
 export default function ConsumptionChart({ data }: ConsumptionChartProps) {
   //todo: remove mock functionality
   const mockData = data || [
-    { name: 'Lun', Luna: 120, Max: 280 },
-    { name: 'Mar', Luna: 110, Max: 270 },
-    { name: 'Mié', Luna: 130, Max: 290 },
-    { name: 'Jue', Luna: 125, Max: 285 },
-    { name: 'Vie', Luna: 115, Max: 275 },
-    { name: 'Sáb', Luna: 100, Max: 270 },
-    { name: 'Dom', Luna: 95, Max: 265 },
+    { name: 'Lun', Bandida: 120, Bruno: 280 },
+    { name: 'Mar', Bandida: 110, Bruno: 270 },
+    { name: 'Mié', Bandida: 130, Bruno: 290 },
+    { name: 'Jue', Bandida: 125, Bruno: 285 },
+    { name: 'Vie', Bandida: 115, Bruno: 275 },
+    { name: 'Sáb', Bandida: 100, Bruno: 270 },
+    { name: 'Dom', Bandida: 95, Bruno: 265 },
   ];
 
   return (
@@ -31,8 +31,8 @@ export default function ConsumptionChart({ data }: ConsumptionChartProps) {
             <YAxis />
             <Tooltip />
             <Legend />
-            <Bar dataKey="Luna" fill="hsl(var(--chart-1))" name="Luna (Gato)" />
-            <Bar dataKey="Max" fill="hsl(var(--chart-3))" name="Max (Perro)" />
+            <Bar dataKey="Bandida" fill="hsl(var(--chart-1))" name="Bandida (Gato)" />
+            <Bar dataKey="Bruno" fill="hsl(var(--chart-3))" name="Bruno (Perro)" />
           </BarChart>
         </ResponsiveContainer>
       </CardContent>

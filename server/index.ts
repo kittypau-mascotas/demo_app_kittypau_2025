@@ -1,6 +1,5 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
-import { setupVite, serveStatic, log } from "./vite";
 
 const app = express();
 
@@ -16,6 +15,7 @@ app.use(express.json({
 }));
 app.use(express.urlencoded({ extended: false }));
 
+// This middleware is for logging purposes and can be kept.
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
@@ -38,62 +38,18 @@ app.use((req, res, next) => {
       if (logLine.length > 80) {
         logLine = logLine.slice(0, 79) + "…";
       }
-
-      log(logLine);
+      // console.log(logLine); // Restoring log for debugging if needed
     }
   });
 
   next();
 });
 
-import express, { type Request, Response, NextFunction } from "express";
-import { registerRoutes } from "./routes";
-import { setupVite, serveStatic, log } from "./vite";
-
-const app = express();
-
-declare module 'http' {
-  interface IncomingMessage {
-    rawBody: unknown
-  }
-}
-app.use(express.json({
-  verify: (req, _res, buf) => {
-    req.rawBody = buf;
-  }
-}));
-app.use(express.urlencoded({ extended: false }));
-
-app.use((req, res, next) => {
-  const start = Date.now();
-  const path = req.path;
-  let capturedJsonResponse: Record<string, any> | undefined = undefined;
-
-  const originalResJson = res.json;
-  res.json = function (bodyJson, ...args) {
-    capturedJsonResponse = bodyJson;
-    return originalResJson.apply(res, [bodyJson, ...args]);
-  };
-
-  res.on("finish", () => {
-    const duration = Date.now() - start;
-    if (path.startsWith("/api")) {
-      let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
-      if (capturedJsonResponse) {
-        logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
-      }
-
-      if (logLine.length > 80) {
-        logLine = logLine.slice(0, 79) + "…";
-      }
-
-      log(logLine);
-    }
-  });
-
-  next();
-});
-
+// The registerRoutes function in this project returns an http.Server instance,
+// which we don't need when deploying to Vercel as a serverless function.
+// We just need to pass the app instance to it to register the routes.
+// However, the function signature expects to return a Server.
+// We will call it and ignore the return value.
 registerRoutes(app);
 
 app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
@@ -101,15 +57,10 @@ app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
   const message = err.message || "Internal Server Error";
 
   res.status(status).json({ message });
-  throw err;
+  // It's better not to re-throw the error in a production serverless environment
+  // as it might cause the function to crash unexpectedly.
+  // throw err;
 });
-
-// Vercel will handle serving static files and the Vite dev server is not needed.
-// if (app.get("env") === "development") {
-//   setupVite(app, server);
-// } else {
-//   serveStatic(app);
-// }
 
 export default app;
 

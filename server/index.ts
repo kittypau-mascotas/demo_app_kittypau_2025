@@ -1,5 +1,6 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
+import { initializeMqttClient } from "./mqtt"; // Importar el cliente MQTT
 
 const app = express();
 
@@ -45,12 +46,24 @@ app.use((req, res, next) => {
   next();
 });
 
-// The registerRoutes function in this project returns an http.Server instance,
-// which we don't need when deploying to Vercel as a serverless function.
-// We just need to pass the app instance to it to register the routes.
-// However, the function signature expects to return a Server.
-// We will call it and ignore the return value.
-registerRoutes(app);
+// The registerRoutes function sets up all the API routes.
+// We'll await its completion before starting the server.
+async function startServer() {
+  await registerRoutes(app);
+
+  const PORT = process.env.PORT || 3000;
+
+  app.listen(PORT, () => {
+    console.log(`Servidor Express escuchando en el puerto ${PORT}`);
+    // Initialize the MQTT client after the Express server is listening
+    initializeMqttClient();
+  });
+}
+
+startServer().catch(error => {
+  console.error("Error al iniciar el servidor Express:", error);
+});
+
 
 app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
   const status = err.status || err.statusCode || 500;

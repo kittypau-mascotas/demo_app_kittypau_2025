@@ -1,6 +1,8 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
-import { initializeMqttClient } from "./mqtt"; // Importar el cliente MQTT
+import { initializeMqttClient } from "./mqtt";
+import { initializeWebSocketServer, broadcast } from "./websocket"; // Import WebSocket
+import * as http from 'http'; // Import http module for server instance
 
 const app = express();
 
@@ -52,11 +54,15 @@ async function startServer() {
   await registerRoutes(app);
 
   const PORT = process.env.PORT || 3000;
+  // Create an HTTP server instance
+  const httpServer = http.createServer(app);
 
-  app.listen(PORT, () => {
+  httpServer.listen(PORT, () => {
     console.log(`Servidor Express escuchando en el puerto ${PORT}`);
-    // Initialize the MQTT client after the Express server is listening
-    initializeMqttClient();
+    // Initialize WebSocket server using the same HTTP server
+    initializeWebSocketServer(httpServer);
+    // Initialize the MQTT client, passing the broadcast function from WebSocket
+    initializeMqttClient(broadcast);
   });
 }
 

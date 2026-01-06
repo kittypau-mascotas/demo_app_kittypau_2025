@@ -8,6 +8,7 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import AppLayout from '@/components/AppLayout';
 import PrivateRoute from '@/components/PrivateRoute';
 import { WelcomeModal } from '@/components/WelcomeModal';
+import { WebSocketProvider } from '@/hooks/use-websocket'; // Import WebSocketProvider
 
 import NotFound from '@/pages/not-found';
 import Login from '@/pages/Login';
@@ -99,9 +100,11 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <AuthProvider>
-          <WelcomeModal isOpen={isWelcomeModalOpen} onOpenChange={setIsWelcomeModalOpen} />
-          <Router />
-          <Toaster />
+          <WebSocketProvider url={import.meta.env.VITE_WS_URL}> {/* Add WebSocketProvider */}
+            <WelcomeModal isOpen={isWelcomeModalOpen} onOpenChange={setIsWelcomeModalOpen} />
+            <Router />
+            <Toaster />
+          </WebSocketProvider>
         </AuthProvider>
       </TooltipProvider>
     </QueryClientProvider>

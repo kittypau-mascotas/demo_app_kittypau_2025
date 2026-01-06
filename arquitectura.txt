@@ -1,0 +1,103 @@
+Actúa como un arquitecto de software senior especializado en IoT, AWS y sistemas en tiempo real.
+
+Estoy desarrollando un proyecto llamado **KittyPau**, un sistema IoT para monitoreo de mascotas usando dispositivos ESP32.
+
+Quiero que diseñes y configures TODA la arquitectura usando EXCLUSIVAMENTE:
+
+- AWS IoT Core como broker MQTT (con certificados X.509 y mTLS)
+- AWS EC2 como backend Node.js (IoT Bridge)
+- Neon (PostgreSQL) como base de datos
+- Vercel para frontend React + API HTTP/WebSocket
+
+NO usar Fly.io, Firebase ni otros proveedores.
+
+---
+
+## 🧩 REQUERIMIENTOS FUNCIONALES
+
+### Dispositivo IoT (ESP32)
+- Publica datos vía MQTT (JSON)
+- Usa mTLS con certificados AWS IoT
+- Topics:
+  - `kittypau/{deviceId}/status`
+  - `kittypau/{deviceId}/health`
+  - `kittypau/{deviceId}/data/sensors`
+- Se suscribe a:
+  - `kittypau/{deviceId}/cmnd/set_wifi`
+
+---
+
+### AWS IoT Core
+- Crear Things por dispositivo
+- Políticas seguras por deviceId
+- Usar Rules Engine para reenviar mensajes
+- Endpoint: `{iot-endpoint}-ats.iot.{region}.amazonaws.com`
+
+---
+
+### Backend (AWS EC2 – Node.js)
+- Servicio llamado **KittyPau IoT Bridge**
+- Funciones:
+  - Conectarse a AWS IoT Core como cliente MQTT (certificados desde variables de entorno)
+  - Suscribirse a `kittypau/+/data/sensors`
+  - Validar y normalizar datos
+  - Guardar datos históricos en Neon
+  - Emitir datos en tiempo real vía WebSocket
+- Framework sugerido:
+  - Node.js + TypeScript
+  - mqtt.js
+  - ws o socket.io
+  - drizzle ORM o pg
+- Ejecutarse con PM2
+- Puerto 443 (WSS)
+
+---
+
+### Base de Datos (Neon PostgreSQL)
+- Esquema sugerido:
+  - households
+  - pets
+  - devices
+  - sensor_readings
+  - device_health
+- Guardar SOLO datos procesados (no ruido)
+- Conexión segura vía DATABASE_URL
+
+---
+
+### Frontend (Vercel)
+- React + Vite
+- Mostrar:
+  - Estado del dispositivo (online/offline)
+  - Datos de sensores en tiempo real (WebSocket)
+  - Histórico desde Neon (API HTTP)
+- NO conectarse directo a MQTT
+- Usar WebSocket contra EC2
+- Variables de entorno:
+  - API_URL
+  - WS_URL
+
+---
+
+## 🔐 SEGURIDAD
+- Certificados AWS IoT almacenados como variables de entorno (Vercel y EC2)
+- Nunca exponer claves privadas en frontend
+- MQTT solo permitido por deviceId
+- HTTPS/WSS obligatorio
+
+---
+
+## 📦 ENTREGABLES QUE QUIERO
+
+1. Diagrama de arquitectura (ASCII o Mermaid)
+2. Flujo de datos paso a paso
+3. Ejemplo de código:
+   - ESP32 (MQTT publish/subscribe)
+   - Node.js IoT Bridge
+4. Estructura de carpetas del backend
+5. Esquema SQL para Neon
+6. Lista exacta de variables de entorno
+7. Buenas prácticas para producción
+8. Errores comunes a evitar
+
+Explica TODO con enfoque práctico, como si fuera un proyecto real en producción.

@@ -1,107 +1,85 @@
 import * as mqtt from 'mqtt';
-import { db } from './db'; // Módulo de conexión a DB
-import { deviceHealthReports, devices, sensorReadings } from '../shared/schema'; // Added sensorReadings
+import { db } from './db';
+import { devices, deviceEvents, sensorReadings } from '../shared/schema';
 import { eq } from 'drizzle-orm';
 import {
-  healthReportPayloadSchema,
-  sensorReadingPayloadSchema,
-  HealthReportPayload,
-  SensorReadingPayload
-} from './mqtt-schemas'; // Import from new schema file
-import * as fs from 'fs'; // For reading cert files
-import * as path from 'path'; // For resolving cert paths
+  deviceDataPayloadSchema,
+  deviceStatusPayloadSchema,
+  DeviceDataPayload,
+  DeviceStatusPayload
+} from './mqtt-schemas';
+import * as fs from 'fs';
+import * as path from 'path';
 
-// Type for the WebSocket broadcast function
+// Placeholder for WebSocket broadcast function if needed in the future
 type WebSocketBroadcast = (topic: string, message: any) => void;
 
-export function initializeMqttClient(broadcast: WebSocketBroadcast) { // Accept broadcast function
+export function initializeMqttClient(broadcast: WebSocketBroadcast) {
   const AWS_IOT_ENDPOINT = process.env.AWS_IOT_ENDPOINT;
-  const AWS_REGION = process.env.AWS_REGION;
-  const MQTT_CLIENT_ID = process.env.MQTT_CLIENT_ID || `kittypau-iot-bridge-${Math.random().toString(16).substr(2, 8)}`;
 
-  if (!AWS_IOT_ENDPOINT || !AWS_REGION) {
-    console.error('AWS_IOT_ENDPOINT and AWS_REGION must be set in environment variables.');
-    // Fallback to a public broker for development if AWS IoT is not configured
-    // This is not recommended for production.
-    const client = mqtt.connect('mqtt://broker.hivemq.com');
-    console.warn('Connecting to a public MQTT broker (HiveMQ) due to missing AWS IoT environment variables. THIS IS FOR DEVELOPMENT ONLY!');
-    setupMqttEventHandlers(client, broadcast);
+  if (!AWS_IOT_ENDPOINT) {
+    console.error('AWS_IOT_ENDPOINT is not set. MQTT client will not start.');
+    console.warn('For development, you can set AWS_IOT_ENDPOINT to a public broker like "mqtt://broker.hivemq.com"');
     return;
   }
+  
+  let client;
+  
+  if (AWS_IOT_ENDPOINT.startsWith('mqtt://')) {
+    // Connect to a public/unsecured broker (FOR DEV ONLY)
+    console.warn(`Connecting to an unsecured MQTT broker at ${AWS_IOT_ENDPOINT}. THIS IS FOR DEVELOPMENT ONLY!`);
+    client = mqtt.connect(AWS_IOT_ENDPOINT);
+  } else {
+    // Connect to AWS IoT Core using mTLS
+    const PRIVATE_KEY_PATH = process.env.AWS_IOT_PRIVATE_KEY_PATH;
+    const CERTIFICATE_PATH = process.env.AWS_IOT_CERT_PATH;
+    const ROOT_CA_PATH = process.env.AWS_IOT_ROOT_CA_PATH;
 
-  // Paths to certificates
-  const PRIVATE_KEY_PATH = process.env.AWS_IOT_PRIVATE_KEY_PATH;
-  const CERTIFICATE_PATH = process.env.AWS_IOT_CERT_PATH;
-  const ROOT_CA_PATH = process.env.AWS_IOT_ROOT_CA_PATH;
+    if (!PRIVATE_KEY_PATH || !CERTIFICATE_PATH || !ROOT_CA_PATH) {
+      console.error('AWS IoT certificate paths (AWS_IOT_PRIVATE_KEY_PATH, AWS_IOT_CERT_PATH, AWS_IOT_ROOT_CA_PATH) must be set for mTLS connection.');
+      return;
+    }
 
-  if (!PRIVATE_KEY_PATH || !CERTIFICATE_PATH || !ROOT_CA_PATH) {
-    console.error('AWS IoT certificate paths (AWS_IOT_PRIVATE_KEY_PATH, AWS_IOT_CERT_PATH, AWS_IOT_ROOT_CA_PATH) must be set in environment variables.');
-    // Fallback to public broker if certs are missing, for dev only
-    const client = mqtt.connect('mqtt://broker.hivemq.com');
-    console.warn('Connecting to a public MQTT broker (HiveMQ) due to missing AWS IoT certificate paths. THIS IS FOR DEVELOPMENT ONLY!');
-    setupMqttEventHandlers(client, broadcast);
-    return;
+    const clientOptions: mqtt.IClientOptions = {
+      host: AWS_IOT_ENDPOINT,
+      protocol: 'mqtts',
+      clientId: `kittypau-bridge-${Math.random().toString(16).substr(2, 8)}`,
+      key: fs.readFileSync(path.resolve(PRIVATE_KEY_PATH)),
+      cert: fs.readFileSync(path.resolve(CERTIFICATE_PATH)),
+      ca: fs.readFileSync(path.resolve(ROOT_CA_PATH)),
+      reconnectPeriod: 5000,
+      qos: 1,
+    };
+    client = mqtt.connect(clientOptions);
   }
 
-  const clientOptions: mqtt.IClientOptions = {
-    host: AWS_IOT_ENDPOINT.split('://')[1] || AWS_IOT_ENDPOINT, // Extract hostname
-    protocol: 'mqtts', // AWS IoT Core uses mqtts for mTLS
-    clientId: MQTT_CLIENT_ID,
-    key: fs.readFileSync(path.resolve(PRIVATE_KEY_PATH)),
-    cert: fs.readFileSync(path.resolve(CERTIFICATE_PATH)),
-    ca: fs.readFileSync(path.resolve(ROOT_CA_PATH)),
-    reconnectPeriod: 5000, // Reconnect every 5 seconds
-    qos: 1, // At least once delivery
-  };
-
-  const client = mqtt.connect(clientOptions);
-
-  client.on('connect', () => {
-    console.log('Conectado al broker MQTT de AWS IoT Core.');
-    // Subscribe to general sensor data topic
-    client.subscribe('kittypau/+/data/sensors', { qos: 1 }, (err) => {
-      if (!err) {
-        console.log('Suscrito a kittypau/+/data/sensors');
-      } else {
-        console.error('Error al suscribirse a kittypau/+/data/sensors:', err);
-      }
-    });
-    // Subscribe to general health reports topic (assuming it follows the deviceId pattern)
-    client.subscribe('kittypau/+/health', { qos: 1 }, (err) => {
-      if (!err) {
-        console.log('Suscrito a kittypau/+/health');
-      }
-    });
-    // Subscribe to command topic (for all devices, bridge will filter or devices will use specific)
-    client.subscribe('kittypau/+/cmnd/#', { qos: 1 }, (err) => { // Using # for subtopics
-      if (!err) {
-        console.log('Suscrito a kittypau/+/cmnd/#');
-      } else {
-        console.error('Error al suscribirse a kittypau/+/cmnd/#:', err);
-      }
-    });
-  });
-
-
-  setupMqttEventHandlers(client, broadcast); // Call the new setup function
+  setupMqttEventHandlers(client, broadcast);
 }
 
 function setupMqttEventHandlers(client: mqtt.MqttClient, broadcast: WebSocketBroadcast) {
+  client.on('connect', () => {
+    console.log(`Conectado al broker MQTT: ${client.options.host}`);
+    
+    // Subscribe to the new consolidated topics
+    const topics = ['kittypau/+/data', 'kittypau/+/status'];
+    client.subscribe(topics, { qos: 1 }, (err, granted) => {
+      if (err) {
+        console.error('Error al suscribirse a los tópicos:', err);
+        return;
+      }
+      granted.forEach(grant => {
+        console.log(`Suscrito a "${grant.topic}" con QoS ${grant.qos}`);
+      });
+    });
+  });
+
   client.on('message', (topic, message) => {
     handleMqttMessage(topic, message, broadcast);
   });
 
-  client.on('error', (err) => {
-    console.error('Error en el cliente MQTT:', err);
-  });
-
-  client.on('offline', () => {
-    console.warn('Cliente MQTT desconectado del broker.');
-  });
-
-  client.on('reconnect', () => {
-    console.log('Cliente MQTT intentando reconectar...');
-  });
+  client.on('error', (err) => console.error('Error en el cliente MQTT:', err));
+  client.on('offline', () => console.warn('Cliente MQTT desconectado.'));
+  client.on('reconnect', () => console.log('Intentando reconectar al broker MQTT...'));
 }
 
 async function handleMqttMessage(topic: string, message: Buffer, broadcast: WebSocketBroadcast) {
@@ -109,86 +87,78 @@ async function handleMqttMessage(topic: string, message: Buffer, broadcast: WebS
     const messageString = message.toString();
     const rawPayload = JSON.parse(messageString);
     const topicParts = topic.split('/');
-    const deviceId = topicParts[1]; // Assuming topic format kittypau/{deviceId}/...
+    const deviceId = topicParts[1];
 
     if (!deviceId) {
-      console.warn(`Mensaje MQTT en tópico inválido (sin deviceId): ${topic}`);
+      console.warn(`Mensaje en tópico inválido (sin deviceId): ${topic}`);
       return;
     }
 
-    // Find the device in the database
-    const existingDevice = await db.query.devices.findFirst({
-      where: eq(devices.deviceId, deviceId),
-    });
-
-    if (!existingDevice) {
-      console.warn(`Dispositivo con ID ${deviceId} no encontrado en la DB para tópico ${topic}. Mensaje ignorado.`);
-      return;
-    }
-
-    if (topic.includes('/data/sensors')) {
-      await handleSensorData(deviceId, rawPayload, existingDevice.id, broadcast);
-    } else if (topic.includes('/health')) {
-      await handleDeviceHealth(deviceId, rawPayload, existingDevice.id, broadcast);
-    } else if (topic.includes('/cmnd/')) {
-      console.log(`Comando MQTT recibido para ${deviceId} en tópico ${topic}:`, rawPayload);
-      // Here you would implement logic to send commands back to the device
-      // e.g., if it's set_wifi, parse and store the command
+    if (topic.endsWith('/data')) {
+      await handleDeviceData(deviceId, rawPayload, broadcast);
+    } else if (topic.endsWith('/status')) {
+      await handleDeviceStatus(deviceId, rawPayload, broadcast);
     } else {
-      console.log(`Mensaje MQTT recibido en tópico no manejado ${topic}:`, rawPayload);
+      console.log(`Mensaje recibido en tópico no manejado ${topic}:`, rawPayload);
     }
 
   } catch (error) {
-    console.error('Error procesando mensaje MQTT:', error);
+    console.error(`Error procesando mensaje MQTT del tópico ${topic}:`, error);
   }
 }
 
-async function handleSensorData(
-  deviceIdStr: string,
-  rawPayload: any,
-  dbDeviceId: number, // Use number if Drizzle schema uses serial for device ID
-  broadcast: WebSocketBroadcast
-) {
+async function handleDeviceData(deviceIdStr: string, rawPayload: any, broadcast: WebSocketBroadcast) {
   try {
-    const payload = sensorReadingPayloadSchema.parse(rawPayload);
-    console.log(`Lectura de sensor de ${deviceIdStr} recibida:`, payload);
+    const payload = deviceDataPayloadSchema.parse(rawPayload);
+    console.log(`[DATA] de ${deviceIdStr}:`, payload);
 
     await db.insert(sensorReadings).values({
-      deviceId: dbDeviceId,
-      timestamp: new Date(payload.timestamp),
-      type: payload.sensorType,
-      value: payload.value,
-      unit: payload.unit,
+      ts: payload.ts ? new Date(payload.ts) : new Date(),
+      deviceId: deviceIdStr,
+      temperatureCelsius: payload.temp,
+      humidityPercent: payload.hum,
+      lightLux: payload.light,
+      weightGrams: payload.weight,
     });
 
-    console.log(`Lectura de sensor para ${deviceIdStr} guardada y emitida.`);
-    broadcast(`sensorData/${deviceIdStr}`, payload); // Broadcast real-time data
+    // Update the last_seen status for the device to show it's active
+    await db.update(devices)
+      .set({ lastSeen: new Date() })
+      .where(eq(devices.deviceId, deviceIdStr));
+      
+    console.log(`-> Lectura de sensor para ${deviceIdStr} guardada.`);
+    broadcast(`sensorData/${deviceIdStr}`, payload);
+
   } catch (error) {
-    console.error(`Error procesando datos de sensor para ${deviceIdStr}:`, error);
+    console.error(`Error de validación o DB en datos de sensor para ${deviceIdStr}:`, error);
   }
 }
 
-async function handleDeviceHealth(
-  deviceIdStr: string,
-  rawPayload: any,
-  dbDeviceId: number, // Use number if Drizzle schema uses serial for device ID
-  broadcast: WebSocketBroadcast
-) {
+async function handleDeviceStatus(deviceIdStr: string, rawPayload: any, broadcast: WebSocketBroadcast) {
   try {
-    const payload = healthReportPayloadSchema.parse(rawPayload);
-    console.log(`Reporte de salud de ${deviceIdStr} recibido:`, payload);
+    const payload = deviceStatusPayloadSchema.parse(rawPayload);
+    console.log(`[STATUS] de ${deviceIdStr}:`, payload);
+    const now = new Date();
 
-    await db.insert(deviceHealthReports).values({
-      deviceId: dbDeviceId,
-      timestamp: new Date(payload.timestamp),
-      firmwareVersion: payload.firmwareVersion,
-      report: JSON.stringify(rawPayload), // Guardar el JSON completo como string
-      overallStatus: payload.overallStatus,
+    // 1. Insert the event into the event log (append-only history)
+    await db.insert(deviceEvents).values({
+      deviceId: deviceIdStr,
+      eventType: payload.status,
+      ts: now,
     });
-
-    console.log(`Reporte de salud para ${deviceIdStr} guardado y emitido.`);
-    broadcast(`deviceHealth/${deviceIdStr}`, payload); // Broadcast real-time data
+    
+    // 2. Update the device's main status (source of truth for current state)
+    await db.update(devices)
+      .set({
+        status: payload.status,
+        lastSeen: now,
+      })
+      .where(eq(devices.deviceId, deviceIdStr));
+      
+    console.log(`-> Evento '${payload.status}' para ${deviceIdStr} guardado y estado actualizado.`);
+    broadcast(`deviceStatus/${deviceIdStr}`, payload);
+      
   } catch (error) {
-    console.error(`Error procesando reporte de salud para ${deviceIdStr}:`, error);
+    console.error(`Error de validación o DB en estado de dispositivo para ${deviceIdStr}:`, error);
   }
 }

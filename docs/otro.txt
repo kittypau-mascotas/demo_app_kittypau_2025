@@ -1,0 +1,208 @@
+Lo que te entregó Gemini está muy bien estructurado y es técnicamente sólido. Ahora voy a hacer lo más valioso en este punto: auditoría + ajustes finos para TU proyecto real (AWS IoT + EC2 bridge + Neon + Vercel) y luego te dejo los próximos pasos exactos para que esto quede 100% operativo en la app.
+
+✅ Evaluación general (resumen ejecutivo)
+
+👉 Conclusión corta:
+El diseño es correcto, escalable y aplicable tal cual a KittyPau con 3 ajustes importantes que te explico abajo.
+
+🧠 Ajustes clave que debes hacer (muy importantes)
+🔧 1. sensor_readings.device_id → decisión correcta, PERO explícita
+
+Gemini hizo algo bien, pero hay que dejarlo claro:
+
+sensor_readings.device_id VARCHAR(50)
+
+
+Esto es correcto porque tu fuente de verdad es el MQTT, que ya viene con:
+
+"device": "KPCL0033"
+
+
+✅ NO cambies esto a FK numérico
+❌ NO intentes usar devices.id aquí
+
+👉 Mantén:
+
+devices.id → interno
+
+devices.device_id → identidad física
+
+sensor_readings.device_id → string MQTT
+
+✔ Esto simplifica el bridge MQTT → DB
+✔ Evita JOINs innecesarios en ingestión
+✔ Es una buena práctica IoT real
+
+🔧 2. Falta una tabla CRÍTICA: device_events
+
+Ahora mismo tienes sensores, pero no tienes historial de estado.
+
+Te recomiendo AGREGAR esto (muy importante para tu app):
+
+CREATE TABLE device_events (
+  id SERIAL PRIMARY KEY,
+  device_id VARCHAR(50) NOT NULL,
+  event_type VARCHAR(50) NOT NULL, -- online, offline, error, reboot
+  payload JSONB,
+  ts TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_device_events_device_ts
+ON device_events(device_id, ts DESC);
+
+
+Esto te permite:
+
+Mostrar “🟢 Online / 🔴 Offline”
+
+Saber cuándo un dispositivo se cayó
+
+Mostrar timeline del dispositivo
+
+Debug real de IoT (oro puro)
+
+👉 Tu EC2 YA está listo para escribir esto cuando recibe:
+
+{ "status": "online" }
+
+🔧 3. Autenticación: NO dupliques auth si usas Neon Auth
+
+Si ya estás usando Neon Auth (lo mencionaste antes), entonces:
+
+❌ NO implementes users.password_hash manual
+✅ Usa Neon Auth como identity provider
+✅ Tu tabla users solo referencia el auth_user_id
+
+Ejemplo recomendado:
+
+CREATE TABLE users (
+  id SERIAL PRIMARY KEY,
+  auth_user_id UUID UNIQUE NOT NULL,
+  email VARCHAR(255),
+  full_name VARCHAR(255),
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+
+Y en backend:
+
+req.user.authUserId
+
+
+Esto:
+
+Evita problemas de seguridad
+
+Te ahorra meses de bugs
+
+Es producción real
+
+🔁 Validación del flujo REAL (lo que ya tienes)
+
+Tu sistema hoy funciona así (y está bien):
+
+ESP8266
+  ↓ MQTT (TLS)
+AWS IoT Core
+  ↓
+EC2 (Node.js + mqtt.js + pm2)
+  ↓
+Neon PostgreSQL
+  ↓
+API (Vercel / Express / Edge)
+  ↓
+App Web (mockup)
+
+
+✔ Correcto
+✔ Escalable
+✔ Cloud-native
+
+🧪 ¿Qué parte YA está funcionando?
+
+Según lo que contaste:
+
+✅ MQTT pub/sub OK
+
+✅ Bridge EC2 suscribe
+
+✅ PM2 persistente
+
+✅ Datos llegan a Neon
+
+✅ Índices creados
+
+⏳ Falta exponer bien la data a la app
+
+Estás a un 80% del sistema completo.
+
+🚀 Próximos pasos EXACTOS (en orden)
+PASO 1 – Alinear schema Neon
+
+Crear / ajustar tablas:
+
+users
+
+devices
+
+pets
+
+sensor_readings
+
+device_events ✅ (nuevo)
+
+PASO 2 – Ajustar el bridge EC2 (muy poco)
+
+En tu index.js del bridge:
+
+Al recibir:
+
+{ "status": "online" }
+
+
+Insertar en:
+
+device_events
+
+
+Al recibir sensores → sensor_readings
+
+Actualizar:
+
+devices.last_seen
+devices.status
+
+
+👉 NO toques MQTT, solo DB logic
+
+PASO 3 – Backend API (Vercel)
+
+Implementar solo estos endpoints primero:
+
+GET /api/devices
+
+GET /api/pets
+
+GET /api/devices/:deviceId/readings
+
+Con validación:
+
+device.user_id === req.user.id
+
+PASO 4 – Frontend mockup
+
+Selector:
+
+Mascota
+
+Dispositivo
+
+Gráficas:
+
+Últimas 24h
+
+Últimos 7 días
+
+Estado:
+
+Online / Offline (desde device_events)

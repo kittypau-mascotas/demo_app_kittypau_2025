@@ -1,56 +1,50 @@
 import type { Express } from "express";
-import { storage } from "./storage";
-import { requireNeonAuth } from "./middleware/requireNeonAuth"; // NEW
-import { db } from "./db"; // NEW
-import { users } from "../shared/schema"; // NEW
-import { eq } from "drizzle-orm"; // NEW
+import { requireNeonAuth } from "./middleware/requireNeonAuth";
+import { db } from "./db";
+import { users, devices, pets, sensorReadings, deviceEvents } from "../shared/schema";
+import { eq, and, sql, desc, inArray } from "drizzle-orm"; // Import necessary Drizzle functions
+import { z } from "zod"; // For query parameter validation
+
+// Helper to validate date strings
+const dateSchema = z.string().datetime({ message: "Invalid date format, expected ISO 8601" }).optional();
+const limitSchema = z.string().regex(/^\d+$/, "Limit must be a number").transform(Number).optional();
 
 export async function registerRoutes(app: Express): Promise<void> {
 
-  // --- NEW Neon Auth Endpoints ---
-
-  // Endpoint /api/me (fetch user profile)
+  // Endpoint /api/me (fetch user profile) - Adjusted for new schema
   app.get("/api/me", requireNeonAuth, async (req, res) => {
     const neonUser = req.neonUser!; // Injected by requireNeonAuth middleware
 
-    const existing = await db
-      .select()
-      .from(users)
-      .where(eq(users.id, neonUser.id))
-      .limit(1);
-
-    let user = existing[0];
+    // Try to find the user in our DB using the authUserId from NeonAuth
+    let userRecord = await db.query.users.findFirst({
+      where: eq(users.authUserId, neonUser.id),
+    });
 
     // If user profile does not exist in our DB, create it (just-in-time provisioning)
-    if (!user) {
-      // Create a personal household for each new user implicitly.
-      const newHouseholdName = `${neonUser.name || neonUser.email?.split('@')[0]}'s Household`; // Use optional chaining for email
-      const insertedHousehold = await storage.createHousehold({ name: newHouseholdName });
-      if (!insertedHousehold) {
-        console.error(`Failed to create default household for user ${neonUser.id}`);
-        return res.status(500).json({ error: "Failed to provision user household" });
-      }
-
-      const inserted = await db
+    if (!userRecord) {
+      const insertedUsers = await db
         .insert(users)
         .values({
-          id: neonUser.id,
+          authUserId: neonUser.id,
           email: neonUser.email,
-          name: neonUser.name || neonUser.email?.split('@')[0], // Use optional chaining for email
-          role: "owner", // Default role for a user creating their own household
-          householdId: insertedHousehold.id // Assign to the new default household
+          fullName: neonUser.name || neonUser.email?.split('@')[0],
+          // No role field in new schema, householdId is also gone.
         })
         .returning();
-      user = inserted[0];
+      userRecord = insertedUsers[0];
+    }
+
+    if (!userRecord) {
+      console.error(`Failed to provision user for Neon Auth ID: ${neonUser.id}`);
+      return res.status(500).json({ error: "Failed to provision user" });
     }
 
     res.json({
       user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        role: user.role,
-        householdId: user.householdId,
+        id: userRecord.id,
+        authUserId: userRecord.authUserId,
+        email: userRecord.email,
+        fullName: userRecord.fullName,
       },
     });
   });
@@ -71,104 +65,157 @@ export async function registerRoutes(app: Express): Promise<void> {
     res.json({ success: true });
   });
 
-  // --- Existing Entity Routes (Protected) ---
+  // --- New API Endpoints based on the refactored schema ---
 
-  // Households
-  app.post("/api/households", requireNeonAuth, async (req, res) => { // Now protected
-    const newHousehold = await storage.createHousehold(req.body);
-    if (newHousehold) {
-      res.status(201).json(newHousehold);
-    } else {
-      res.status(400).json({ message: "Error al crear hogar" });
+  // Middleware to find userId from authUserId
+  app.use("/api/*", requireNeonAuth, async (req, res, next) => {
+    const neonUser = req.neonUser!;
+    const user = await db.query.users.findFirst({
+      where: eq(users.authUserId, neonUser.id),
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found in application database." });
+    }
+    (req as any).appUserId = user.id; // Attach our internal user ID to the request
+    next();
+  });
+
+  // GET /api/devices - Get all devices for the authenticated user
+  app.get("/api/devices", async (req, res) => {
+    const appUserId = (req as any).appUserId;
+
+    try {
+      const devicesWithLastEvent = await db
+        .select({
+          id: devices.id,
+          deviceId: devices.deviceId,
+          name: devices.name,
+          status: devices.status,
+          lastSeen: devices.lastSeen,
+          lastEventAt: sql<Date>`${deviceEvents.ts}`.as('last_event_at'), // Select the ts from the lateral join
+        })
+        .from(devices)
+        .leftJoin(
+          sql`LATERAL (
+            SELECT ${deviceEvents.ts}
+            FROM ${deviceEvents}
+            WHERE ${deviceEvents.deviceId} = ${devices.deviceId}
+            ORDER BY ${deviceEvents.ts} DESC
+            LIMIT 1
+          ) AS last_event ON TRUE`
+        )
+        .where(eq(devices.userId, appUserId));
+
+      res.json(devicesWithLastEvent);
+    } catch (error) {
+      console.error("Error fetching devices:", error);
+      res.status(500).json({ message: "Error fetching devices" });
     }
   });
 
-  app.get("/api/households/:id", requireNeonAuth, async (req, res) => {
-    const household = await storage.getHousehold(parseInt(req.params.id));
-    if (household) {
-      res.json(household);
-    } else {
-      res.status(404).json({ message: "Hogar no encontrado" });
+  // GET /api/pets - Get all pets for the authenticated user
+  app.get("/api/pets", async (req, res) => {
+    const appUserId = (req as any).appUserId;
+
+    try {
+      const petsWithDevices = await db
+        .select({
+          id: pets.id,
+          name: pets.name,
+          species: pets.species,
+          breed: pets.breed,
+          birthDate: pets.birthDate,
+          deviceId: pets.deviceId, // Our internal DB device ID
+          deviceIdentifier: devices.deviceId, // The string ID from MQTT
+        })
+        .from(pets)
+        .leftJoin(devices, eq(pets.deviceId, devices.id))
+        .where(eq(pets.userId, appUserId));
+
+      res.json(petsWithDevices);
+    } catch (error) {
+      console.error("Error fetching pets:", error);
+      res.status(500).json({ message: "Error fetching pets" });
     }
   });
 
-  app.get("/api/households", requireNeonAuth, async (req, res) => {
-    // For now, get all households. Later, filter by user's householdId
-    const households = await storage.getHouseholds();
-    res.json(households);
-  });
 
-  // Pets
-  app.post("/api/pets", requireNeonAuth, async (req, res) => {
-    const newPet = await storage.createPet(req.body);
-    if (newPet) {
-      res.status(201).json(newPet);
-    } else {
-      res.status(400).json({ message: "Error al crear mascota" });
+  // Middleware to verify device ownership
+  async function verifyDeviceOwnership(req: Express.Request, res: Express.Response, next: Express.NextFunction) {
+    const appUserId = (req as any).appUserId;
+    const deviceIdParam = req.params.deviceId; // This is the device_id string from MQTT
+
+    if (!deviceIdParam) {
+      return res.status(400).json({ message: "Device ID parameter is missing." });
+    }
+
+    const device = await db.query.devices.findFirst({
+      where: and(eq(devices.deviceId, deviceIdParam), eq(devices.userId, appUserId)),
+    });
+
+    if (!device) {
+      return res.status(404).json({ message: "Device not found or not owned by user." });
+    }
+    (req as any).deviceRecord = device; // Attach the full device record for later use
+    next();
+  }
+
+  // GET /api/devices/:deviceId/readings - Get sensor readings for a specific device
+  app.get("/api/devices/:deviceId/readings", verifyDeviceOwnership, async (req, res) => {
+    const deviceIdParam = req.params.deviceId; // MQTT device_id string
+    const { start_date, end_date } = req.query;
+
+    const parsedStartDate = dateSchema.parse(start_date);
+    const parsedEndDate = dateSchema.parse(end_date);
+
+    try {
+      const readings = await db.query.sensorReadings.findMany({
+        where: and(
+          eq(sensorReadings.deviceId, deviceIdParam),
+          parsedStartDate ? sql`${sensorReadings.ts} >= ${new Date(parsedStartDate)}` : undefined,
+          parsedEndDate ? sql`${sensorReadings.ts} <= ${new Date(parsedEndDate)}` : undefined,
+        ),
+        orderBy: [desc(sensorReadings.ts)],
+      });
+
+      res.json(readings);
+    } catch (error) {
+      console.error(`Error fetching sensor readings for device ${deviceIdParam}:`, error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid date format in query parameters.", errors: error.errors });
+      }
+      res.status(500).json({ message: "Error fetching sensor readings" });
     }
   });
 
-  app.get("/api/pets/:id", requireNeonAuth, async (req, res) => {
-    const pet = await storage.getPet(parseInt(req.params.id));
-    if (pet) {
-      res.json(pet);
-    } else {
-      res.status(404).json({ message: "Mascota no encontrada" });
+  // GET /api/devices/:deviceId/events - Get device events for a specific device
+  app.get("/api/devices/:deviceId/events", verifyDeviceOwnership, async (req, res) => {
+    const deviceIdParam = req.params.deviceId; // MQTT device_id string
+    const { start_date, end_date, limit } = req.query;
+
+    const parsedStartDate = dateSchema.parse(start_date);
+    const parsedEndDate = dateSchema.parse(end_date);
+    const parsedLimit = limitSchema.parse(limit);
+
+    try {
+      const events = await db.query.deviceEvents.findMany({
+        where: and(
+          eq(deviceEvents.deviceId, deviceIdParam),
+          parsedStartDate ? sql`${deviceEvents.ts} >= ${new Date(parsedStartDate)}` : undefined,
+          parsedEndDate ? sql`${deviceEvents.ts} <= ${new Date(parsedEndDate)}` : undefined,
+        ),
+        orderBy: [desc(deviceEvents.ts)],
+        limit: parsedLimit,
+      });
+
+      res.json(events);
+    } catch (error) {
+      console.error(`Error fetching device events for device ${deviceIdParam}:`, error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid query parameter format.", errors: error.errors });
+      }
+      res.status(500).json({ message: "Error fetching device events" });
     }
   });
-
-  app.get("/api/pets", requireNeonAuth, async (req, res) => {
-    const householdId = req.query.householdId ? parseInt(req.query.householdId as string) : undefined;
-    const pets = await storage.getPets(householdId);
-    res.json(pets);
-  });
-
-  // Devices
-  app.post("/api/devices", requireNeonAuth, async (req, res) => {
-    const newDevice = await storage.createDevice(req.body);
-    if (newDevice) {
-      res.status(201).json(newDevice);
-    } else {
-      res.status(400).json({ message: "Error al crear dispositivo" });
-    }
-  });
-
-  app.get("/api/devices/:id", requireNeonAuth, async (req, res) => {
-    const device = await storage.getDevice(parseInt(req.params.id));
-    if (device) {
-      res.json(device);
-    } else {
-      res.status(404).json({ message: "Dispositivo no encontrado" });
-    }
-  });
-
-  app.get("/api/devices", requireNeonAuth, async (req, res) => {
-    const householdId = req.query.householdId ? parseInt(req.query.householdId as string) : undefined;
-    const devices = await storage.getDevices(householdId);
-    res.json(devices);
-  });
-
-  // --- Telemetry Routes ---
-  // Sensor Readings
-  app.get("/api/sensor-readings", requireNeonAuth, async (req, res) => {
-    const deviceId = parseInt(req.query.deviceId as string);
-    if (isNaN(deviceId)) {
-      return res.status(400).json({ message: "ID de dispositivo inválido" });
-    }
-
-    // TODO: Implement date range and limit filtering if needed later
-    const readings = await storage.getSensorReadingsByDevice(deviceId);
-    res.json(readings);
-  });
-
-  // Consumption Events
-  app.get("/api/consumption-events", requireNeonAuth, async (req, res) => {
-    const deviceId = parseInt(req.query.deviceId as string);
-    if (isNaN(deviceId)) {
-      return res.status(400).json({ message: "ID de dispositivo inválido" });
-    }
-
-    // TODO: Implement date range and limit filtering if needed later
-    const events = await storage.getConsumptionEventsByDevice(deviceId);
-    res.json(events);
-  });}
+}

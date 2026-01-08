@@ -1,135 +1,75 @@
 import { sql } from "drizzle-orm";
-import { pgTable, serial, text, varchar, timestamp, integer, date, real, pgEnum, primaryKey } from "drizzle-orm/pg-core";
-import { createInsertSchema } from "drizzle-zod";
-import { z } from "zod";
+import { pgTable, serial, text, varchar, timestamp, integer, date, real, pgEnum, primaryKey, numeric, jsonb, uuid } from "drizzle-orm/pg-core";
 
 // --- Enums ---
-export const userRoleEnum = pgEnum('user_role', ['owner', 'carer']);
-export const deviceModeEnum = pgEnum('device_mode', ['comedero', 'bebedero', 'collar', 'unknown']);
+// Corresponds to: CREATE TYPE device_event_type AS ENUM (...)
+export const deviceEventTypeEnum = pgEnum('device_event_type', [
+  'online',
+  'offline',
+  'reboot',
+  'error',
+  'low_battery',
+  'sensor_error'
+]);
 
-// --- 1. Tablas Principales ---
+// --- Tablas ---
 
-// Tabla: households (Hogares)
-export const households = pgTable("households", {
-  id: serial("id").primaryKey(),
-  name: text("name").notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-});
-
-export const insertHouseholdSchema = createInsertSchema(households);
-export type InsertHousehold = z.infer<typeof insertHouseholdSchema>;
-export type Household = typeof households.$inferSelect;
-
-// Tabla: users (Usuarios)
+// Tabla de usuarios (users)
 export const users = pgTable("users", {
-  id: text("id").primaryKey(), // Neon Auth user.id (UUID or similar from external auth provider)
-  householdId: integer("household_id").notNull().references(() => households.id), // NEW: User belongs to a household
-  name: text("name"), // User's display name, optional
-  email: text("email").notNull().unique(), // User's email from external auth, must be unique
-  role: userRoleEnum("role").default('carer').notNull(), // Application-specific role
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-});
-
-export const insertUserSchema = createInsertSchema(users).pick({
-  id: true,
-  householdId: true, // NEW
-  name: true,
-  email: true,
-  role: true,
-});
-export type InsertUser = z.infer<typeof insertUserSchema>;
-export type User = typeof users.$inferSelect;
-
-// Tabla: pets (Mascotas)
-export const pets = pgTable("pets", {
   id: serial("id").primaryKey(),
-  householdId: integer("household_id").notNull().references(() => households.id),
-  name: text("name").notNull(),
-  species: text("species"),
-  breed: text("breed"),
-  birthDate: date("birth_date"),
-  avatarUrl: text("avatar_url"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(), // Añadido defaultNow
+  authUserId: uuid("auth_user_id").notNull().unique(), // From Neon Auth
+  email: varchar("email", { length: 255 }).unique(),
+  fullName: varchar("full_name", { length: 255 }),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
 });
 
-export const insertPetSchema = createInsertSchema(pets);
-export type InsertPet = z.infer<typeof insertPetSchema>;
-export type Pet = typeof pets.$inferSelect;
-
-// Tabla: devices (Dispositivos)
+// Tabla de dispositivos (devices)
 export const devices = pgTable("devices", {
   id: serial("id").primaryKey(),
-  householdId: integer("household_id").notNull().references(() => households.id),
-  deviceId: text("device_id").notNull().unique(), // ID físico del dispositivo
-  name: text("name").notNull(),
-  type: text("type").default('unknown').notNull(),
-  mode: deviceModeEnum("mode").default('unknown').notNull(),
-  status: text("status").default('offline').notNull(),
-  batteryLevel: integer("battery_level"),
-  lastUpdate: timestamp("last_update"),
-  ipAddress: text("ip_address"),
+  deviceId: varchar("device_id", { length: 50 }).notNull().unique(), // Physical device ID from MQTT
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  name: varchar("name", { length: 100 }).notNull().default('Mi Dispositivo KittyPaw'),
+  status: varchar("status", { length: 50 }).default('offline'),
+  lastSeen: timestamp("last_seen", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
 });
 
-export const insertDeviceSchema = createInsertSchema(devices);
-export type InsertDevice = z.infer<typeof insertDeviceSchema>;
-export type Device = typeof devices.$inferSelect;
-
-// --- 2. Tablas de Eventos y Registros ---
-
-// Tabla: consumptionEvents (Eventos de Consumo)
-export const consumptionEvents = pgTable("consumption_events", {
+// Tabla de mascotas (pets)
+export const pets = pgTable("pets", {
   id: serial("id").primaryKey(),
-  deviceId: integer("device_id").notNull().references(() => devices.id),
-  timestamp: timestamp("timestamp").defaultNow().notNull(),
-  amountGrams: real("amount_grams").notNull(),
-  durationSeconds: integer("duration_seconds").notNull(),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  deviceId: integer("device_id").unique().references(() => devices.id, { onDelete: 'set null' }),
+  name: varchar("name", { length: 100 }).notNull(),
+  species: varchar("species", { length: 50 }),
+  breed: varchar("breed", { length: 100 }),
+  birthDate: date("birth_date"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
 });
 
-export const insertConsumptionEventSchema = createInsertSchema(consumptionEvents);
-export type InsertConsumptionEvent = z.infer<typeof insertConsumptionEventSchema>;
-export type ConsumptionEvent = typeof consumptionEvents.$inferSelect;
+// Tabla de eventos de dispositivo (device_events)
+export const deviceEvents = pgTable("device_events", {
+  id: serial("id").primaryKey(),
+  deviceId: varchar("device_id", { length: 50 }).notNull(), // From MQTT, not a FK
+  eventType: deviceEventTypeEnum("event_type").notNull(),
+  payload: jsonb("payload"),
+  ts: timestamp("ts", { withTimezone: true }).defaultNow(),
+});
 
-// Tabla: sensorReadings (Lecturas de Sensores)
+// Tabla de lecturas de sensores (sensor_readings)
 export const sensorReadings = pgTable("sensor_readings", {
-  id: serial("id").primaryKey(),
-  deviceId: integer("device_id").notNull().references(() => devices.id),
-  timestamp: timestamp("timestamp").defaultNow().notNull(),
-  type: text("type").notNull(), // 'temperature', 'humidity', 'weight'
-  value: real("value").notNull(),
-  unit: text("unit"), // '°C', '%', 'g'
-});
-
-export const insertSensorReadingSchema = createInsertSchema(sensorReadings);
-export type InsertSensorReading = z.infer<typeof insertSensorReadingSchema>;
-export type SensorReading = typeof sensorReadings.$inferSelect;
-
-// Tabla: deviceHealthReports (Reportes de Salud del Dispositivo)
-export const deviceHealthReports = pgTable("device_health_reports", {
-  id: serial("id").primaryKey(),
-  deviceId: integer("device_id").notNull().references(() => devices.id),
-  timestamp: timestamp("timestamp").defaultNow().notNull(),
-  firmwareVersion: text("firmware_version"),
-  report: text("report").notNull(), // JSON string del reporte completo
-  overallStatus: text("overall_status").notNull(), // 'PASS' o 'FAIL'
-});
-
-export const insertDeviceHealthReportSchema = createInsertSchema(deviceHealthReports);
-export type InsertDeviceHealthReport = z.infer<typeof insertDeviceHealthReportSchema>;
-export type DeviceHealthReport = typeof deviceHealthReports.$inferSelect;
-
-// --- 3. Tablas de Unión (Relaciones) ---
-
-// Tabla: pets_to_devices (Relación Mascotas y Dispositivos)
-export const petsToDevices = pgTable("pets_to_devices", {
-  petId: integer("pet_id").notNull().references(() => pets.id),
-  deviceId: integer("device_id").notNull().references(() => devices.id),
+  ts: timestamp("ts", { withTimezone: true }).notNull(), // Timestamp from device
+  receivedAt: timestamp("received_at", { withTimezone: true }).defaultNow(), // Timestamp from server
+  deviceId: varchar("device_id", { length: 50 }).notNull(), // From MQTT, not a FK
+  temperatureCelsius: numeric("temperature_celsius", { precision: 5, scale: 2 }),
+  humidityPercent: numeric("humidity_percent", { precision: 5, scale: 2 }),
+  lightLux: integer("light_lux"),
+  weightGrams: numeric("weight_grams", { precision: 8, scale: 2 }),
 }, (table) => {
   return {
-    pk: primaryKey({ columns: [table.petId, table.deviceId] }),
+    pk: primaryKey({ columns: [table.deviceId, table.ts] }),
   };
 });
 
-export const insertPetToDeviceSchema = createInsertSchema(petsToDevices);
-export type InsertPetToDevice = z.infer<typeof insertPetToDeviceSchema>;
-export type PetToDevice = typeof petsToDevices.$inferSelect;
+// Nota: No se exportan 'Insert' types con Zod porque no es un requisito inmediato
+// y el schema anterior era complejo. Se puede añadir `drizzle-zod` si se necesita
+// para la validación de la API.

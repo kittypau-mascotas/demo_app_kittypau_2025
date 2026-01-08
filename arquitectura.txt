@@ -1,51 +1,107 @@
-You are a senior full-stack engineer and software architect.
+Perfecto, ahora sí tenemos el error real y es claro 👍
+No es Neon, no es Auth, no es Dashboard: es un problema de dependencias en el build frontend.
 
-I have an existing React application (already designed and implemented visually).
-The UI includes login, signup, profile, pets, device dashboards and charts.
-All components are already built and MUST NOT be redesigned or duplicated.
+🔴 ERROR REAL (confirmado)
+[vite]: Rollup failed to resolve import "axios"
+from "client/src/services/api.ts"
 
-Your task is to:
 
-1. Analyze the entire codebase and identify:
-   - UI components that collect or display data
-   - Forms, inputs, dashboards, charts, profile screens
-   - Components that currently use mock data, local state, or placeholders
+👉 Vite NO encuentra axios durante el build
+Esto rompe el build en Vercel, aunque en local pueda funcionar.
 
-2. For each component, determine:
-   - What database entity it represents
-   - What fields are required
-   - Whether it should be linked to a user, pet, device, or telemetry
+🎯 CAUSA EXACTA (no especulación)
 
-3. Propose a relational database schema (PostgreSQL) that:
-   - Uses the existing UI as the source of truth
-   - Does NOT invent new features
-   - Models users, pets, devices, and telemetry
-   - Supports authentication via Neon Auth (users already exist in auth.users)
+Tu proyecto es monorepo y el build corre desde la raíz:
 
-4. Map each UI component to:
-   - A database table
-   - Read / write operations (CRUD)
-   - Required API or server action
+vite build && esbuild server/index.ts ...
 
-5. Generate:
-   - SQL table definitions
-   - Minimal backend logic (queries or API handlers)
-   - Frontend data bindings (fetch / mutations)
-   - Without modifying component JSX structure
 
-6. Explicit constraints:
-   - DO NOT redesign UI
-   - DO NOT create new components
-   - DO NOT change styling
-   - Only wire existing components to data
-   - Reuse existing state, props, and structure
+Pero:
 
-7. Output format:
-   - Section 1: Component → Data Mapping
-   - Section 2: SQL schema
-   - Section 3: Backend glue code
-   - Section 4: Frontend integration notes
+axios NO está instalado en el package.json raíz, o
 
-Ask for clarification ONLY if something is technically ambiguous.
-Otherwise, proceed with analysis.
+Está instalado solo en otro workspace / carpeta
 
+O fue usado sin estar en dependencies
+
+Vercel no infiere dependencias: si no está en dependencies, rompe.
+
+✅ SOLUCIÓN CORRECTA (la única válida en producción)
+🔧 PASO ÚNICO (OBLIGATORIO)
+
+En la raíz del proyecto (donde está este script):
+
+"build": "vite build && esbuild server/index.ts ..."
+
+
+Ejecutá:
+
+npm install axios
+
+
+Esto debe:
+
+agregar axios a dependencies
+
+NO a devDependencies
+
+NO solo en /client
+
+✅ Verificación rápida (antes de pushear)
+
+Abrí el package.json raíz y confirmá que exista:
+
+"dependencies": {
+  "axios": "^1.x.x"
+}
+
+
+Si está en devDependencies, moverlo a dependencies.
+
+🚀 Commit recomendado
+git add package.json package-lock.json
+git commit -m "fix: add axios dependency for frontend build"
+git push
+
+
+Vercel va a:
+
+reinstalar dependencias
+
+resolver el import
+
+completar el build
+
+🧠 Nota arquitectónica (importante para el futuro)
+
+👉 En Vite + Vercel + monorepo:
+
+Cualquier cosa importada en client/
+🔴 DEBE existir en dependencies raíz
+
+Rollup no tolera imports fantasma
+
+Esto te va a volver a pasar con:
+
+date-fns
+
+recharts
+
+lucide-react
+
+@tanstack/react-query (si no está bien instalado)
+
+🟢 Estado actual
+
+Arquitectura: ✅ correcta
+
+Neon Auth: ✅ bien integrado
+
+Dashboard: ✅ bien encaminado
+
+Build: ❌ bloqueado SOLO por axios
+
+Cuando confirmes que ya lo instalaste, seguimos con:
+👉 telemetría + gráficos reales + endpoints REST
+
+Vas excelente, este error es normal en esta etapa 💪

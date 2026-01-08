@@ -70,10 +70,13 @@ export const apiService = {
     }
   },
 
-  // Example: Fetch historical sensor data for a device
-  getSensorReadings: async (deviceId: string, params?: { startDate?: string; endDate?: string; limit?: number }) => {
+  // --- Telemetry API Calls ---
+  // Protected by requireNeonAuth
+  getSensorReadings: async (deviceId: number, params?: { startDate?: string; endDate?: string; limit?: number }) => {
     try {
-      const response = await apiClient.get(`/api/devices/${deviceId}/sensors`, { params });
+      const response = await apiClient.get('/api/sensor-readings', {
+        params: { deviceId, ...params },
+      });
       return response.data;
     } catch (error) {
       console.error('Error fetching sensor readings:', error);
@@ -81,13 +84,14 @@ export const apiService = {
     }
   },
 
-  // Example: Fetch historical device health data
-  getDeviceHealth: async (deviceId: string, params?: { startDate?: string; endDate?: string; limit?: number }) => {
+  getConsumptionEvents: async (deviceId: number, params?: { startDate?: string; endDate?: string; limit?: number }) => {
     try {
-      const response = await apiClient.get(`/api/devices/${deviceId}/health`, { params });
+      const response = await apiClient.get('/api/consumption-events', {
+        params: { deviceId, ...params },
+      });
       return response.data;
     } catch (error) {
-      console.error('Error fetching device health:', error);
+      console.error('Error fetching consumption events:', error);
       throw error;
     }
   },

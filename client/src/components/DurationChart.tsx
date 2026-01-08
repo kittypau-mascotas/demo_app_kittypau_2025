@@ -6,16 +6,19 @@ interface DurationChartProps {
 }
 
 export default function DurationChart({ data }: DurationChartProps) {
-  //todo: remove mock functionality
-  const mockData = data || [
-    { name: '00:00', value: 0 },
-    { name: '04:00', value: 2 },
-    { name: '08:00', value: 5 },
-    { name: '12:00', value: 8 },
-    { name: '16:00', value: 6 },
-    { name: '20:00', value: 4 },
-    { name: '24:00', value: 1 },
-  ];
+  if (!data || data.length === 0) {
+    return (
+      <Card className="card-info border-0" data-testid="chart-duration">
+        <CardHeader>
+          <CardTitle>Duración de Uso</CardTitle>
+          <CardDescription>Horas de actividad por periodo</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground text-center py-10">No hay datos de duración disponibles.</p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="card-info border-0" data-testid="chart-duration">
@@ -25,7 +28,7 @@ export default function DurationChart({ data }: DurationChartProps) {
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={300}>
-          <AreaChart data={mockData}>
+          <AreaChart data={data}>
             <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
             <XAxis dataKey="name" />
             <YAxis />

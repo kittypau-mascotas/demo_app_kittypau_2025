@@ -5,21 +5,133 @@ import ConsumptionChart from '@/components/ConsumptionChart';
 import PetAvatar from '@/components/PetAvatar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Activity, Home, AlertTriangle, Heart, Fish, Droplets } from 'lucide-react';
-import { usePets } from '@/hooks/data/usePets'; // Import usePets hook
-import { useDevices } from '@/hooks/data/useDevices'; // Import useDevices hook
-import { Skeleton } from '@/components/ui/skeleton'; // Assuming a Skeleton component exists for loading states
+import { usePets } from '@/hooks/data/usePets';
+import { useDevices } from '@/hooks/data/useDevices';
+import { useSensorReadings } from '@/hooks/data/useSensorReadings'; // Import useSensorReadings
+import { useConsumptionEvents } from '@/hooks/data/useConsumptionEvents'; // Import useConsumptionEvents
+import { Skeleton } from '@/components/ui/skeleton';
+import { ConsumptionEvent, SensorReading, Device } from '@shared/schema'; // Import types
+import { useMemo } from 'react';
+
+// Helper to transform raw consumption events into chart-friendly format for ConsumptionChart
+interface ChartData {
+  name: string; // Day of the week or date
+  [deviceName: string]: number | string; // Dynamic keys for device consumption
+}
+const transformConsumptionData = (events: ConsumptionEvent[], devices: Device[], timeRange: string): ChartData[] => {
+  if (!events || events.length === 0 || !devices || devices.length === 0) {
+    return [];
+  }
+
+  const deviceMap = new Map<number, string>();
+  devices.forEach(device => deviceMap.set(device.id as number, device.name));
+
+  const dailyConsumption = new Map<string, { [deviceName: string]: number }>();
+
+  events.forEach(event => {
+    const date = new Date(event.timestamp);
+    let dayKey: string;
+
+    if (timeRange === 'day') {
+      dayKey = date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+    } else if (timeRange === 'week' || timeRange === 'month') {
+      dayKey = date.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric' });
+    } else { // 'year' or default
+      dayKey = date.toLocaleDateString('es-ES', { month: 'short', day: 'numeric' });
+    }
+
+    if (!dailyConsumption.has(dayKey)) {
+      dailyConsumption.set(dayKey, {});
+    }
+    const consumptionForDay = dailyConsumption.get(dayKey)!;
+    const deviceName = deviceMap.get(event.deviceId) || `Device ${event.deviceId}`;
+
+    if (!consumptionForDay[deviceName]) {
+      consumptionForDay[deviceName] = 0;
+    }
+    consumptionForDay[deviceName] += event.amountGrams;
+  });
+
+  const result: ChartData[] = [];
+  dailyConsumption.forEach((values, dayKey) => {
+    result.push({ name: dayKey, ...values });
+  });
+
+  return result.sort((a,b) => a.name.localeCompare(b.name));
+};
+
+// Helper to transform sensor readings for ActivityChart
+const transformSensorDataForActivityChart = (readings: SensorReading[], timeRange: string): ChartData[] => {
+  if (!readings || readings.length === 0) return [];
+
+  const dailyActivity = new Map<string, number>();
+
+  readings.forEach(reading => {
+    const date = new Date(reading.timestamp);
+    let dayKey: string;
+
+    if (timeRange === 'day') {
+      dayKey = date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+    } else if (timeRange === 'week' || timeRange === 'month') {
+      dayKey = date.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric' });
+    } else { // 'year' or default
+      dayKey = date.toLocaleDateString('es-ES', { month: 'short', day: 'numeric' });
+    }
+
+    // For activity, we can count events or sum a specific value if available
+    // For now, let's just count readings as "activity"
+    if (!dailyActivity.has(dayKey)) {
+      dailyActivity.set(dayKey, 0);
+    }
+    dailyActivity.set(dayKey, dailyActivity.get(dayKey)! + 1);
+  });
+
+  const result: ChartData[] = [];
+  dailyActivity.forEach((value, dayKey) => {
+    result.push({ name: dayKey, Activity: value }); // Assuming 'Activity' is the dataKey
+  });
+
+  return result.sort((a,b) => a.name.localeCompare(b.name));
+};
+
 
 export default function Dashboard() {
   const { data: pets, isLoading: isLoadingPets, isError: isErrorPets } = usePets();
   const { data: devices, isLoading: isLoadingDevices, isError: isErrorDevices } = useDevices();
+  
+  const firstDeviceId = devices && devices.length > 0 ? devices[0].id : undefined;
 
+  const { data: sensorReadings, isLoading: isLoadingSensorReadings, isError: isErrorSensorReadings } = useSensorReadings(firstDeviceId as number);
+  const { data: consumptionEvents, isLoading: isLoadingConsumptionEvents, isError: isErrorConsumptionEvents } = useConsumptionEvents(firstDeviceId as number);
+
+  // Aggregate data for StatWidgets
   const totalActivePets = pets?.length || 0;
-  // Placeholder for these stats until dedicated APIs are implemented
-  const totalMealsToday = "N/A";
-  const averageWaterLevel = "N/A";
+  const totalMealsToday = useMemo(() => {
+    // Simple aggregation: count consumption events from today
+    const today = new Date().toDateString();
+    return consumptionEvents?.filter(event => new Date(event.timestamp).toDateString() === today).length || 0;
+  }, [consumptionEvents]);
+  
+  const averageWaterLevel = useMemo(() => {
+    // Assuming a 'water' sensor type and averaging its last values
+    const waterReadings = sensorReadings?.filter(reading => reading.type === 'water');
+    if (waterReadings && waterReadings.length > 0) {
+      const sum = waterReadings.reduce((acc, curr) => acc + curr.value, 0);
+      return `${(sum / waterReadings.length).toFixed(1)}%`;
+    }
+    return "N/A";
+  }, [sensorReadings]);
+  
+  // Placeholder for alerts
   const pendingAlerts = "N/A";
 
-  if (isLoadingPets || isLoadingDevices) {
+  // Transformed data for charts
+  const timeRange = 'week'; // Default for dashboard charts
+  const consumptionChartData = useMemo(() => transformConsumptionData(consumptionEvents || [], devices || [], timeRange), [consumptionEvents, devices, timeRange]);
+  const activityChartData = useMemo(() => transformSensorDataForActivityChart(sensorReadings || [], timeRange), [sensorReadings, timeRange]);
+
+
+  if (isLoadingPets || isLoadingDevices || isLoadingSensorReadings || isLoadingConsumptionEvents) {
     return (
       <div className="p-6 lg:p-8 space-y-8 max-w-screen-2xl mx-auto">
         <Skeleton className="h-10 w-1/4" />
@@ -39,7 +151,7 @@ export default function Dashboard() {
     );
   }
 
-  if (isErrorPets || isErrorDevices) {
+  if (isErrorPets || isErrorDevices || isErrorSensorReadings || isErrorConsumptionEvents) {
     return (
       <div className="p-6 lg:p-8 space-y-8 max-w-screen-2xl mx-auto text-red-500">
         <h2 className="text-4xl font-bold titulo">Dashboard</h2>
@@ -67,15 +179,15 @@ export default function Dashboard() {
         />
         <StatWidget
           title="Comidas Hoy"
-          value={totalMealsToday}
-          description="Datos no disponibles"
+          value={totalMealsToday.toString()}
+          description="Consumos registrados hoy"
           icon={Fish}
           variant="data"
         />
         <StatWidget
           title="Nivel Promedio Agua"
           value={averageWaterLevel}
-          description="Datos no disponibles"
+          description="Última lectura del sensor"
           icon={Droplets}
           variant="info"
         />
@@ -127,8 +239,8 @@ export default function Dashboard() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <ActivityChart />
-        <ConsumptionChart />
+        <ActivityChart data={activityChartData} />
+        <ConsumptionChart data={consumptionChartData} />
       </div>
 
       <div className="space-y-4">

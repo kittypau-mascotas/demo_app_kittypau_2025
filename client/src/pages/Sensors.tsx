@@ -1,44 +1,100 @@
 import DeviceStatus from '@/components/DeviceStatus';
+import { useDevices } from '@/hooks/data/useDevices'; // Import useDevices
+import { useSensorReadings } from '@/hooks/data/useSensorReadings'; // Import useSensorReadings
+import { Skeleton } from '@/components/ui/skeleton'; // Import Skeleton for loading state
+import { Device, SensorReading } from '@shared/schema'; // Import types
+import { useMemo } from 'react'; // Import useMemo
+
+interface DeviceStatusPropsTransformed {
+  deviceName: string;
+  temperature?: number;
+  humidity?: number;
+  battery?: number;
+  lastUpdate: string;
+}
+
+const transformSensorData = (devices: Device[], allSensorReadings: SensorReading[]): DeviceStatusPropsTransformed[] => {
+  if (!devices || devices.length === 0) return [];
+
+  const deviceLatestReadings: { [deviceId: number]: {
+    temperature?: number,
+    humidity?: number,
+    battery?: number,
+    lastUpdate: Date,
+    [key: string]: any // To allow dynamic properties for sensor types
+  }} = {};
+
+  // Group and find latest reading for each type and device
+  allSensorReadings.forEach(reading => {
+    const deviceId = reading.deviceId as number;
+    const readingTimestamp = new Date(reading.timestamp);
+
+    if (!deviceLatestReadings[deviceId]) {
+      deviceLatestReadings[deviceId] = { lastUpdate: new Date(0) }; // Initialize with a very old date
+    }
+
+    // Update if this reading is newer for its type
+    if (readingTimestamp > deviceLatestReadings[deviceId].lastUpdate) {
+      deviceLatestReadings[deviceId][reading.type] = reading.value;
+      deviceLatestReadings[deviceId].lastUpdate = readingTimestamp;
+    }
+  });
+
+  return devices.map(device => {
+    const latest = deviceLatestReadings[device.id as number];
+    return {
+      deviceName: device.name,
+      temperature: latest?.temperature as number, // Assuming 'temperature' type is mapped
+      humidity: latest?.humidity as number,     // Assuming 'humidity' type is mapped
+      battery: device.batteryLevel,            // Use device's batteryLevel directly if available
+      lastUpdate: latest ? latest.lastUpdate.toLocaleString() : 'N/A',
+    };
+  });
+};
+
 
 export default function Sensors() {
-  //todo: remove mock functionality
-  const mockSensors = [
-    {
-      deviceName: 'Comedero Principal',
-      temperature: 22,
-      humidity: 45,
-      battery: 85,
-      lastUpdate: 'Hace 5 minutos',
-    },
-    {
-      deviceName: 'Arenero Inteligente',
-      temperature: 24,
-      humidity: 50,
-      battery: 60,
-      lastUpdate: 'Hace 1 hora',
-    },
-    {
-      deviceName: 'Bebedero Automático',
-      temperature: 20,
-      battery: 30,
-      lastUpdate: 'Hace 3 horas',
-    },
-    {
-      deviceName: 'Cámara de Vigilancia',
-      temperature: 23,
-      humidity: 42,
-      battery: 90,
-      lastUpdate: 'Hace 2 minutos',
-    },
-  ];
+  const { data: devices, isLoading: isLoadingDevices, isError: isErrorDevices } = useDevices();
+  const firstDeviceId = devices && devices.length > 0 ? devices[0].id : undefined;
+
+  // For this simplified example, we'll fetch all sensor readings for the first device
+  // In a real app, you'd fetch for all devices in the household or specific ones.
+  const { data: sensorReadings, isLoading: isLoadingSensorReadings, isError: isErrorSensorReadings } = useSensorReadings(firstDeviceId as number);
+
+  const transformedSensorData = useMemo(() => transformSensorData(devices || [], sensorReadings || []), [devices, sensorReadings]);
+
+  if (isLoadingDevices || isLoadingSensorReadings) {
+    return (
+      <div className="space-y-6" data-testid="page-sensors">
+        <Skeleton className="h-10 w-1/4" />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <Skeleton className="h-[150px]" />
+          <Skeleton className="h-[150px]" />
+          <Skeleton className="h-[150px]" />
+        </div>
+      </div>
+    );
+  }
+
+  if (isErrorDevices || isErrorSensorReadings) {
+    return (
+      <div className="space-y-6 text-red-500" data-testid="page-sensors">
+        <h1 className="titulo text-3xl">Sensores</h1>
+        <p>Error al cargar los datos de los sensores.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6" data-testid="page-sensors">
       <h1 className="titulo text-3xl">Sensores</h1>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {mockSensors.map((sensor) => (
+        {transformedSensorData.map((sensor) => (
           <DeviceStatus key={sensor.deviceName} {...sensor} />
         ))}
+        {transformedSensorData.length === 0 && (
+          <p className="text-muted-foreground col-span-full text-center">No hay datos de sensores disponibles.</p>
+        )}
       </div>
     </div>
   );

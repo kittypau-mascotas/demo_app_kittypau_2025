@@ -20,99 +20,10 @@ import { db } from "./db";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 
-export interface IStorage {
-  // Operaciones para Usuarios
-  getUser(id: string): Promise<User | undefined>; // Cambiado a string
-  createUser(user: InsertUser): Promise<User | undefined>;
 
-  // Operaciones para Households
-  createHousehold(household: InsertHousehold): Promise<Household | undefined>;
-  getHousehold(id: number): Promise<Household | undefined>;
-  getHouseholds(): Promise<Household[]>;
 
-  // Operaciones para Pets
-  createPet(pet: InsertPet): Promise<Pet | undefined>;
-  getPet(id: number): Promise<Pet | undefined>;
-  getPets(householdId?: number): Promise<Pet[]>;
 
-  // Operaciones para Devices
-  createDevice(device: InsertDevice): Promise<Device | undefined>;
-  getDevice(id: number): Promise<Device | undefined>;
-import {
-  type User,
-  type InsertUser,
-  users,
-  type Household,
-  type InsertHousehold,
-  households,
-  insertHouseholdSchema,
-  type Pet,
-  type InsertPet,
-  pets,
-  insertPetSchema,
-  type Device,
-  type InsertDevice,
-  devices,
-  insertDeviceSchema,
-  type ConsumptionEvent,
-  type InsertConsumptionEvent,
-  consumptionEvents,
-  insertConsumptionEventSchema,
-  type SensorReading,
-  type InsertSensorReading,
-  sensorReadings,
-  insertSensorReadingSchema,
-  type DeviceHealthReport,
-  type InsertDeviceHealthReport,
-  deviceHealthReports,
-  insertDeviceHealthReportSchema,
-  petsToDevices
-} from "../shared/schema";
-import { db } from "./db";
-import { eq, and } from "drizzle-orm"; // Added 'and'
-import { z } from "zod";
 
-export interface IStorage {
-  // Operaciones para Usuarios
-  getUser(id: string): Promise<User | undefined>; // Cambiado a string
-  createUser(user: InsertUser): Promise<User | undefined>;
-
-  // Operaciones para Households
-  createHousehold(household: InsertHousehold): Promise<Household | undefined>;
-  getHousehold(id: number): Promise<Household | undefined>;
-  getHouseholds(): Promise<Household[]>;
-
-  // Operaciones para Pets
-  createPet(pet: InsertPet): Promise<Pet | undefined>;
-  getPet(id: number): Promise<Pet | undefined>;
-  getPets(householdId?: number): Promise<Pet[]>;
-
-  // Operaciones para Devices
-  createDevice(device: InsertDevice): Promise<Device | undefined>;
-  getDevice(id: number): Promise<Device | undefined>;
-  getDevices(householdId?: number): Promise<Device[]>;
-
-  // Operaciones para consumptionEvents
-  createConsumptionEvent(event: InsertConsumptionEvent): Promise<ConsumptionEvent | undefined>;
-  getConsumptionEvent(id: number): Promise<ConsumptionEvent | undefined>;
-  getConsumptionEventsByDevice(deviceId: number): Promise<ConsumptionEvent[]>;
-
-  // Operaciones para sensorReadings
-  createSensorReading(reading: InsertSensorReading): Promise<SensorReading | undefined>;
-  getSensorReading(id: number): Promise<SensorReading | undefined>;
-  getSensorReadingsByDevice(deviceId: number): Promise<SensorReading[]>;
-
-  // Operaciones para deviceHealthReports
-  createDeviceHealthReport(report: InsertDeviceHealthReport): Promise<DeviceHealthReport | undefined>;
-  getDeviceHealthReport(id: number): Promise<DeviceHealthReport | undefined>;
-  getDeviceHealthReportsByDevice(deviceId: number): Promise<DeviceHealthReport[]>;
-
-  // Operaciones para petsToDevices
-  addPetToDevice(petId: number, deviceId: number): Promise<void>;
-  removePetFromDevice(petId: number, deviceId: number): Promise<void>;
-  getDevicesForPet(petId: number): Promise<Device[]>;
-  getPetsForDevice(deviceId: number): Promise<Pet[]>;
-}
 
 export class DrizzleStorage implements IStorage {
   // --- Usuarios ---

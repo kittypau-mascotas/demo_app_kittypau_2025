@@ -24,7 +24,8 @@ import Alerts from '@/pages/Alerts';
 import Settings from '@/pages/Settings';
 import Planes from '@/pages/Planes';
 import Users from '@/pages/Users';
-import { AuthView } from '@neondatabase/neon-js'; // Import AuthView
+import { AuthView } from '@neondatabase/neon-js/auth/react/ui'; // Import AuthView
+
 
 function Router() {
   const [, setLocation] = useLocation(); // Get setLocation for programmatic navigation

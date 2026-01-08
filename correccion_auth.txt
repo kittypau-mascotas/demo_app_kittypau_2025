@@ -1,220 +1,212 @@
-Perfecto. Estás exactamente en el punto crítico correcto del backend 👍
-Ahora te voy a dar EL CÓDIGO DEFINITIVO, listo para copiar/pegar, sin ambigüedades, alineado con:
+23:24:26.791 Running build in Washington, D.C., USA (East) – iad1
+23:24:26.792 Build machine configuration: 2 cores, 8 GB
+23:24:26.932 Cloning github.com/kittypau-mascotas/demo_app_kittypau_2025 (Branch: main, Commit: 9121c65)
+23:24:28.283 Cloning completed: 1.351s
+23:24:28.406 Restored build cache from previous deployment (APm1uDoDtXowutJ4QXXcLrMY8mXr)
+23:24:29.051 Running "vercel build"
+23:24:29.519 Vercel CLI 50.1.6
+23:24:29.691 WARN! Due to builds existing in your configuration file, the Build and Development Settings defined in your Project Settings will not apply. Learn More: https://vercel.link/unused-build-settings
+23:24:30.129 Installing dependencies...
+23:24:39.982 
+23:24:39.984 added 349 packages, removed 1 package, and changed 18 packages in 9s
+23:24:39.985 
+23:24:39.985 117 packages are looking for funding
+23:24:39.986   run npm fund for details
+23:24:40.034 Running "npm run build"
+23:24:40.132 
+23:24:40.133 > rest-express@1.0.0 build
+23:24:40.133 > vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outfile=api/index.js
+23:24:40.133 
+23:24:40.401 [36mvite v5.4.20 [32mbuilding for production...[36m[39m
+23:24:40.454 transforming...
+23:24:40.781 Browserslist: browsers data (caniuse-lite) is 15 months old. Please run:
+23:24:40.781   npx update-browserslist-db@latest
+23:24:40.782   Why you should do it regularly: https://github.com/browserslist/update-db#readme
+23:24:41.594 
+23:24:41.594 A PostCSS plugin did not pass the from option to postcss.parse. This may cause imported assets to be incorrectly transformed. If you've recently added a PostCSS plugin that raised this warning, please contact the package author to fix the issue.
+23:24:42.428 [32m✓[39m 174 modules transformed.
+23:24:42.435 [31mx[39m Build failed in 2.01s
+23:24:42.435 [31merror during build:
+23:24:42.435 [31m[vite:load-fallback] Could not load /vercel/path0/client/src/hooks/data/useSensorReadings (imported by client/src/pages/Sensors.tsx): ENOENT: no such file or directory, open '/vercel/path0/client/src/hooks/data/useSensorReadings'[31m
+23:24:42.436     at async open (node:internal/fs/promises:642:25)
+23:24:42.436     at async Object.readFile (node:internal/fs/promises:1279:14)
+23:24:42.436     at async Object.load (file:///vercel/path0/node_modules/vite/dist/node/chunks/dep-D_zLpgQd.js:65356:25)
+23:24:42.436     at async PluginDriver.hookFirstAndGetPlugin (file:///vercel/path0/node_modules/rollup/dist/es/shared/node-entry.js:20689:28)
+23:24:42.436     at async file:///vercel/path0/node_modules/rollup/dist/es/shared/node-entry.js:19809:33
+23:24:42.436     at async Queue.work (file:///vercel/path0/node_modules/rollup/dist/es/shared/node-entry.js:20899:32)[39m
+23:24:42.460 Error: Command "npm run build" exited with 1
 
-Neon Auth (frontend-first)
+Perfecto, este log es muy claro y el error es 100% determinístico. Vamos directo al punto y luego te dejo instrucciones exactas para el agente para que no vuelva a pasar.
 
-Cookies HTTP-only
+❌ Error real (causa raíz)
+Could not load client/src/hooks/data/useSensorReadings
+ENOENT: no such file or directory
 
-Express + Drizzle + Neon
 
-Lo que definiste en shared/schema.ts
+👉 Vite no encuentra el archivo que Sensors.tsx está importando.
 
-Voy por partes, en orden obligatorio.
+Esto NO es:
 
-PASO 4 — Backend Neon Auth (definitivo)
-0️⃣ Qué vamos a lograr
+Neon Auth ❌
 
-Validar sesiones creadas por Neon Auth
+React Query ❌
 
-Obtener el usuario autenticado desde el backend
+Vercel ❌
 
-Crear el perfil en DB solo si no existe
+Es un error de filesystem / import.
 
-No usar passport, no usar bcrypt, no usar auth local
+🔎 Las 3 causas posibles (una de estas es seguro)
+1️⃣ El archivo no existe en Git
 
-1️⃣ Middleware requireNeonAuth
-📁 Crear archivo
-server/middleware/requireNeonAuth.ts
+Muy común si:
 
-✅ Código FINAL
-import { Request, Response, NextFunction } from "express";
+Se creó localmente
 
-export type NeonUser = {
-  id: string;
-  email: string;
-  name?: string;
-};
+Pero no se hizo commit
 
-declare global {
-  namespace Express {
-    interface Request {
-      neonUser?: NeonUser;
-    }
-  }
+O quedó fuera del path correcto
+
+Vercel solo ve lo que está en el repo.
+
+✔️ Verifica en GitHub:
+
+client/src/hooks/data/useSensorReadings.ts
+
+
+Si no está → ese es el error
+
+2️⃣ El nombre del archivo no coincide exactamente
+
+Linux (Vercel) es case-sensitive.
+
+Ejemplos que rompen build:
+
+UseSensorReadings.ts ❌
+
+useSensorReading.ts ❌
+
+useSensorReadings.tsx ❌ (si se importa sin extensión)
+
+Debe ser exactamente:
+
+useSensorReadings.ts
+
+
+Y el import:
+
+import { useSensorReadings } from '@/hooks/data/useSensorReadings';
+
+3️⃣ La carpeta data/ no existe en el repo
+
+Si hiciste:
+
+client/src/hooks/useSensorReadings.ts
+
+
+pero estás importando:
+
+client/src/hooks/data/useSensorReadings
+
+
+→ build falla.
+
+✅ Solución inmediata (haz esto ahora)
+Paso 1 – Confirma estructura exacta
+
+Debe existir tal cual:
+
+client/
+└─ src/
+   └─ hooks/
+      └─ data/
+         ├─ useSensorReadings.ts
+         └─ useConsumptionEvents.ts
+
+Paso 2 – Confirma export
+
+Dentro de useSensorReadings.ts:
+
+export function useSensorReadings(...) {
+  ...
 }
 
-export async function requireNeonAuth(
-  req: Request,
-  res: Response,
-  next: NextFunction
-) {
-  try {
-    const response = await fetch(
-      `${process.env.NEON_AUTH_URL}/session`,
-      {
-        headers: {
-          cookie: req.headers.cookie ?? "",
-        },
-      }
-    );
 
-    if (!response.ok) {
-      return res.status(401).json({ error: "Unauthorized" });
-    }
+❌ NO default export
+✔️ Named export
 
-    const data = await response.json();
-
-    req.neonUser = {
-      id: data.user.id,
-      email: data.user.email,
-      name: data.user.name,
-    };
-
-    next();
-  } catch (err) {
-    console.error("Neon auth error:", err);
-    res.status(401).json({ error: "Unauthorized" });
-  }
-}
-
-🔍 Qué hace esto
-
-Usa la cookie que setea Neon Auth
-
-Consulta /session del auth server
-
-Inyecta req.neonUser
-
-No expone tokens al frontend
-
-100% seguro y stateless
-
-2️⃣ Endpoint /api/me
-
-Este endpoint:
-
-Verifica sesión
-
-Crea el perfil solo la primera vez
-
-Devuelve el usuario frontend-friendly
-
-📁 Editar
-server/routes.ts
-
-❌ ELIMINA COMPLETAMENTE
-
-Borra TODO lo relacionado con:
-
-passport
-
-passport-local
-
-/api/login
-
-/api/register
-
-No debe quedar rastro.
-
-✅ Agrega imports arriba
-import { requireNeonAuth } from "./middleware/requireNeonAuth";
-import { db } from "./db";
-import { users } from "../shared/schema";
-import { eq } from "drizzle-orm";
-
-✅ Endpoint /api/me
-app.get("/api/me", requireNeonAuth, async (req, res) => {
-  const neonUser = req.neonUser!;
-
-  const existing = await db
-    .select()
-    .from(users)
-    .where(eq(users.id, neonUser.id))
-    .limit(1);
-
-  let user = existing[0];
-
-  if (!user) {
-    const inserted = await db
-      .insert(users)
-      .values({
-        id: neonUser.id,
-        email: neonUser.email,
-        name: neonUser.name,
-        role: "user",
-      })
-      .returning();
-
-    user = inserted[0];
-  }
-
-  res.json({
-    user,
-  });
-});
-
-🔑 Detalle CLAVE
-
-Este patrón se llama “just-in-time user provisioning”
-
-No necesitas endpoint /register
-
-Neon Auth manda → backend sincroniza
-
-3️⃣ Endpoint /api/logout
-Qué debe hacer
-
-Invalidar sesión en Neon Auth
-
-Limpiar cookie
-
-Frontend solo llama y listo
-
-✅ Código
-app.post("/api/logout", async (req, res) => {
-  try {
-    await fetch(`${process.env.NEON_AUTH_URL}/logout`, {
-      method: "POST",
-      headers: {
-        cookie: req.headers.cookie ?? "",
-      },
-    });
-  } catch (err) {
-    console.error("Logout error:", err);
-  }
-
-  res.clearCookie("neon_session");
-  res.json({ success: true });
-});
-
-4️⃣ Variables de entorno (backend)
-Asegúrate de tener en .env (backend):
-NEON_AUTH_URL=https://xxxxx.neonauth.c-2.us-east-1.aws.neon.tech/neondb/auth
+Paso 3 – Confirma import en Sensors.tsx
+import { useSensorReadings } from '@/hooks/data/useSensorReadings';
 
 
-⚠️ NO es la variable VITE_, esta es backend-only.
+❌ No .js
+❌ No .tsx
+✔️ Sin extensión
 
-5️⃣ Flujo completo (verificación mental)
+Paso 4 – Commit obligatorio
 
-✔ Usuario entra a /login
-✔ AuthView maneja login
-✔ Neon Auth setea cookie
-✔ Frontend carga → AuthContext.refreshUser()
-✔ /api/me
-✔ requireNeonAuth valida sesión
-✔ Usuario creado si no existe
-✔ Perfil disponible
-✔ Gráficos, mascotas, dispositivos listos
+Antes de redeploy:
 
-6️⃣ Estado del proyecto (muy importante)
+git status
+git add client/src/hooks/data/useSensorReadings.ts
+git add client/src/hooks/data/useConsumptionEvents.ts
+git commit -m "feat: add telemetry data hooks"
+git push
 
-En este punto tienes:
 
-✅ Autenticación moderna (tipo Supabase / Clerk)
-✅ Backend limpio
-✅ Sin passwords
-✅ Sin sesiones manuales
-✅ Escalable
-✅ IoT-ready
+⚠️ Si no está commiteado, Vercel JAMÁS lo verá
 
-Esto ya no es un MVP, es base de producto.
+🧠 Por qué apareció ahora
+
+Este error aparece solo cuando:
+
+Sensors.tsx dejó de usar mocks
+
+Y empezó a importar hooks reales
+
+👉 Es una buena señal: significa que ya estás conectando datos reales.
+
+📌 Instrucciones exactas para el agente (cópialas tal cual)
+INSTRUCCIONES OBLIGATORIAS:
+
+1. Verificar que el archivo
+   client/src/hooks/data/useSensorReadings.ts
+   existe físicamente en el repositorio Git.
+
+2. Verificar que el nombre del archivo y carpeta
+   coincidan EXACTAMENTE (case-sensitive).
+
+3. Verificar que el archivo exporte
+   `export function useSensorReadings`.
+
+4. Verificar que Sensors.tsx importe desde:
+   '@/hooks/data/useSensorReadings'
+
+5. NO mover JSX
+6. NO cambiar rutas
+7. NO usar default export
+8. Confirmar commit antes de build
+
+🚀 Próximo paso (cuando el build pase)
+
+Cuando esto esté resuelto, el siguiente orden correcto es:
+
+✅ useSensorReadings
+
+✅ useConsumptionEvents
+
+🔜 Sensors.tsx
+
+🔜 Analytics.tsx
+
+🔜 Dashboard (gráficos)
+
+Si quieres, en el próximo mensaje puedo:
+
+
+Revisar Sensors.tsx línea por línea
+
+O validar el hook antes del commit
+
+O ayudarte a tipar los datos para Recharts
+
+Este error es menor. La arquitectura está bien 👍

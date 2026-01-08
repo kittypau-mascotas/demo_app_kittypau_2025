@@ -1,103 +1,51 @@
-Actúa como un arquitecto de software senior especializado en IoT, AWS y sistemas en tiempo real.
+You are a senior full-stack engineer and software architect.
 
-Estoy desarrollando un proyecto llamado **KittyPau**, un sistema IoT para monitoreo de mascotas usando dispositivos ESP32.
+I have an existing React application (already designed and implemented visually).
+The UI includes login, signup, profile, pets, device dashboards and charts.
+All components are already built and MUST NOT be redesigned or duplicated.
 
-Quiero que diseñes y configures TODA la arquitectura usando EXCLUSIVAMENTE:
+Your task is to:
 
-- AWS IoT Core como broker MQTT (con certificados X.509 y mTLS)
-- AWS EC2 como backend Node.js (IoT Bridge)
-- Neon (PostgreSQL) como base de datos
-- Vercel para frontend React + API HTTP/WebSocket
+1. Analyze the entire codebase and identify:
+   - UI components that collect or display data
+   - Forms, inputs, dashboards, charts, profile screens
+   - Components that currently use mock data, local state, or placeholders
 
-NO usar Fly.io, Firebase ni otros proveedores.
+2. For each component, determine:
+   - What database entity it represents
+   - What fields are required
+   - Whether it should be linked to a user, pet, device, or telemetry
 
----
+3. Propose a relational database schema (PostgreSQL) that:
+   - Uses the existing UI as the source of truth
+   - Does NOT invent new features
+   - Models users, pets, devices, and telemetry
+   - Supports authentication via Neon Auth (users already exist in auth.users)
 
-## 🧩 REQUERIMIENTOS FUNCIONALES
+4. Map each UI component to:
+   - A database table
+   - Read / write operations (CRUD)
+   - Required API or server action
 
-### Dispositivo IoT (ESP32)
-- Publica datos vía MQTT (JSON)
-- Usa mTLS con certificados AWS IoT
-- Topics:
-  - `kittypau/{deviceId}/status`
-  - `kittypau/{deviceId}/health`
-  - `kittypau/{deviceId}/data/sensors`
-- Se suscribe a:
-  - `kittypau/{deviceId}/cmnd/set_wifi`
+5. Generate:
+   - SQL table definitions
+   - Minimal backend logic (queries or API handlers)
+   - Frontend data bindings (fetch / mutations)
+   - Without modifying component JSX structure
 
----
+6. Explicit constraints:
+   - DO NOT redesign UI
+   - DO NOT create new components
+   - DO NOT change styling
+   - Only wire existing components to data
+   - Reuse existing state, props, and structure
 
-### AWS IoT Core
-- Crear Things por dispositivo
-- Políticas seguras por deviceId
-- Usar Rules Engine para reenviar mensajes
-- Endpoint: `{iot-endpoint}-ats.iot.{region}.amazonaws.com`
+7. Output format:
+   - Section 1: Component → Data Mapping
+   - Section 2: SQL schema
+   - Section 3: Backend glue code
+   - Section 4: Frontend integration notes
 
----
+Ask for clarification ONLY if something is technically ambiguous.
+Otherwise, proceed with analysis.
 
-### Backend (AWS EC2 – Node.js)
-- Servicio llamado **KittyPau IoT Bridge**
-- Funciones:
-  - Conectarse a AWS IoT Core como cliente MQTT (certificados desde variables de entorno)
-  - Suscribirse a `kittypau/+/data/sensors`
-  - Validar y normalizar datos
-  - Guardar datos históricos en Neon
-  - Emitir datos en tiempo real vía WebSocket
-- Framework sugerido:
-  - Node.js + TypeScript
-  - mqtt.js
-  - ws o socket.io
-  - drizzle ORM o pg
-- Ejecutarse con PM2
-- Puerto 443 (WSS)
-
----
-
-### Base de Datos (Neon PostgreSQL)
-- Esquema sugerido:
-  - households
-  - pets
-  - devices
-  - sensor_readings
-  - device_health
-- Guardar SOLO datos procesados (no ruido)
-- Conexión segura vía DATABASE_URL
-
----
-
-### Frontend (Vercel)
-- React + Vite
-- Mostrar:
-  - Estado del dispositivo (online/offline)
-  - Datos de sensores en tiempo real (WebSocket)
-  - Histórico desde Neon (API HTTP)
-- NO conectarse directo a MQTT
-- Usar WebSocket contra EC2
-- Variables de entorno:
-  - API_URL
-  - WS_URL
-
----
-
-## 🔐 SEGURIDAD
-- Certificados AWS IoT almacenados como variables de entorno (Vercel y EC2)
-- Nunca exponer claves privadas en frontend
-- MQTT solo permitido por deviceId
-- HTTPS/WSS obligatorio
-
----
-
-## 📦 ENTREGABLES QUE QUIERO
-
-1. Diagrama de arquitectura (ASCII o Mermaid)
-2. Flujo de datos paso a paso
-3. Ejemplo de código:
-   - ESP32 (MQTT publish/subscribe)
-   - Node.js IoT Bridge
-4. Estructura de carpetas del backend
-5. Esquema SQL para Neon
-6. Lista exacta de variables de entorno
-7. Buenas prácticas para producción
-8. Errores comunes a evitar
-
-Explica TODO con enfoque práctico, como si fuera un proyecto real en producción.

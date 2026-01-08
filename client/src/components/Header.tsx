@@ -2,7 +2,7 @@ import { Button } from '@/components/ui/button';
 import { Menu, LogOut } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLocation } from 'wouter';
-import logo from '@assets/generated_images/KittyPau_app_logo_icon_4a2bd296.png';
+// import logo from '@assets/generated_images/KittyPau_app_logo_icon_4a2bd296.png'; // No longer needed directly here
 
 interface HeaderProps {
   onMenuToggle: () => void;
@@ -12,10 +12,12 @@ export default function Header({ onMenuToggle }: HeaderProps) {
   const { logout, user } = useAuth();
   const [, setLocation] = useLocation();
 
-  const handleLogout = () => {
-    logout();
-    setLocation('/login');
+  const handleLogout = async () => {
+    await logout(); // Call the new logout function from AuthContext
+    setLocation('/'); // Redirect to the root path, which will show AuthView
   };
+
+  const displayName = user?.name || user?.email || 'User';
 
   return (
     <header className="navbar px-6 py-4 lg:px-8 border-b">
@@ -41,11 +43,11 @@ export default function Header({ onMenuToggle }: HeaderProps) {
           <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-card border border-card-border">
             <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
               <span className="text-sm font-medium text-primary">
-                {user?.username?.charAt(0).toUpperCase()}
+                {displayName.charAt(0).toUpperCase()}
               </span>
             </div>
             <span className="text-sm font-medium text-foreground">
-              {user?.username}
+              {displayName}
             </span>
           </div>
           <Button variant="outline" size="sm" onClick={handleLogout} className="hover-elevate">

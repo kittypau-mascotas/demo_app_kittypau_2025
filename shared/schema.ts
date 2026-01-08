@@ -22,23 +22,19 @@ export type Household = typeof households.$inferSelect;
 
 // Tabla: users (Usuarios)
 export const users = pgTable("users", {
-  id: serial("id").primaryKey(), // Cambiado de varchar a serial para coincidir con la especificación
-  householdId: integer("household_id").notNull().references(() => households.id),
-  name: text("name").notNull(),
-  username: text("username").notNull().unique(),
-  email: text("email").notNull().unique(),
-  password: text("password").notNull(),
-  role: userRoleEnum("role").default('carer').notNull(),
-  lastLogin: timestamp("last_login"),
+  id: text("id").primaryKey(), // Neon Auth user.id (UUID or similar from external auth provider)
+  householdId: integer("household_id").notNull().references(() => households.id), // NEW: User belongs to a household
+  name: text("name"), // User's display name, optional
+  email: text("email").notNull().unique(), // User's email from external auth, must be unique
+  role: userRoleEnum("role").default('carer').notNull(), // Application-specific role
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
-  householdId: true,
+  id: true,
+  householdId: true, // NEW
   name: true,
-  username: true,
   email: true,
-  password: true,
   role: true,
 });
 export type InsertUser = z.infer<typeof insertUserSchema>;

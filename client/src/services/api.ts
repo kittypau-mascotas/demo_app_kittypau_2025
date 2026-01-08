@@ -22,6 +22,54 @@ const apiClient = axios.create({
 // );
 
 export const apiService = {
+  // --- Pet API Calls ---
+  // Protected by requireNeonAuth
+  getPets: async (householdId?: number) => {
+    try {
+      const response = await apiClient.get('/api/pets', {
+        params: householdId ? { householdId } : {},
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching pets:', error);
+      throw error;
+    }
+  },
+
+  getPet: async (id: number) => {
+    try {
+      const response = await apiClient.get(`/api/pets/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching pet with ID ${id}:`, error);
+      throw error;
+    }
+  },
+
+  // --- Device API Calls ---
+  // Protected by requireNeonAuth
+  getDevices: async (householdId?: number) => {
+    try {
+      const response = await apiClient.get('/api/devices', {
+        params: householdId ? { householdId } : {},
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching devices:', error);
+      throw error;
+    }
+  },
+
+  getDevice: async (id: number) => {
+    try {
+      const response = await apiClient.get(`/api/devices/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching device with ID ${id}:`, error);
+      throw error;
+    }
+  },
+
   // Example: Fetch historical sensor data for a device
   getSensorReadings: async (deviceId: string, params?: { startDate?: string; endDate?: string; limit?: number }) => {
     try {

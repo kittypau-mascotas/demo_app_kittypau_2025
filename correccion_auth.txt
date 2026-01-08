@@ -1,0 +1,220 @@
+Perfecto. Estás exactamente en el punto crítico correcto del backend 👍
+Ahora te voy a dar EL CÓDIGO DEFINITIVO, listo para copiar/pegar, sin ambigüedades, alineado con:
+
+Neon Auth (frontend-first)
+
+Cookies HTTP-only
+
+Express + Drizzle + Neon
+
+Lo que definiste en shared/schema.ts
+
+Voy por partes, en orden obligatorio.
+
+PASO 4 — Backend Neon Auth (definitivo)
+0️⃣ Qué vamos a lograr
+
+Validar sesiones creadas por Neon Auth
+
+Obtener el usuario autenticado desde el backend
+
+Crear el perfil en DB solo si no existe
+
+No usar passport, no usar bcrypt, no usar auth local
+
+1️⃣ Middleware requireNeonAuth
+📁 Crear archivo
+server/middleware/requireNeonAuth.ts
+
+✅ Código FINAL
+import { Request, Response, NextFunction } from "express";
+
+export type NeonUser = {
+  id: string;
+  email: string;
+  name?: string;
+};
+
+declare global {
+  namespace Express {
+    interface Request {
+      neonUser?: NeonUser;
+    }
+  }
+}
+
+export async function requireNeonAuth(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const response = await fetch(
+      `${process.env.NEON_AUTH_URL}/session`,
+      {
+        headers: {
+          cookie: req.headers.cookie ?? "",
+        },
+      }
+    );
+
+    if (!response.ok) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const data = await response.json();
+
+    req.neonUser = {
+      id: data.user.id,
+      email: data.user.email,
+      name: data.user.name,
+    };
+
+    next();
+  } catch (err) {
+    console.error("Neon auth error:", err);
+    res.status(401).json({ error: "Unauthorized" });
+  }
+}
+
+🔍 Qué hace esto
+
+Usa la cookie que setea Neon Auth
+
+Consulta /session del auth server
+
+Inyecta req.neonUser
+
+No expone tokens al frontend
+
+100% seguro y stateless
+
+2️⃣ Endpoint /api/me
+
+Este endpoint:
+
+Verifica sesión
+
+Crea el perfil solo la primera vez
+
+Devuelve el usuario frontend-friendly
+
+📁 Editar
+server/routes.ts
+
+❌ ELIMINA COMPLETAMENTE
+
+Borra TODO lo relacionado con:
+
+passport
+
+passport-local
+
+/api/login
+
+/api/register
+
+No debe quedar rastro.
+
+✅ Agrega imports arriba
+import { requireNeonAuth } from "./middleware/requireNeonAuth";
+import { db } from "./db";
+import { users } from "../shared/schema";
+import { eq } from "drizzle-orm";
+
+✅ Endpoint /api/me
+app.get("/api/me", requireNeonAuth, async (req, res) => {
+  const neonUser = req.neonUser!;
+
+  const existing = await db
+    .select()
+    .from(users)
+    .where(eq(users.id, neonUser.id))
+    .limit(1);
+
+  let user = existing[0];
+
+  if (!user) {
+    const inserted = await db
+      .insert(users)
+      .values({
+        id: neonUser.id,
+        email: neonUser.email,
+        name: neonUser.name,
+        role: "user",
+      })
+      .returning();
+
+    user = inserted[0];
+  }
+
+  res.json({
+    user,
+  });
+});
+
+🔑 Detalle CLAVE
+
+Este patrón se llama “just-in-time user provisioning”
+
+No necesitas endpoint /register
+
+Neon Auth manda → backend sincroniza
+
+3️⃣ Endpoint /api/logout
+Qué debe hacer
+
+Invalidar sesión en Neon Auth
+
+Limpiar cookie
+
+Frontend solo llama y listo
+
+✅ Código
+app.post("/api/logout", async (req, res) => {
+  try {
+    await fetch(`${process.env.NEON_AUTH_URL}/logout`, {
+      method: "POST",
+      headers: {
+        cookie: req.headers.cookie ?? "",
+      },
+    });
+  } catch (err) {
+    console.error("Logout error:", err);
+  }
+
+  res.clearCookie("neon_session");
+  res.json({ success: true });
+});
+
+4️⃣ Variables de entorno (backend)
+Asegúrate de tener en .env (backend):
+NEON_AUTH_URL=https://xxxxx.neonauth.c-2.us-east-1.aws.neon.tech/neondb/auth
+
+
+⚠️ NO es la variable VITE_, esta es backend-only.
+
+5️⃣ Flujo completo (verificación mental)
+
+✔ Usuario entra a /login
+✔ AuthView maneja login
+✔ Neon Auth setea cookie
+✔ Frontend carga → AuthContext.refreshUser()
+✔ /api/me
+✔ requireNeonAuth valida sesión
+✔ Usuario creado si no existe
+✔ Perfil disponible
+✔ Gráficos, mascotas, dispositivos listos
+
+6️⃣ Estado del proyecto (muy importante)
+
+En este punto tienes:
+
+✅ Autenticación moderna (tipo Supabase / Clerk)
+✅ Backend limpio
+✅ Sin passwords
+✅ Sin sesiones manuales
+✅ Escalable
+✅ IoT-ready
+
+Esto ya no es un MVP, es base de producto.

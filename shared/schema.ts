@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, serial, text, varchar, timestamp, integer, date, real, pgEnum, primaryKey, numeric, jsonb, uuid } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, varchar, timestamp, integer, date, real, pgEnum, primaryKey, numeric, jsonb, uuid, index } from "drizzle-orm/pg-core";
 
 // --- Enums ---
 // Corresponds to: CREATE TYPE device_event_type AS ENUM (...)
@@ -32,6 +32,10 @@ export const devices = pgTable("devices", {
   status: varchar("status", { length: 50 }).default('offline'),
   lastSeen: timestamp("last_seen", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+}, (table) => {
+  return {
+    userIdx: index("devices_user_id_idx").on(table.userId),
+  };
 });
 
 // Tabla de mascotas (pets)
@@ -44,6 +48,10 @@ export const pets = pgTable("pets", {
   breed: varchar("breed", { length: 100 }),
   birthDate: date("birth_date"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+}, (table) => {
+  return {
+    userIdx: index("pets_user_id_idx").on(table.userId),
+  };
 });
 
 // Tabla de eventos de dispositivo (device_events)
@@ -53,6 +61,11 @@ export const deviceEvents = pgTable("device_events", {
   eventType: deviceEventTypeEnum("event_type").notNull(),
   payload: jsonb("payload"),
   ts: timestamp("ts", { withTimezone: true }).defaultNow(),
+}, (table) => {
+  return {
+    deviceIdIdx: index("events_device_id_idx").on(table.deviceId),
+    timestampIdx: index("events_timestamp_idx").on(table.ts),
+  };
 });
 
 // Tabla de lecturas de sensores (sensor_readings)

@@ -21,6 +21,22 @@ export const apiClient = axios.create({
 //   (error) => Promise.reject(error)
 // );
 
+// Add a response interceptor to handle 401 errors globally
+apiClient.interceptors.response.use(
+  (response) => response, // Pass through successful responses
+  (error) => {
+    // Check if the error is a 401 Unauthorized
+    if (error.response && error.response.status === 401) {
+      // Redirect to the login page
+      // This is a simple way to handle session expiration.
+      // It forces the user to re-authenticate.
+      window.location.href = '/login';
+    }
+    // For all other errors, just reject the promise
+    return Promise.reject(error);
+  }
+);
+
 export const apiService = {
   // --- Pet API Calls ---
   // Protected by requireNeonAuth

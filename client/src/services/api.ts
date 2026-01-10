@@ -7,112 +7,91 @@ export const apiClient = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true, // NECESARIO para Neon Auth (cookies)
 });
 
-// You can add request interceptors for auth tokens if needed
-// apiClient.interceptors.request.use(
-//   (config) => {
-//     const token = localStorage.getItem('authToken'); // Or wherever you store your token
-//     if (token) {
-//       config.headers.Authorization = `Bearer ${token}`;
-//     }
-//     return config;
-//   },
-//   (error) => Promise.reject(error)
-// );
-
-// Add a response interceptor to handle 401 errors globally
+// Manejo global de 401 (sesión expirada)
 apiClient.interceptors.response.use(
-  (response) => response, // Pass through successful responses
+  (response) => response,
   (error) => {
-    // Check if the error is a 401 Unauthorized
-    if (error.response && error.response.status === 401) {
-      // Redirect to the login page
-      // This is a simple way to handle session expiration.
-      // It forces the user to re-authenticate.
+    if (error.response?.status === 401) {
+      console.warn('Sesión expirada. Redirigiendo a login.');
       window.location.href = '/login';
     }
-    // For all other errors, just reject the promise
     return Promise.reject(error);
   }
 );
 
 export const apiService = {
-  // --- Pet API Calls ---
-  // Protected by requireNeonAuth
-  getPets: async (householdId?: number) => {
-    try {
-      const response = await apiClient.get('/api/pets', {
-        params: householdId ? { householdId } : {},
-      });
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching pets:', error);
-      throw error;
-    }
+  /* ======================
+     🐾 PETS
+     ====================== */
+  getPets: async () => {
+    const { data } = await apiClient.get('/api/pets');
+    return data;
   },
 
   getPet: async (id: number) => {
-    try {
-      const response = await apiClient.get(`/api/pets/${id}`);
-      return response.data;
-    } catch (error) {
-      console.error(`Error fetching pet with ID ${id}:`, error);
-      throw error;
-    }
+    const { data } = await apiClient.get(`/api/pets/${id}`);
+    return data;
   },
 
-  // --- Device API Calls ---
-  // Protected by requireNeonAuth
-  getDevices: async (householdId?: number) => {
-    try {
-      const response = await apiClient.get('/api/devices', {
-        params: householdId ? { householdId } : {},
-      });
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching devices:', error);
-      throw error;
-    }
+  /* ======================
+     📟 DEVICES
+     ====================== */
+  getDevices: async () => {
+    const { data } = await apiClient.get('/api/devices');
+    return data;
   },
 
   getDevice: async (id: number) => {
+    const { data } = await apiClient.get(`/api/devices/${id}`);
+    return data;
+  },
+
+  /* ======================
+     📡 IOT – SENSOR READINGS
+     ====================== */
+  getSensorReadings: async (
+    deviceId: string,
+    params?: {
+      start_date?: string;
+      end_date?: string;
+      limit?: number;
+    }
+  ) => {
     try {
-      const response = await apiClient.get(`/api/devices/${id}`);
-      return response.data;
+      const { data } = await apiClient.get(
+        `/api/devices/${deviceId}/readings`,
+        { params }
+      );
+      return data;
     } catch (error) {
-      console.error(`Error fetching device with ID ${id}:`, error);
+      console.error('[API] Error fetching sensor readings', error);
       throw error;
     }
   },
 
-  // --- Telemetry API Calls ---
-  // Protected by requireNeonAuth
-  getSensorReadings: async (deviceId: number, params?: { startDate?: string; endDate?: string; limit?: number }) => {
+  /* ======================
+     ⚡ IOT – EVENTS
+     ====================== */
+  getDeviceEvents: async (
+    deviceId: string,
+    params?: {
+      start_date?: string;
+      end_date?: string;
+      limit?: number;
+    }
+  ) => {
     try {
-      const response = await apiClient.get('/api/sensor-readings', {
-        params: { deviceId, ...params },
-      });
-      return response.data;
+      const { data } = await apiClient.get(
+        `/api/devices/${deviceId}/events`,
+        { params }
+      );
+      return data;
     } catch (error) {
-      console.error('Error fetching sensor readings:', error);
+      console.error('[API] Error fetching device events', error);
       throw error;
     }
   },
-
-  getConsumptionEvents: async (deviceId: number, params?: { startDate?: string; endDate?: string; limit?: number }) => {
-    try {
-      const response = await apiClient.get('/api/consumption-events', {
-        params: { deviceId, ...params },
-      });
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching consumption events:', error);
-      throw error;
-    }
-  },
-
-  // Add more API calls as needed
-  // getUserProfile: async (userId: string) => { /* ... */ },
-  // updateDeviceConfig: async (deviceId: string, config: object) => { /* ... */ },
 };

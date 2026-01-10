@@ -1,8 +1,10 @@
+import 'dotenv/config';
+
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { initializeMqttClient } from "./mqtt";
-import { initializeWebSocketServer, broadcast } from "./websocket"; // Import WebSocket
-import * as http from 'http'; // Import http module for server instance
+import { initializeWebSocketServer, broadcast } from "./websocket";
+import * as http from 'http';// Import http module for server instance
 
 const app = express();
 

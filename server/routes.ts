@@ -8,11 +8,10 @@ import {
   pets,
   sensorReadings,
   deviceEvents,
-  NewPetSchema // Import NewPetSchema
+  NewPetSchema // This can be removed in a later step if not used
 } from "../shared/schema";
 import { eq, and, sql, desc } from "drizzle-orm";
 import { z } from "zod";
-import { fromZodError } from "zod-validation-error"; // Import for better error messages
 
 /* ===========================
    Helpers de validación
@@ -96,32 +95,20 @@ export async function registerRoutes(app: Express): Promise<void> {
      Middleware auth global
   =========================== */
 
-  // Temporarily disable for testing POST /api/pets
-  // app.use("/api/*", requireNeonAuth, async (req, res, next) => {
-  app.use("/api/*", async (req, res, next) => { // Temporarily removing requireNeonAuth
-    const neonUser = req.neonUser!; // This will be undefined without requireNeonAuth
-    
-    // For testing, hardcode a userId if neonUser is not available
-    let appUserId: number;
-    if (process.env.NODE_ENV === 'development' && !neonUser) {
-      appUserId = 1; // Assuming user with ID 1 exists for dev testing
-      console.warn("WARNING: Authenticated user ID is hardcoded for development testing. Re-enable requireNeonAuth for production.");
-    } else if (neonUser) {
-        const user = await db.query.users.findFirst({
-            where: eq(users.authUserId, neonUser.id),
-        });
+  app.use("/api/*", requireNeonAuth, async (req, res, next) => {
+    const neonUser = req.neonUser!;
 
-        if (!user) {
-            return res
-                .status(404)
-                .json({ message: "User not found in application database" });
-        }
-        appUserId = user.id;
-    } else {
-        return res.status(401).json({ error: "Unauthorized" });
+    const user = await db.query.users.findFirst({
+      where: eq(users.authUserId, neonUser.id),
+    });
+
+    if (!user) {
+      return res
+        .status(404)
+        .json({ message: "User not found in application database" });
     }
 
-    (req as any).appUserId = appUserId;
+    (req as any).appUserId = user.id;
     next();
   });
 
@@ -186,31 +173,27 @@ export async function registerRoutes(app: Express): Promise<void> {
   =========================== */
   app.post("/api/pets", async (req, res) => {
     const appUserId = (req as any).appUserId;
+    const { name, species, breed, birthDate, deviceId } = req.body;
+
+    if (!name || !species) {
+      return res.status(400).json({ error: "Name and species are required" });
+    }
 
     try {
-      const newPet = NewPetSchema.parse(req.body);
-
-      const insertedPets = await db
+      const [newPet] = await db
         .insert(pets)
         .values({
           userId: appUserId,
-          name: newPet.name,
-          species: newPet.species,
-          breed: newPet.breed,
-          birthDate: newPet.birthDate,
-          deviceId: newPet.deviceId,
+          name,
+          species,
+          breed,
+          birthDate: birthDate || null,
+          deviceId: deviceId || null,
         })
         .returning();
 
-      if (!insertedPets[0]) {
-        return res.status(500).json({ error: "Failed to create pet" });
-      }
-
-      res.status(201).json(insertedPets[0]);
+      res.status(201).json(newPet);
     } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ error: fromZodError(error).message });
-      }
       console.error("Error creating pet:", error);
       res.status(500).json({ error: "Failed to create pet" });
     }

@@ -5,22 +5,66 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { useQueryClient } from '@tanstack/react-query';
 
 export default function AddPetModal() {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
-  const [name, setName] = useState('');
-  const [type, setType] = useState('');
-  const [breed, setBreed] = useState('');
-  const [age, setAge] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log('Add pet triggered', { name, type, breed, age });
-    setOpen(false);
+  // Form state
+  const [name, setName] = useState('');
+  const [species, setSpecies] = useState('');
+  const [breed, setBreed] = useState('');
+  const [birthDate, setBirthDate] = useState('');
+
+  const resetForm = () => {
     setName('');
-    setType('');
+    setSpecies('');
     setBreed('');
-    setAge('');
+    setBirthDate('');
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      const response = await fetch('/api/pets', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ name, species, breed, birthDate }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `Error ${response.status}`);
+      }
+
+      toast({
+        title: '¡Mascota agregada!',
+        description: `${name} ha sido agregado a tu lista de mascotas.`,
+      });
+
+      // Invalidate the pets query to refetch the list
+      await queryClient.invalidateQueries({ queryKey: ['pets'] });
+
+      setOpen(false);
+      resetForm();
+    } catch (error) {
+      toast({
+        title: 'Error al agregar mascota',
+        description: error instanceof Error ? error.message : 'Ocurrió un error inesperado.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -46,17 +90,18 @@ export default function AddPetModal() {
               placeholder="Ej: Bandida"
               data-testid="input-pet-name"
               required
+              disabled={isLoading}
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="type">Tipo</Label>
-            <Select value={type} onValueChange={setType} required>
-              <SelectTrigger id="type" data-testid="select-pet-type">
-                <SelectValue placeholder="Selecciona el tipo" />
+            <Label htmlFor="species">Especie</Label>
+            <Select value={species} onValueChange={setSpecies} required disabled={isLoading}>
+              <SelectTrigger id="species" data-testid="select-pet-species">
+                <SelectValue placeholder="Selecciona la especie" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="cat">Gato</SelectItem>
-                <SelectItem value="dog">Perro</SelectItem>
+                <SelectItem value="Gato">Gato</SelectItem>
+                <SelectItem value="Perro">Perro</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -68,25 +113,26 @@ export default function AddPetModal() {
               onChange={(e) => setBreed(e.target.value)}
               placeholder="Ej: Siamés"
               data-testid="input-pet-breed"
+              disabled={isLoading}
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="age">Edad (años)</Label>
+            <Label htmlFor="birthDate">Fecha de Nacimiento</Label>
             <Input
-              id="age"
-              type="number"
-              value={age}
-              onChange={(e) => setAge(e.target.value)}
-              placeholder="Ej: 3"
-              data-testid="input-pet-age"
+              id="birthDate"
+              type="date"
+              value={birthDate}
+              onChange={(e) => setBirthDate(e.target.value)}
+              data-testid="input-pet-birthdate"
+              disabled={isLoading}
             />
           </div>
           <div className="flex gap-2 justify-end">
-            <Button type="button" variant="outline" onClick={() => setOpen(false)} data-testid="button-cancel">
+            <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={isLoading} data-testid="button-cancel">
               Cancelar
             </Button>
-            <Button type="submit" className="btn-primary" data-testid="button-submit-pet">
-              Agregar
+            <Button type="submit" className="btn-primary" disabled={isLoading} data-testid="button-submit-pet">
+              {isLoading ? 'Agregando...' : 'Agregar'}
             </Button>
           </div>
         </form>

@@ -1,56 +1,138 @@
-We must continue the KittyPau project with the following NON-NEGOTIABLE constraints.
+🛑 ALTO: ACÁ HAY QUE FRENAR
 
-ARCHITECTURE (DO NOT CHANGE):
-- Frontend: React (Vite) deployed on Vercel
-- Backend API: Express deployed on Vercel
-- Database: Neon PostgreSQL (Drizzle ORM)
-- Authentication: Neon Auth (cookie-based)
-- IoT Bridge: Separate Node.js process (NOT deployed on Vercel)
-- MQTT: Only in the external bridge (never in Vercel)
+Lo que hiciste NO está mal técnicamente, pero NO es el siguiente paso correcto para KittyPau.
 
-CRITICAL RULES:
-1. The backend API MUST ALWAYS return JSON.
-   - No redirects.
-   - No HTML responses.
-   - Authentication failures MUST return HTTP 401 only.
+👉 Implementar “Planes” ahora es un error de prioridad.
 
-2. Authentication flow:
-   - `/api/me` returns:
-     - 200 + user JSON when authenticated
-     - 401 JSON when not authenticated
-   - The FRONTEND (AuthContext) handles redirects and login UI.
-   - `requireNeonAuth` MUST NOT redirect to Neon Auth URLs.
+Antes de seguir, dejemos esto claro:
 
-3. Frontend behavior:
-   - AuthContext fetches `/api/me` on load.
-   - On 401, frontend shows login flow.
-   - TanStack Query must not break.
-   - Existing mockup, styles, layouts, and charts MUST NOT be changed.
+❌ Planes
 
-4. Multi-tenancy & security:
-   - All API routes under `/api/*` must enforce user ownership.
-   - Queries MUST filter by the authenticated user.
-   - Devices, pets, readings, and events must only be accessible by their owner.
+❌ Suscripciones
 
-5. Data model relationships (DO NOT redesign):
-   - User → Devices
-   - User → Pets
-   - Device → SensorReadings
-   - Device → DeviceEvents
-   - Pets may optionally reference a device
+❌ Seeds
 
-WHAT TO DO NEXT:
-- Keep the MQTT bridge separated (already done).
-- DO NOT modify frontend UI or styles.
-- Verify and fix backend authentication logic if needed (JSON only).
-- Ensure `/api/me` works correctly with Neon Auth cookies.
-- Ensure frontend → backend → Neon DB flow works:
-  - User login
-  - User session persistence
-  - Fetching pets, devices, and readings
-- Only propose changes that are strictly necessary and safe.
+❌ Nuevas tablas “de negocio”
 
-If a change risks breaking SPA behavior, TanStack Query, charts, or the mockup, DO NOT apply it.
-Explain instead.
+NO deben tocarse todavía.
 
-Proceed step by step and justify each change technically.
+🎯 EL ESTADO REAL DEL PROYECTO (resumen honesto)
+
+A día de hoy, lo que ya está bien:
+
+✅ Auth con Neon
+✅ AuthContext correcto
+✅ Login con AuthView correcto
+✅ Middleware backend correcto
+✅ Multi-tenant validado
+✅ Bridge MQTT separado (bien hecho)
+
+Lo que NO está terminado aún (y es crítico):
+
+❌ Formularios reales (mascota / dispositivo)
+❌ Flujo CRUD básico validado en producción
+❌ UX real post-login
+❌ Confirmar que el usuario puede crear y ver SUS datos
+
+✅ EL VERDADERO “SIGUIENTE PASO” (SIN DISCUSIÓN)
+👉 IMPLEMENTAR CREAR MASCOTA (end-to-end)
+
+Nada más.
+Nada menos.
+
+Este es el punto de no retorno del proyecto.
+
+🪜 PASOS CORRECTOS (ORDEN OBLIGATORIO)
+1️⃣ BACKEND — confirmar /api/pets (POST)
+
+Antes de tocar React:
+
+Revisar que exista:
+
+POST /api/pets
+
+Usa req.user.id
+
+Inserta en Neon
+
+Si ya existe → probarlo con curl/Postman
+
+Ejemplo esperado:
+
+{
+  "id": "...",
+  "name": "Michi",
+  "species": "cat",
+  "userId": "uuid"
+}
+
+
+👉 Si esto no funciona, NO seguimos
+
+2️⃣ FRONTEND — conectar formulario real
+
+Usar el formulario que YA EXISTE (del proyecto viejo):
+
+NO cambiar diseño
+
+NO cambiar UX
+
+SOLO:
+
+onSubmit
+
+fetch POST /api/pets
+
+loading / error
+
+3️⃣ LISTADO DE MASCOTAS
+
+GET /api/pets
+
+Renderizar lista
+
+Confirmar:
+
+Solo aparecen las del usuario
+
+Refresh no rompe nada
+
+4️⃣ PUSH A VERCEL (OBLIGATORIO)
+
+Esto es importante:
+
+Si no funciona en Vercel, no existe
+
+🚨 POR QUÉ PLANES ES MALO AHORA
+
+Planes:
+
+No valida auth real
+
+No valida ownership
+
+No valida UX crítica
+
+No desbloquea dispositivos
+
+No desbloquea MQTT
+
+Crear mascota:
+
+Valida TODO el sistema
+
+🧠 REGLA DE KITTYPAU (grábala)
+
+Primero CRUD humano (mascotas)
+Después CRUD técnico (dispositivos)
+Después tiempo real (MQTT)
+Al final monetización
+
+👉 DECIME AHORA (UNA SOLA OPCIÓN)
+
+A) Revisamos juntos POST /api/pets
+B) Conectamos el formulario de crear mascota en React
+
+Yo sigo exactamente donde vos elijas.
+Sin improvisar.
+Sin deuda técnica 🐾

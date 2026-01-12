@@ -1,5 +1,7 @@
 import { sql } from "drizzle-orm";
 import { pgTable, serial, text, varchar, timestamp, integer, date, real, pgEnum, primaryKey, numeric, jsonb, uuid, index } from "drizzle-orm/pg-core";
+import { createInsertSchema, createSelectSchema } from "drizzle-zod";
+import { z } from "zod";
 
 // --- Enums ---
 // Corresponds to: CREATE TYPE device_event_type AS ENUM (...)
@@ -83,6 +85,32 @@ export const sensorReadings = pgTable("sensor_readings", {
   };
 });
 
-// Nota: No se exportan 'Insert' types con Zod porque no es un requisito inmediato
-// y el schema anterior era complejo. Se puede añadir `drizzle-zod` si se necesita
-// para la validación de la API.
+// Tabla de planes (plans)
+export const plans = pgTable("plans", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 50 }).notNull().unique(),
+  price: varchar("price", { length: 20 }).notNull(),
+  period: varchar("period", { length: 20 }).notNull(),
+  description: text("description"),
+  features: jsonb("features").$type<string[]>(),
+});
+
+// --- Zod Schemas for API Validation ---
+export const insertPetSchema = createInsertSchema(pets).omit({
+  id: true,
+  userId: true,
+  createdAt: true,
+});
+export type InsertPet = z.infer<typeof insertPetSchema>;
+
+export const selectPetSchema = createSelectSchema(pets);
+export type SelectPet = z.infer<typeof selectPetSchema>;
+
+// Schema for the request body when creating a new pet
+export const NewPetSchema = z.object({
+  name: z.string().min(1, "El nombre de la mascota es requerido"),
+  species: z.string().min(1, "La especie de la mascota es requerida"),
+  breed: z.string().optional(),
+  birthDate: z.string().optional(), // ISO 8601 string
+  deviceId: z.number().optional(),
+});

@@ -2,8 +2,7 @@ import 'dotenv/config';
 
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
-import { initializeMqttClient } from "./mqtt";
-import { initializeWebSocketServer, broadcast } from "./websocket";
+import { initializeWebSocketServer } from "./websocket";
 import * as http from 'http';// Import http module for server instance
 
 const app = express();
@@ -63,8 +62,6 @@ async function startServer() {
     console.log(`Servidor Express escuchando en el puerto ${PORT}`);
     // Initialize WebSocket server using the same HTTP server
     initializeWebSocketServer(httpServer);
-    // Initialize the MQTT client, passing the broadcast function from WebSocket
-    initializeMqttClient(broadcast);
   });
 }
 
@@ -84,4 +81,3 @@ app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
 });
 
 export default app;
-

@@ -1,20 +1,39 @@
+import 'dotenv/config';
 import * as mqtt from 'mqtt';
 import { db } from './db';
 import { devices, deviceEvents, sensorReadings } from '../shared/schema';
 import { eq } from 'drizzle-orm';
-import {
-  deviceDataPayloadSchema,
-  deviceStatusPayloadSchema,
-  DeviceDataPayload,
-  DeviceStatusPayload
-} from './mqtt-schemas';
+import { z } from 'zod';
 import * as fs from 'fs';
 import * as path from 'path';
 
-// Placeholder for WebSocket broadcast function if needed in the future
-type WebSocketBroadcast = (topic: string, message: any) => void;
+// --- MQTT Schemas ---
+export const deviceStatusPayloadSchema = z.object({
+  status: z.enum([
+    'online',
+    'offline',
+    'reboot',
+    'error',
+    'low_battery',
+    'sensor_error'
+  ]),
+});
 
-export function initializeMqttClient(broadcast: WebSocketBroadcast) {
+export type DeviceStatusPayload = z.infer<typeof deviceStatusPayloadSchema>;
+
+export const deviceDataPayloadSchema = z.object({
+  ts: z.string().datetime().optional(), // ISO 8601 format
+  temp: z.number().optional(),
+  hum: z.number().optional(),
+  light: z.number().optional(),
+  weight: z.number().optional(),
+});
+
+export type DeviceDataPayload = z.infer<typeof deviceDataPayloadSchema>;
+
+// --- MQTT Client ---
+
+function initializeMqttClient() {
   const AWS_IOT_ENDPOINT = process.env.AWS_IOT_ENDPOINT;
 
   if (!AWS_IOT_ENDPOINT) {
@@ -26,11 +45,9 @@ export function initializeMqttClient(broadcast: WebSocketBroadcast) {
   let client;
   
   if (AWS_IOT_ENDPOINT.startsWith('mqtt://')) {
-    // Connect to a public/unsecured broker (FOR DEV ONLY)
     console.warn(`Connecting to an unsecured MQTT broker at ${AWS_IOT_ENDPOINT}. THIS IS FOR DEVELOPMENT ONLY!`);
     client = mqtt.connect(AWS_IOT_ENDPOINT);
   } else {
-    // Connect to AWS IoT Core using mTLS
     const PRIVATE_KEY_PATH = process.env.AWS_IOT_PRIVATE_KEY_PATH;
     const CERTIFICATE_PATH = process.env.AWS_IOT_CERT_PATH;
     const ROOT_CA_PATH = process.env.AWS_IOT_ROOT_CA_PATH;
@@ -53,14 +70,13 @@ export function initializeMqttClient(broadcast: WebSocketBroadcast) {
     client = mqtt.connect(clientOptions);
   }
 
-  setupMqttEventHandlers(client, broadcast);
+  setupMqttEventHandlers(client);
 }
 
-function setupMqttEventHandlers(client: mqtt.MqttClient, broadcast: WebSocketBroadcast) {
+function setupMqttEventHandlers(client: mqtt.MqttClient) {
   client.on('connect', () => {
     console.log(`Conectado al broker MQTT: ${client.options.host}`);
     
-    // Subscribe to the new consolidated topics
     const topics = ['kittypau/+/data', 'kittypau/+/status'];
     client.subscribe(topics, { qos: 1 }, (err, granted) => {
       if (err) {
@@ -74,7 +90,7 @@ function setupMqttEventHandlers(client: mqtt.MqttClient, broadcast: WebSocketBro
   });
 
   client.on('message', (topic, message) => {
-    handleMqttMessage(topic, message, broadcast);
+    handleMqttMessage(topic, message);
   });
 
   client.on('error', (err) => console.error('Error en el cliente MQTT:', err));
@@ -82,7 +98,7 @@ function setupMqttEventHandlers(client: mqtt.MqttClient, broadcast: WebSocketBro
   client.on('reconnect', () => console.log('Intentando reconectar al broker MQTT...'));
 }
 
-async function handleMqttMessage(topic: string, message: Buffer, broadcast: WebSocketBroadcast) {
+async function handleMqttMessage(topic: string, message: Buffer) {
   try {
     const messageString = message.toString();
     const rawPayload = JSON.parse(messageString);
@@ -95,9 +111,9 @@ async function handleMqttMessage(topic: string, message: Buffer, broadcast: WebS
     }
 
     if (topic.endsWith('/data')) {
-      await handleDeviceData(deviceId, rawPayload, broadcast);
+      await handleDeviceData(deviceId, rawPayload);
     } else if (topic.endsWith('/status')) {
-      await handleDeviceStatus(deviceId, rawPayload, broadcast);
+      await handleDeviceStatus(deviceId, rawPayload);
     } else {
       console.log(`Mensaje recibido en tópico no manejado ${topic}:`, rawPayload);
     }
@@ -107,7 +123,7 @@ async function handleMqttMessage(topic: string, message: Buffer, broadcast: WebS
   }
 }
 
-async function handleDeviceData(deviceIdStr: string, rawPayload: any, broadcast: WebSocketBroadcast) {
+async function handleDeviceData(deviceIdStr: string, rawPayload: any) {
   try {
     const payload = deviceDataPayloadSchema.parse(rawPayload);
     console.log(`[DATA] de ${deviceIdStr}:`, payload);
@@ -121,33 +137,29 @@ async function handleDeviceData(deviceIdStr: string, rawPayload: any, broadcast:
       weightGrams: payload.weight,
     });
 
-    // Update the last_seen status for the device to show it's active
     await db.update(devices)
       .set({ lastSeen: new Date() })
       .where(eq(devices.deviceId, deviceIdStr));
       
     console.log(`-> Lectura de sensor para ${deviceIdStr} guardada.`);
-    broadcast(`sensorData/${deviceIdStr}`, payload);
 
   } catch (error) {
     console.error(`Error de validación o DB en datos de sensor para ${deviceIdStr}:`, error);
   }
 }
 
-async function handleDeviceStatus(deviceIdStr: string, rawPayload: any, broadcast: WebSocketBroadcast) {
+async function handleDeviceStatus(deviceIdStr: string, rawPayload: any) {
   try {
     const payload = deviceStatusPayloadSchema.parse(rawPayload);
     console.log(`[STATUS] de ${deviceIdStr}:`, payload);
     const now = new Date();
 
-    // 1. Insert the event into the event log (append-only history)
     await db.insert(deviceEvents).values({
       deviceId: deviceIdStr,
       eventType: payload.status,
       ts: now,
     });
     
-    // 2. Update the device's main status (source of truth for current state)
     await db.update(devices)
       .set({
         status: payload.status,
@@ -156,9 +168,16 @@ async function handleDeviceStatus(deviceIdStr: string, rawPayload: any, broadcas
       .where(eq(devices.deviceId, deviceIdStr));
       
     console.log(`-> Evento '${payload.status}' para ${deviceIdStr} guardado y estado actualizado.`);
-    broadcast(`deviceStatus/${deviceIdStr}`, payload);
       
   } catch (error) {
     console.error(`Error de validación o DB en estado de dispositivo para ${deviceIdStr}:`, error);
   }
 }
+
+// --- Main function ---
+function main() {
+    console.log('Iniciando Bridge MQTT...');
+    initializeMqttClient();
+}
+
+main();

@@ -15,8 +15,8 @@ apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      console.warn('Sesión expirada. Redirigiendo a login.');
-      window.location.href = '/login';
+      console.warn('Sesión expirada. Recargando la página.');
+      window.location.reload();
     }
     return Promise.reject(error);
   }
@@ -31,21 +31,11 @@ export const apiService = {
     return data;
   },
 
-  getPet: async (id: number) => {
-    const { data } = await apiClient.get(`/api/pets/${id}`);
-    return data;
-  },
-
   /* ======================
      📟 DEVICES
      ====================== */
   getDevices: async () => {
     const { data } = await apiClient.get('/api/devices');
-    return data;
-  },
-
-  getDevice: async (id: number) => {
-    const { data } = await apiClient.get(`/api/devices/${id}`);
     return data;
   },
 

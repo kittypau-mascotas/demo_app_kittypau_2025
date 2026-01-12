@@ -1,0 +1,632 @@
+Archivo JSON sin procesar: KPCL_Pol1a
+
+Versión de la política
+
+1 - Versión activa
+Detalles del archivo de política
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": "iot:*",
+      "Resource": "*"
+    }
+  ]
+}
+Copiar
+Descargar
+Editar versión
+Cerrar
+
+
+KPCL_Pol1a Información
+Editar versión activa
+Eliminar
+Detalles
+ARN de la política
+arn:aws:iot:us-east-2:440671981849:policy/KPCL_Pol1a
+Versión activa
+1
+Creado
+January 05, 2026, 17:03:07 (UTC-03:00)
+Actualización más reciente
+January 05, 2026, 17:03:07 (UTC-03:00)
+
+Versiones
+
+Destinos
+
+Falta de conformidad
+
+Etiquetas
+Versión activa: 1 Información
+
+Creador
+
+JSON
+Efecto de la política
+Acción de la política
+Recurso de la política
+Allow
+iot:*
+*
+Todas las versiones (1) Información
+
+Eliminar
+Establecer como activa
+Editar versión
+Ver JSON
+Las versiones activas y anteriores de esta política. Solo puede haber una versión activa. Una política no puede tener más de 5 versiones. Para actualizar una política con 5 versiones, primero debe eliminar una.
+
+Número de versión
+	
+Estado
+	
+Creado
+
+1
+Activo
+January 05, 2026, 17:03:07 (UTC-03:00)
+
+AWS IoT
+Seguridad
+Certificados
+ec9ff0aa19e27f9e836d69fec5049bf75c6ea6503c486fb92c2e9e4d0cffff4f
+AWS IoT
+Seguridad
+Certificados
+ec9ff0aa19e27f9e836d69fec5049bf75c6ea6503c486fb92c2e9e4d0cffff4f
+
+
+
+AWS IoT
+Monitorear
+Conectarse
+Conectar un dispositivo
+
+Conectar muchos dispositivos
+Configuraciones de dominio
+Probar
+Cliente de prueba de MQTT
+Consultar el estado de conectividad
+Administrar
+
+Todos los dispositivos
+Objetos
+Grupos de objetos
+Tipos de objetos
+Métricas de flota
+
+Dispositivos de Greengrass
+Paquetes de software
+
+Acciones remotas
+
+Enrutamiento de mensajes
+Mensajes retenidos
+
+Seguridad
+Introducción
+Certificados
+Políticas
+Entidades de certificación
+Firma de certificado
+Alias de rol
+Autorizadores
+
+Auditoría
+
+Detectar
+Registros
+Actualizado
+Software de dispositivos
+Grupos de facturación
+Configuración
+Destacar foco
+Documentación
+Coméntenos su opinión
+
+ec9ff0aa19e27f9e836d69fec5049bf75c6ea6503c486fb92c2e9e4d0cffff4f Información
+Acciones
+Detalles
+ID de certificado
+ec9ff0aa19e27f9e836d69fec5049bf75c6ea6503c486fb92c2e9e4d0cffff4f
+ARN de certificado
+arn:aws:iot:us-east-2:440671981849:cert/ec9ff0aa19e27f9e836d69fec5049bf75c6ea6503c486fb92c2e9e4d0cffff4f
+Asunto
+CN=AWS IoT Certificate
+Emisor
+OU=Amazon Web Services O=Amazon.com Inc. L=Seattle ST=Washington C=US
+Estado
+Activo
+Creado
+January 08, 2026, 13:38:29 (UTC-03:00)
+Válido
+January 08, 2026, 13:36:29 (UTC-03:00)
+Vence
+December 31, 2049, 20:59:59 (UTC-03:00)
+
+Políticas
+
+Objetos
+
+Falta de conformidad
+Políticas (1) Información
+
+Desconectar políticas
+Adjuntar políticas
+Las políticas de AWS IoT le permiten controlar el acceso a las operaciones del plano de datos de AWS IoT Core.
+
+Nombre
+
+KPCL_Pol1a
+
+AWS IoT
+Administrar
+Objetos
+KPCL0033
+AWS IoT
+Administrar
+Objetos
+KPCL0033
+
+
+
+AWS IoT
+Monitorear
+Conectarse
+Conectar un dispositivo
+
+Conectar muchos dispositivos
+Configuraciones de dominio
+Probar
+Cliente de prueba de MQTT
+Consultar el estado de conectividad
+Administrar
+
+Todos los dispositivos
+Objetos
+Grupos de objetos
+Tipos de objetos
+Métricas de flota
+
+Dispositivos de Greengrass
+Paquetes de software
+
+Acciones remotas
+
+Enrutamiento de mensajes
+Mensajes retenidos
+
+Seguridad
+Registros
+Actualizado
+Software de dispositivos
+Grupos de facturación
+Configuración
+Destacar foco
+Documentación
+Coméntenos su opinión
+
+La auditoría de seguridad de IoT está desactivadaInformación
+Automatice la auditoría de seguridad de IoT
+Automatice la auditoría de seguridad. Para ello, habilite las comprobaciones diarias de la flota desde AWS IoT Device Defender. La auditoría evalúa las configuraciones de IoT con respecto a las prácticas recomendadas de seguridad, incluidas las comprobaciones de las identidades y las políticas de acceso. Ver precios  Más información 
+
+KPCL0033La indexación de conectividad no está activada Información
+Crear túnel seguro
+Editar
+Eliminar
+Detalles del objeto
+Nombre
+KPCL0033
+ARN
+
+arn:aws:iot:us-east-2:440671981849:thing/KPCL0033
+Tipo
+-
+Grupo de facturación
+-
+
+
+Atributos
+
+Certificados
+
+Grupos de objetos
+
+Historial de comandos
+
+Sombras de dispositivos
+
+Actividad
+2
+
+Paquetes y versiones
+
+Trabajos
+
+Alarmas
+
+Métricas de Defender
+
+Atributos (0) Información
+Los atributos son pares clave-valor que permiten o no las búsquedas. Los atributos que se pueden buscar se pueden usar para filtrar listas de objetos sin usar la indexación de flotas. Los atributos que no permiten búsquedas se pueden usar para encontrar objetos, pero solo cuando la indexación de flotas está activada.
+
+Clave
+	
+Valor
+	
+Tipo
+
+No hay atributos
+No hay atributos que mostrar.
+
+Atributos de propagación (0) Información
+Los atributos de propagación le permiten mejorar los mensajes de MQTT publicados por los dispositivos.
+
+Tipo de atributo de propagación
+	
+Tipo de atributo
+	
+Nombre de atributo
+	
+Anular
+
+No hay atributos
+No hay atributos de propagación para mostrar
+
+AWS IoT
+Administrar
+Objetos
+AWS IoT
+Administrar
+Objetos
+
+
+
+
+AWS IoT
+Monitorear
+Conectarse
+Conectar un dispositivo
+
+Conectar muchos dispositivos
+Configuraciones de dominio
+Probar
+Cliente de prueba de MQTT
+Consultar el estado de conectividad
+Administrar
+
+Todos los dispositivos
+Objetos
+Grupos de objetos
+Tipos de objetos
+Métricas de flota
+
+Dispositivos de Greengrass
+Paquetes de software
+
+Acciones remotas
+
+Enrutamiento de mensajes
+Mensajes retenidos
+
+Seguridad
+Registros
+Actualizado
+Software de dispositivos
+Grupos de facturación
+Configuración
+Destacar foco
+Documentación
+Coméntenos su opinión
+
+Objetos (4) Información
+
+Búsqueda avanzada
+Ejecutar agregaciones
+Ejecutar la consulta de estado de conectividad
+Editar
+Eliminar
+Crear objetos
+Un objeto de IoT es una representación y un registro del dispositivo físico en la nube. El dispositivo físico necesita un registro de objeto para poder trabajar con AWS IoT.
+
+
+1
+
+
+Nombre
+	
+Tipo de objeto
+
+KPCL0033
+-
+KPCL0031
+-
+vercel_neon_1a
+-
+KPCL0030
+Plato_1a
+0 objetos seleccionados
+
+
+Console-to-Code
+
+
+
+(contexto de aws ec2. No veo que los datos se guarden o lleguen a neon)
+PS D:\Escritorio\Proyectos\KittyPaw\kittypau_landingpage_demo_2025\Aws\Ec2> ssh -i "kittypau-key.pem" ubuntu@3.135.201.228
+Welcome to Ubuntu 24.04.3 LTS (GNU/Linux 6.14.0-1018-aws x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/pro
+
+ System information as of Thu Jan  8 19:42:04 UTC 2026
+
+  System load:  0.0               Processes:             110
+  Usage of /:   40.6% of 6.71GB   Users logged in:       0
+  Memory usage: 29%               IPv4 address for enX0: 172.31.14.153
+  Swap usage:   0%
+
+
+Expanded Security Maintenance for Applications is not enabled.
+
+12 updates can be applied immediately.
+12 of these updates are standard security updates.
+To see these additional updates run: apt list --upgradable
+
+3 additional security updates can be applied with ESM Apps.
+Learn more about enabling ESM Apps service at https://ubuntu.com/esm
+
+
+Last login: Thu Jan  8 16:28:15 2026 from 186.189.112.96
+ubuntu@ip-172-31-14-153:~$ cd ~/kittypau
+ubuntu@ip-172-31-14-153:~/kittypau$ pm2 startup
+[PM2] Init System found: systemd
+[PM2] To setup the Startup Script, copy/paste the following command:
+sudo env PATH=$PATH:/usr/bin /usr/lib/node_modules/pm2/bin/pm2 startup systemd -u ubuntu --hp /home/ubuntu
+ubuntu@ip-172-31-14-153:~/kittypau$ pm2 logs kittypau-iot
+[TAILING] Tailing last 15 lines for [kittypau-iot] process (change the value with --lines option)
+/home/ubuntu/.pm2/logs/kittypau-iot-error.log last 15 lines:
+/home/ubuntu/.pm2/logs/kittypau-iot-out.log last 15 lines:
+0|kittypau | 🟢 Conectado a Neon (pool listo)
+0|kittypau | 💾 Guardado en Neon: test-device
+0|kittypau | [dotenv@17.2.3] injecting env (6) from .env -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+0|kittypau | [dotenv@17.2.3] injecting env (0) from .env -- tip: 👥 sync secrets across teammates & machines: https://dotenvx.com/ops
+0|kittypau | 🐾 KITTYPAU conectado a AWS IoT
+0|kittypau | 📡 Suscripto a kittypau/devices/+/telemetry
+0|kittypau | 🟢 Conectado a Neon (pool listo)
+0|kittypau | 💾 Guardado en Neon: test-device
+0|kittypau | 🟢 Conectado a Neon (pool listo)
+0|kittypau | 💾 Guardado en Neon: test-device
+
+PS D:\Escritorio\Proyectos\KittyPaw\kittypau_landingpage_demo_2025\Aws\Ec2> ssh -i "kittypau-key.pem" ubuntu@3.135.201.228
+Welcome to Ubuntu 24.04.3 LTS (GNU/Linux 6.14.0-1018-aws x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/pro
+
+ System information as of Thu Jan  8 19:45:02 UTC 2026
+
+  System load:  0.0               Processes:             114
+  Usage of /:   40.6% of 6.71GB   Users logged in:       1
+  Memory usage: 32%               IPv4 address for enX0: 172.31.14.153
+  Swap usage:   0%
+
+
+Expanded Security Maintenance for Applications is not enabled.
+
+12 updates can be applied immediately.
+12 of these updates are standard security updates.
+To see these additional updates run: apt list --upgradable
+
+3 additional security updates can be applied with ESM Apps.
+Learn more about enabling ESM Apps service at https://ubuntu.com/esm
+
+
+Last login: Thu Jan  8 19:42:05 2026 from 186.189.112.96
+ubuntu@ip-172-31-14-153:~$ mosquitto_sub \
+  -h a3o1jhmmwxnm4z-ats.iot.us-east-2.amazonaws.com \
+  -p 8883 \
+  --cafile ~/kittypau/certs/AmazonRootCA1.pem \
+  --cert ~/kittypau/certs/device.pem.crt \
+  --key ~/kittypau/certs/private.pem.key \
+  -t "KPCL0033/sensors" \
+  -v
+KPCL0033/sensors {"weight":3123575.00,"temp":717.00,"hum":973.70,"ldr":63}
+KPCL0033/sensors {"weight":3123512.00,"temp":716.90,"hum":973.70,"ldr":62}
+KPCL0033/sensors {"weight":3123464.00,"temp":716.90,"hum":973.70,"ldr":62}
+KPCL0033/sensors {"weight":3123503.00,"temp":716.90,"hum":973.70,"ldr":62}
+KPCL0033/sensors {"weight":3123633.00,"temp":716.90,"hum":973.70,"ldr":56}
+KPCL0033/sensors {"weight":3123580.00,"temp":716.80,"hum":973.70,"ldr":62}
+KPCL0033/sensors {"weight":3123635.00,"temp":716.80,"hum":973.70,"ldr":55}
+KPCL0033/sensors {"weight":3123655.00,"temp":716.80,"hum":973.70,"ldr":62}
+KPCL0033/sensors {"weight":3123543.00,"temp":716.80,"hum":998.40,"ldr":62}
+KPCL0033/sensors {"weight":3123598.00,"temp":716.80,"hum":998.70,"ldr":55}
+KPCL0033/sensors {"weight":3123586.00,"temp":716.80,"hum":998.70,"ldr":57}
+KPCL0033/sensors {"weight":3123541.00,"temp":716.80,"hum":998.70,"ldr":64}
+^Cubuntu@ip-172-31-14-153:~$ mosquitto_sub   -h a3o1jhmmwxnm4z-ats.iot.us-east-2.amazonaws.com   -p 8883   --cafile ~/kittypau/certs/AmazonRootCA1.pem   --cert ~/kittypau/certs/device.pem.crt   --key ~/kittypau/certs/private.pem.key   -t "KPCL0033/#"   -v
+KPCL0033/sensors {"weight":3123544.00,"temp":692.00,"hum":998.90,"ldr":62}
+KPCL0033/status OK
+KPCL0033/sensors {"weight":3123520.00,"temp":692.00,"hum":998.90,"ldr":62}
+KPCL0033/status OK
+KPCL0033/sensors {"weight":3123655.00,"temp":692.00,"hum":998.90,"ldr":55}
+KPCL0033/status OK
+KPCL0033/sensors {"weight":3123577.00,"temp":692.00,"hum":998.90,"ldr":62}
+KPCL0033/status OK
+KPCL0033/sensors {"weight":3123554.00,"temp":692.00,"hum":999.00,"ldr":61}
+KPCL0033/status OK
+KPCL0033/sensors {"weight":3123582.00,"temp":691.90,"hum":999.00,"ldr":62}
+KPCL0033/status OK
+KPCL0033/sensors {"weight":3123643.00,"temp":691.90,"hum":999.00,"ldr":78}
+KPCL0033/status OK
+KPCL0033/sensors {"weight":3123684.00,"temp":691.90,"hum":999.00,"ldr":70}
+KPCL0033/status OK
+KPCL0033/sensors {"weight":3123603.00,"temp":691.90,"hum":999.10,"ldr":70}
+KPCL0033/status OK
+KPCL0033/sensors {"weight":3123574.00,"temp":691.90,"hum":999.10,"ldr":72}
+KPCL0033/status OK
+KPCL0033/sensors {"weight":3123605.00,"temp":691.80,"hum":999.20,"ldr":78}
+KPCL0033/status OK
+KPCL0033/sensors {"weight":3123558.00,"temp":691.80,"hum":999.20,"ldr":78}
+KPCL0033/status OK
+KPCL0033/sensors {"weight":3123603.00,"temp":691.80,"hum":999.20,"ldr":70}
+KPCL0033/status OK
+KPCL0033/sensors {"weight":3123570.00,"temp":691.80,"hum":999.20,"ldr":70}
+KPCL0033/status OK
+KPCL0033/sensors {"weight":3123545.00,"temp":691.80,"hum":999.20,"ldr":78}
+KPCL0033/status OK
+KPCL0033/sensors {"weight":3123612.00,"temp":691.80,"hum":999.30,"ldr":78}
+KPCL0033/status OK
+KPCL0033/sensors {"weight":3123612.00,"temp":691.70,"hum":999.30,"ldr":78}
+KPCL0033/status OK
+KPCL0033/sensors {"weight":3123608.00,"temp":691.70,"hum":1024.00,"ldr":70}
+KPCL0033/status OK
+KPCL0033/sensors {"weight":3123643.00,"temp":691.70,"hum":1024.00,"ldr":77}
+KPCL0033/status OK
+KPCL0033/sensors {"weight":3123561.00,"temp":691.70,"hum":1024.00,"ldr":69}
+KPCL0033/status OK
+KPCL0033/sensors {"weight":3123625.00,"temp":691.70,"hum":1024.00,"ldr":60}
+KPCL0033/status OK
+KPCL0033/sensors {"weight":3123638.00,"temp":691.70,"hum":1024.10,"ldr":60}
+KPCL0033/status OK
+KPCL0033/sensors {"weight":3123589.00,"temp":691.60,"hum":1024.10,"ldr":54}
+KPCL0033/status OK
+KPCL0033/sensors {"weight":3123628.00,"temp":691.60,"hum":1024.10,"ldr":77}
+KPCL0033/status OK
+KPCL0033/sensors {"weight":3123628.00,"temp":691.60,"hum":1024.10,"ldr":69}
+KPCL0033/status OK
+KPCL0033/sensors {"weight":3123654.00,"temp":691.60,"hum":1024.20,"ldr":70}
+
+
+
+(neon)
+
+Kittypau
+Free
+
+kittypau_a1
+
+All ok
+
+
+Upgrade
+
+Dashboard
+Branches
+Integrations
+Settings
+
+production
+
+production
+Overview
+Monitoring
+SQL Editor
+Tables
+Backup & Restore
+Data Masking
+Beta
+Data API
+Auth
+Feedback
+Collapse menu
+Project dashboard
+
+Connect
+Share
+Branches
+4 / 10
+Compute
+1.71 / 100
+CU-hrs
+Storage
+0.03 / 0.5
+GB
+Network transfer
+0 / 5
+GB
+Usage since Jan 5, 2026. Metrics may be delayed by an hour and are not updated for inactive projects. Learn more.
+Monitoring
+View all metrics
+Branch
+production
+Default
+Compute
+Primary
+Active
+
+Refresh
+
+4 Branches
+View all
+Name
+Primary compute
+Created by
+production
+Default
+.25 ↔ 2 CU
+Active
+vercel-dev
+.25 ↔ 2 CU
+Idle
+preview/main
+.25 ↔ 2 CU
+Idle
+development
+.25 ↔ 1 CU
+Idle
+Preview Workflow
+You don't have any preview branches yet. Improve your workflow by adding database branching to your development previews.
+
+
+Install an integration
+Neon Auth
+Manage
+Branch
+
+production
+
+production
+Waiting for someone to sign up to your app.
+After sign up, your users' data will be added to the auth schema on your database.
+
+Open quickstart
+Learn more
+Project settings
+Manage
+Region	
+AWS US East 1 (N. Virginia)
+Default compute size	.25 ↔ 2 CU
+History retention	6 hours
+Postgres version
+17
+To extend the compute size limit, upgrade your plan
+
+
+
+Connect to your database
+
+Branch
+production
+Default
+Compute
+Primary
+Active
+Database
+neondb
+Role
+Reset password
+neondb_owner
+psql
+connection string
+passwordless auth
+psql 'postgresql://neondb_owner:npg_iVL1xhT6ICwp@ep-polished-art-adllyxom-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require'
+
+
+
+Copy snippet
+

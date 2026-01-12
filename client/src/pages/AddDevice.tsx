@@ -1,99 +1,114 @@
 import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
+import { ChevronLeft } from 'lucide-react';
 import { useLocation } from 'wouter';
-import { QrCode } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function AddDevice() {
-  const [deviceName, setDeviceName] = useState('');
-  const [deviceType, setDeviceType] = useState('');
-  const [serialNumber, setSerialNumber] = useState('');
   const { toast } = useToast();
   const [, setLocation] = useLocation();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [name, setName] = useState('');
+  const [deviceType, setDeviceType] = useState('');
+  const [mqttTopic, setMqttTopic] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Add device triggered', { deviceName, deviceType, serialNumber });
-    toast({ title: 'Dispositivo agregado', description: `${deviceName} ha sido agregado exitosamente.` });
-    setLocation('/devices');
+    setIsLoading(true);
+
+    try {
+      const response = await fetch('/api/devices', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ name, deviceType, mqttTopic }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `Error ${response.status}`);
+      }
+
+      toast({
+        title: '¡Dispositivo agregado!',
+        description: `${name} ha sido agregado a tu lista de dispositivos.`,
+      });
+
+      setLocation('/devices'); // Redirect to devices page
+    } catch (error) {
+      toast({
+        title: 'Error al agregar dispositivo',
+        description: error instanceof Error ? error.message : 'Ocurrió un error inesperado.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6" data-testid="page-add-device">
-      <h1 className="titulo text-3xl">Agregar Dispositivo</h1>
+    <div className="space-y-6" data-testid="page-add-device">
+      <div className="flex items-center">
+        <Button variant="ghost" size="icon" onClick={() => setLocation('/devices')}>
+          <ChevronLeft className="h-6 w-6" />
+        </Button>
+        <h1 className="titulo text-3xl ml-4">Agregar Nuevo Dispositivo</h1>
+      </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Configuración del Dispositivo</CardTitle>
-          <CardDescription>Ingresa los detalles de tu nuevo dispositivo IoT</CardDescription>
+          <CardTitle>Datos del Dispositivo</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="deviceName">Nombre del Dispositivo</Label>
+              <Label htmlFor="name">Nombre</Label>
               <Input
-                id="deviceName"
-                value={deviceName}
-                onChange={(e) => setDeviceName(e.target.value)}
+                id="name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
                 placeholder="Ej: Comedero Principal"
                 data-testid="input-device-name"
                 required
+                disabled={isLoading}
               />
             </div>
-
             <div className="space-y-2">
               <Label htmlFor="deviceType">Tipo de Dispositivo</Label>
-              <Select value={deviceType} onValueChange={setDeviceType} required>
-                <SelectTrigger id="deviceType" data-testid="select-device-type">
-                  <SelectValue placeholder="Selecciona el tipo" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="feeder">Dispensador de Comida</SelectItem>
-                  <SelectItem value="litterbox">Monitor de Arenero</SelectItem>
-                  <SelectItem value="water">Dispensador de Agua</SelectItem>
-                  <SelectItem value="camera">Cámara IoT</SelectItem>
-                  <SelectItem value="tracker">Rastreador GPS</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="serialNumber">Número de Serie</Label>
               <Input
-                id="serialNumber"
-                value={serialNumber}
-                onChange={(e) => setSerialNumber(e.target.value)}
-                placeholder="Ej: KP-123456789"
-                data-testid="input-serial-number"
+                id="deviceType"
+                value={deviceType}
+                onChange={(e) => setDeviceType(e.target.value)}
+                placeholder="Ej: Dispensador de Comida"
+                data-testid="input-device-type"
                 required
+                disabled={isLoading}
               />
             </div>
-
-            <div className="border-2 border-dashed rounded-lg p-8 text-center">
-              <QrCode className="h-24 w-24 mx-auto text-muted-foreground mb-4" />
-              <p className="text-sm text-muted-foreground">
-                Escanea el código QR del dispositivo para vincularlo automáticamente
-              </p>
-              <Button type="button" variant="outline" className="mt-4" data-testid="button-scan-qr">
-                Escanear QR
-              </Button>
+            <div className="space-y-2">
+              <Label htmlFor="mqttTopic">Tema MQTT</Label>
+              <Input
+                id="mqttTopic"
+                value={mqttTopic}
+                onChange={(e) => setMqttTopic(e.target.value)}
+                placeholder="Ej: kittypaw/feeders/ABC123"
+                data-testid="input-mqtt-topic"
+                required
+                disabled={isLoading}
+              />
             </div>
-
-            <div className="flex gap-2 justify-end pt-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setLocation('/devices')}
-                data-testid="button-cancel"
-              >
+            <div className="flex gap-2 justify-end">
+              <Button type="button" variant="outline" onClick={() => setLocation('/devices')} disabled={isLoading} data-testid="button-cancel">
                 Cancelar
               </Button>
-              <Button type="submit" className="btn-primary" data-testid="button-submit-device">
-                Agregar Dispositivo
+              <Button type="submit" className="btn-primary" disabled={isLoading} data-testid="button-submit-device">
+                {isLoading ? 'Agregando...' : 'Agregar'}
               </Button>
             </div>
           </form>

@@ -1,12 +1,13 @@
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import PetAvatar from '@/components/PetAvatar';
 import AddPetModal from '@/components/AddPetModal';
 import { Badge } from '@/components/ui/badge';
-import { useQuery } from '@tanstack/react-query';
-import api from '@/services/api';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Terminal } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button'; // Import Button component
+import LinkDeviceModal from '@/components/LinkDeviceModal'; // Import LinkDeviceModal
 
 // Helper to calculate age
 const calculateAge = (birthDate: string | null) => {
@@ -15,20 +16,58 @@ const calculateAge = (birthDate: string | null) => {
   return `${age} años`;
 };
 
+interface Pet {
+  id: string;
+  name: string;
+  species: string;
+  breed: string | null;
+  birthDate: string | null;
+  deviceId: string | null;
+  deviceIdentifier: string | null;
+}
+
 export default function Mascotas() {
-  const { data: pets, isLoading, isError, error } = useQuery({
-    queryKey: ['pets'],
-    queryFn: async () => {
-      const response = await api.get('/api/pets');
-      return response.data;
-    },
-  });
+  const [pets, setPets] = useState<Pet[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isError, setIsError] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+  const [isLinkDeviceModalOpen, setIsLinkDeviceModalOpen] = useState(false);
+  const [selectedPetId, setSelectedPetId] = useState<string | null>(null);
+
+  const fetchPets = async () => {
+    setIsLoading(true);
+    setIsError(false);
+    setError(null);
+    try {
+      const response = await fetch('/api/pets', { credentials: 'include' });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `Error ${response.status}`);
+      }
+      const data = await response.json();
+      setPets(data);
+    } catch (err) {
+      setIsError(true);
+      setError(err instanceof Error ? err : new Error('Ocurrió un error inesperado.'));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchPets();
+  }, []);
+
+  const handleLinkDeviceClick = (petId: string) => {
+    setSelectedPetId(petId);
+    setIsLinkDeviceModalOpen(true);
+  };
 
   return (
     <div className="space-y-6" data-testid="page-mascotas">
       <div className="flex items-center justify-between">
         <h1 className="titulo text-3xl">Mis Mascotas</h1>
-        <AddPetModal />
+        <AddPetModal onPetAdded={fetchPets} />
       </div>
 
       {isLoading && (
@@ -99,9 +138,26 @@ export default function Mascotas() {
                 </Badge>
               </div>
             </CardContent>
+            <div className="p-4 pt-0">
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => handleLinkDeviceClick(pet.id)}
+              >
+                Vincular Dispositivo
+              </Button>
+            </div>
           </Card>
         ))}
       </div>
+
+      {/* Link Device Modal */}
+      <LinkDeviceModal
+        isOpen={isLinkDeviceModalOpen}
+        onOpenChange={setIsLinkDeviceModalOpen}
+        petId={selectedPetId}
+        onDeviceLinked={fetchPets}
+      />
     </div>
   );
 }

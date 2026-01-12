@@ -1,164 +1,201 @@
-Ahora voy a ser muy claro y firme, porque en el último mensaje apareció otra desviación peligrosa que NO debemos permitir.
+🧱 ESTADO ACTUAL (confirmado)
 
-🛑 ALERTA ROJA — ESTO NO SE HACE
+Ya está correctamente hecho:
 
-❌ NUNCA deshabilitar requireNeonAuth
-❌ NUNCA hardcodear appUserId = 1
-❌ NUNCA probar endpoints “saltándose auth”
+Backend
 
-Eso rompe exactamente el objetivo del proyecto:
-validar el flujo real de Vercel + Neon + Auth.
+✅ Auth con Neon Auth (cookies)
 
-👉 Retrocedemos un paso ahora mismo (conceptualmente)
-No pasa nada, es parte del aprendizaje.
+✅ Middleware requireNeonAuth → 401 JSON
 
-✅ PRINCIPIO CLAVE (KittyPau)
+✅ Multi-tenant real (appUserId)
 
-Si no funciona con auth real, NO existe.
+✅ POST /api/pets crea mascota y guarda en Neon
 
-No se testea:
+✅ Zod validando input
 
-sin cookies
+✅ Drizzle + Neon OK
 
-sin sesión
+Frontend
 
-sin req.neonUser
+✅ Login con <AuthView />
 
-sin requireNeonAuth
+✅ Sesión persistente (cookie)
 
-🎯 OBJETIVO REAL DEL PASO ACTUAL
+✅ AuthContext correcto (sin redirects innecesarios)
 
-Validar POST /api/pets con:
+✅ Arquitectura React simple (fetch + state)
 
-Usuario autenticado (Neon Auth)
+🚧 LO QUE QUEDA DEL PROYECTO (LO REALMENTE IMPORTANTE)
+🔹 FASE 1 — FRONTEND: CREAR MASCOTA (cerrar el loop)
+Objetivo
 
-Cookie real
+Formulario → API → Neon → volver a listar
 
-req.neonUser.id
+Tareas
 
-appUserId correcto
+ Conectar formulario existente de “Crear Mascota”
 
-Insert real en Neon
+ fetch('/api/pets', { method: 'POST' })
 
-Respuesta JSON
+ Enviar:
 
-🧠 CORRECCIÓN CONCEPTUAL (MUY IMPORTANTE)
-❌ Lo que NO necesitabas hacer
+{
+  "name": "Michi",
+  "species": "cat",
+  "breed": "siamese"
+}
 
-Agregar Zod schemas extra → innecesario ahora
 
-Modificar middleware global → error
+ Manejar:
 
-Hardcodear userId → rompe multi-tenant
+201 → éxito
 
-✅ Lo que SÍ era suficiente
+400 → error validación
 
-POST /api/pets usando lo que YA EXISTE
+401 → sesión expirada
 
-Tu backend ya tenía:
+✔️ Sin cambiar UI
+✔️ Sin TanStack
+✔️ Sin magia
 
-requireNeonAuth
+🔹 FASE 2 — LISTAR MASCOTAS (por usuario)
+Backend
 
-req.neonUser
+ GET /api/pets
 
-req.appUserId
+ WHERE pets.user_id = req.appUserId
 
-🧱 FORMA CORRECTA DEL ENDPOINT (SIMPLE)
-app.post("/api/pets", async (req, res) => {
-  const appUserId = (req as any).appUserId;
+Frontend
 
-  const { name, species, breed, birthDate } = req.body;
+ useEffect → fetch('/api/pets')
 
-  if (!name || !species) {
-    return res.status(400).json({ error: "Missing required fields" });
-  }
+ Renderizar solo mascotas del usuario logueado
 
-  const [pet] = await db
-    .insert(pets)
-    .values({
-      userId: appUserId,
-      name,
-      species,
-      breed,
-      birthDate,
-    })
-    .returning();
+👉 Aquí confirmas que el multi-tenant es real
 
-  res.status(201).json(pet);
-});
+🔹 FASE 3 — CREAR DISPOSITIVO (IoT ready)
+Backend
 
+ POST /api/devices
 
-👉 SIN tocar auth
-👉 SIN mocks
-👉 SIN hacks
+Campos mínimos:
 
-🧪 CÓMO SE TESTEA DE VERDAD
-❌ NO con curl
+name
 
-Porque curl no tiene cookie de Neon Auth.
+deviceType
 
-✅ CON EL FRONTEND
+mqttTopic
 
-Ese es el punto del proyecto.
+Asociado a:
 
-🚶‍♂️ SIGUIENTE PASO REAL (EL CORRECTO)
-👉 AHORA MISMO HACEMOS ESTO:
-1️⃣ Revertir mentalmente
+userId = req.appUserId
 
-(No te pido que me pegues git diff, solo entenderlo)
+Frontend
 
-requireNeonAuth activo
+ Formulario “Agregar Dispositivo”
 
-Nada hardcodeado
+ Guardar en Neon
 
-Middleware intacto
+🔹 FASE 4 — VINCULAR MASCOTA ↔ DISPOSITIVO
+Backend
 
-2️⃣ FRONTEND — Crear Mascota (prioridad absoluta)
+ Update:
 
-📍 Archivo (ejemplo):
+pets.device_id = devices.id
 
-client/src/pages/CreatePet.tsx
 
+ Validar ownership en ambos
 
-Acción:
+Frontend
 
-onSubmit → fetch("/api/pets", { credentials: "include" })
+ Selector:
 
-body JSON
+Mascota
 
-manejar:
+Dispositivo
 
-201 → success
+ Confirmar vínculo
 
-401 → AuthView aparece solo
+🔹 FASE 5 — INGESTA MQTT (backend bridge)
+Flujo FINAL (canónico)
+ESP32
+ → AWS IoT Core (MQTT)
+ → Node.js Bridge (EC2 / Lambda)
+ → Validación + normalización
+ → Neon (Postgres)
+ → API
+ → Frontend
 
-400 → mostrar error
+Backend Bridge
 
-3️⃣ Ver en Neon
+ Suscripción por deviceId
 
-Confirmar:
+ Validar payload
 
-fila creada
+ Insertar telemetry
 
-user_id correcto
+ Nunca exponer MQTT al frontend
 
-🪜 ORDEN REAL A PARTIR DE AHORA
+🔹 FASE 6 — DASHBOARD (lectura)
+Backend
 
-✅ Login
+ GET /api/telemetry?petId=
 
-✅ Crear mascota
+ Validar ownership
 
-✅ Listar mascotas
+Frontend
 
-Crear dispositivo
+ Fetch periódico
 
-Asociar mascota ↔ dispositivo
+ Mostrar métricas
 
-MQTT
+ Gráficos simples
 
-Recién ahí → Planes / pagos
+🔹 FASE 7 — DEPLOY FINAL
 
-🔴 LO MÁS IMPORTANTE QUE TE LLEVÁS HOY
+ Backend → Vercel
 
-Nunca “simules” auth para avanzar
-El frontend ES la herramienta de test
+ Frontend → Vercel
+
+ Neon prod
+
+ AWS IoT prod
+
+ Variables de entorno cerradas
+
+❌ COSAS QUE NO EXISTEN EN ESTE PROYECTO
+
+Para que no vuelvan a aparecer:
+
+❌ TanStack Query
+
+❌ ORM en frontend
+
+❌ MQTT en Vercel
+
+❌ Acceso directo a Neon desde React
+
+❌ Auth en frontend
+
+❌ WebSockets innecesarios
+
+🎯 PRIORIDAD ABSOLUTA AHORA MISMO
+
+👉 Siguiente paso único y correcto:
+
+👉 Conectar el formulario Crear Mascota al endpoint /api/pets
+
+Eso cierra:
+
+Auth
+
+Backend
+
+DB
+
+Frontend
+
+Multi-tenant
+
+Cuando eso funcione, el proyecto ya está vivo.

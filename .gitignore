@@ -1,19 +1,30 @@
+# Dependencies
 node_modules
+
+# Build outputs
 dist
+api
+
+# Local environment variables
+.env
+.env.*
+!.env.example
+
+# Local state and caches
+.local
+.vercel
+
+# Archived mockups
+__archive_public/
+
+# Database migrations (often auto-generated)
+migrations
+
+# OS-specific
 .DS_Store
-server/public
-vite.config.ts.*
+
+# Archives
 *.tar.gz
 
-
-.vercel
-prompt_maestro_para_gemini.md
-contexto_aws.md
-contexto_ec2_ubuntu.md
-contexto_iot.md
-contexto_neon.md
-contexto_vercel.md
-diagnostico.md
-KPCL_Pol1.txt
-plan_de_accion.md
-prompt_1.md
+# Vite cache
+vite.config.ts.*

@@ -6,11 +6,13 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useQueryClient } from '@tanstack/react-query';
 
-export default function AddPetModal() {
+interface AddPetModalProps {
+  onPetAdded: () => void;
+}
+
+export default function AddPetModal({ onPetAdded }: AddPetModalProps) {
   const { toast } = useToast();
-  const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -32,13 +34,23 @@ export default function AddPetModal() {
     setIsLoading(true);
 
     try {
+      const petData: { name: string; species: string; breed?: string; birthDate?: string } = {
+        name,
+        species,
+        breed,
+      };
+
+      if (birthDate) {
+        petData.birthDate = birthDate;
+      }
+
       const response = await fetch('/api/pets', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         credentials: 'include',
-        body: JSON.stringify({ name, species, breed, birthDate }),
+        body: JSON.stringify(petData),
       });
 
       if (!response.ok) {
@@ -46,16 +58,23 @@ export default function AddPetModal() {
         throw new Error(errorData.error || `Error ${response.status}`);
       }
 
-      toast({
-        title: '¡Mascota agregada!',
-        description: `${name} ha sido agregado a tu lista de mascotas.`,
-      });
+            toast({
 
-      // Invalidate the pets query to refetch the list
-      await queryClient.invalidateQueries({ queryKey: ['pets'] });
+              title: '¡Mascota agregada!',
 
-      setOpen(false);
-      resetForm();
+              description: `${name} ha sido agregado a tu lista de mascotas.`,
+
+            });
+
+      
+
+            onPetAdded();
+
+      
+
+            setOpen(false);
+
+            resetForm();
     } catch (error) {
       toast({
         title: 'Error al agregar mascota',

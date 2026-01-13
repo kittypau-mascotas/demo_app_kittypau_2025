@@ -31,6 +31,9 @@ const neonClient = createClient({
   auth: {
     url: authUrl || '',
   },
+  dataApi: {
+    url: 'https://placeholder.neon.tech',
+  },
 });
 
 
@@ -125,7 +128,7 @@ function App() {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50">
         <div className="w-full max-w-md p-6 bg-white rounded-lg shadow-md">
-          <AuthView client={neonClient} onSuccess={() => window.location.reload()} />
+          <AuthView auth={neonClient.auth} onSuccess={() => window.location.reload()} />
         </div>
       </div>
     );

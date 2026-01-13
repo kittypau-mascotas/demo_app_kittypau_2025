@@ -2,8 +2,9 @@ import { createContext, useContext, useEffect, useState } from "react";
 
 type User = {
   id: number;
+  authUserId: string; // Añadir el ID del servicio de autenticación
   email: string;
-  fullName?: string; // name en el backend es fullName
+  fullName?: string;
 };
 
 type AuthContextType = {

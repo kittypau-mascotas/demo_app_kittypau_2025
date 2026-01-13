@@ -1,12 +1,5 @@
 {
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/index.js" }
-  ],
-  "build": {
-    "env": {
-      "VITE_ROOT": "client"
-    },
-    "outputDirectory": "dist",
-    "buildCommand": "npm run build"
-  }
+  ]
 }

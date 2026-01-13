@@ -22,7 +22,16 @@ import Alerts from '@/pages/Alerts';
 import Settings from '@/pages/Settings';
 import Planes from '@/pages/Planes';
 import Users from '@/pages/Users';
+import { createClient } from '@neondatabase/neon-js';
 import { AuthView } from '@neondatabase/neon-js/auth/react/ui'; // Import AuthView
+import '@neondatabase/neon-js/ui/css'; // Import Neon Auth styles
+
+const authUrl = import.meta.env.VITE_NEON_AUTH_URL;
+const neonClient = createClient({
+  auth: {
+    url: authUrl || '',
+  },
+});
 
 
 function Router() {
@@ -100,12 +109,26 @@ function App() {
   }, [loading, user]); // Re-run effect when loading or user status changes
 
   if (loading) {
-    return <div>Loading authentication...</div>; // Simple loading state
+    return <div className="flex items-center justify-center h-screen">Loading authentication...</div>; // Simple loading state
   }
 
   if (!user) {
+    if (!authUrl) {
+      return (
+        <div className="flex items-center justify-center h-screen text-red-600 p-4 text-center">
+          Error crítico: <code>VITE_NEON_AUTH_URL</code> no está definida.<br/>
+          Revisa tus variables de entorno en Vercel.
+        </div>
+      );
+    }
     // If not authenticated, render the Neon Auth UI
-    return <AuthView />;
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+        <div className="w-full max-w-md p-6 bg-white rounded-lg shadow-md">
+          <AuthView client={neonClient} onSuccess={() => window.location.reload()} />
+        </div>
+      </div>
+    );
   }
 
   return (

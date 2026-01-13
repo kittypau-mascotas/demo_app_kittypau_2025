@@ -1,5 +1,6 @@
 {
   "rewrites": [
+    { "source": "/neon_auth/(.*)", "destination": "https://royal-glade-63824812.us-east-1.aws.neon.tech/$1" },
     { "source": "/api/(.*)", "destination": "/api/index.js" }
   ]
 }

@@ -23,13 +23,15 @@ import Settings from '@/pages/Settings';
 import Planes from '@/pages/Planes';
 import Users from '@/pages/Users';
 import { createClient } from '@neondatabase/neon-js';
+import { BetterAuthReactAdapter } from '@neondatabase/neon-js/auth/react/adapters';
 import { AuthView } from '@neondatabase/neon-js/auth/react/ui'; // Import AuthView
 import '@neondatabase/neon-js/ui/css'; // Import Neon Auth styles
 
-const authUrl = import.meta.env.VITE_NEON_AUTH_URL;
+const authUrl = import.meta.env.DEV ? import.meta.env.VITE_NEON_AUTH_URL : '/neon_auth';
 const neonClient = createClient({
   auth: {
     url: authUrl || '',
+    adapter: BetterAuthReactAdapter(),
   },
   dataApi: {
     url: 'https://placeholder.neon.tech',
@@ -128,7 +130,7 @@ function App() {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50">
         <div className="w-full max-w-md p-6 bg-white rounded-lg shadow-md">
-          <AuthView auth={neonClient.auth} onSuccess={() => window.location.reload()} />
+          <AuthView {...{ auth: neonClient.auth } as any} onSuccess={() => window.location.reload()} />
         </div>
       </div>
     );

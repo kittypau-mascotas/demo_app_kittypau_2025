@@ -16,7 +16,7 @@ apiClient.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       console.warn('Sesión expirada. Recargando la página.');
-      window.location.reload();
+      // window.location.reload();
     }
     return Promise.reject(error);
   }

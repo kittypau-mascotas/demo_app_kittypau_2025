@@ -1,69 +1,77 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 
-type User = {
+// Ajusta esta interfaz según los datos reales de tu usuario
+interface User {
   id: number;
-  authUserId: string; // Añadir el ID del servicio de autenticación
+  authUserId: string;
   email: string;
-  fullName?: string;
-};
+  fullName: string;
+}
 
-type AuthContextType = {
+interface AuthContextType {
   user: User | null;
   loading: boolean;
-  isAuthenticated: boolean;
-  refreshUser: () => Promise<void>;
   logout: () => Promise<void>;
-};
+}
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const refreshUser = async () => {
-    try {
-      const res = await fetch("/api/me", {
-        credentials: "include", // Ensure cookies are sent
-      });
+  useEffect(() => {
+    async function checkAuth() {
+      try {
+        // 🔑 CRÍTICO: credentials: "include" es obligatorio para que viajen las cookies en Vercel
+        const res = await fetch("/api/me", { credentials: "include" });
 
-      if (!res.ok) {
+        if (res.ok) {
+          const data = await res.json();
+          // Tu backend devuelve { user: { ... } }
+          setUser(data.user);
+        } else if (res.status === 401) {
+          // 🛑 401 explícito: No hay sesión o expiró.
+          // Esto rompe el bucle de "Loading..."
+          setUser(null);
+        } else {
+          // Otros errores (500, etc.)
+          console.error("Error verificando sesión:", res.status);
+          setUser(null);
+        }
+      } catch (error) {
+        console.error("Error de red al verificar sesión:", error);
         setUser(null);
-        return;
+      } finally {
+        // ✅ SIEMPRE desactivar loading, pase lo que pase
+        setLoading(false);
       }
+    }
 
-      const data = await res.json();
-      setUser(data.user);
-    } catch {
+    checkAuth();
+  }, []);
+
+  const logout = async () => {
+    try {
+      await fetch("/api/logout", { method: "POST", credentials: "include" });
       setUser(null);
-    } finally {
-      setLoading(false);
+      // Opcional: window.location.href = "/";
+    } catch (error) {
+      console.error("Error al cerrar sesión:", error);
     }
   };
 
-  const logout = async () => {
-    await fetch("/api/logout", {
-      method: "POST",
-      credentials: "include", // Ensure cookies are sent
-    });
-    setUser(null);
-  };
-
-  useEffect(() => {
-    refreshUser();
-  }, []);
-
   return (
-    <AuthContext.Provider value={{ user, loading, isAuthenticated: !!user, refreshUser, logout }}>
+    <AuthContext.Provider value={{ user, loading, logout }}>
       {children}
     </AuthContext.Provider>
   );
-};
+}
 
-export const useAuth = () => {
+export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
-};
+}

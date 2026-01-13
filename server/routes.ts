@@ -55,6 +55,9 @@ export async function registerRoutes(app: Express): Promise<void> {
   =========================== */
 
   app.get("/api/me", requireNeonAuth, async (req, res) => {
+    if (!req.neonUser) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
     const neonUser = req.neonUser;
 
     let userRecord = await db.query.users.findFirst({
@@ -113,6 +116,9 @@ export async function registerRoutes(app: Express): Promise<void> {
   =========================== */
 
   app.use("/api/*", requireNeonAuth, async (req, res, next) => {
+    if (!req.neonUser) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
     const neonUser = req.neonUser;
 
     const user = await db.query.users.findFirst({
@@ -221,14 +227,19 @@ export async function registerRoutes(app: Express): Promise<void> {
   =========================== */
   app.patch("/api/pets/:petId", async (req, res) => {
     const appUserId = req.appUserId;
-    const petId = req.params.petId;
+    const petIdParam = req.params.petId;
+
+    const petId = Number(petIdParam);
+    if (Number.isNaN(petId)) {
+      return res.status(400).json({ message: "Invalid petId" });
+    }
 
     try {
       const { deviceId } = LinkDeviceToPetSchema.parse(req.body);
 
       // Validate pet ownership
       const existingPet = await db.query.pets.findFirst({
-        where: and(eq(pets.id, Number(petId)), eq(pets.userId, appUserId)),
+        where: and(eq(pets.id, petId), eq(pets.userId, appUserId)),
       });
 
       if (!existingPet) {
@@ -279,9 +290,13 @@ export async function registerRoutes(app: Express): Promise<void> {
       let targetDeviceIds: string[] = [];
 
       if (petId) {
+        const petIdNum = Number(petId);
+        if (Number.isNaN(petIdNum)) {
+          return res.status(400).json({ message: "Invalid petId" });
+        }
         // Validate pet ownership and get deviceId
         const pet = await db.query.pets.findFirst({
-          where: and(eq(pets.id, Number(petId)), eq(pets.userId, appUserId)),
+          where: and(eq(pets.id, petIdNum), eq(pets.userId, appUserId)),
         });
 
         if (!pet) {

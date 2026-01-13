@@ -7,8 +7,7 @@ import {
   devices,
   pets,
   sensorReadings,
-  deviceEvents,
-  NewPetSchema // This can be removed in a later step if not used
+  deviceEvents
 } from "../shared/schema";
 import { eq, and, sql, desc } from "drizzle-orm";
 import { z } from "zod";
@@ -55,7 +54,7 @@ export async function registerRoutes(app: Express): Promise<void> {
   =========================== */
 
   app.get("/api/me", requireNeonAuth, async (req, res) => {
-    const neonUser = req.neonUser!;
+    const neonUser = req.neonUser;
 
     let userRecord = await db.query.users.findFirst({
       where: eq(users.authUserId, neonUser.id),
@@ -113,7 +112,7 @@ export async function registerRoutes(app: Express): Promise<void> {
   =========================== */
 
   app.use("/api/*", requireNeonAuth, async (req, res, next) => {
-    const neonUser = req.neonUser!;
+    const neonUser = req.neonUser;
 
     const user = await db.query.users.findFirst({
       where: eq(users.authUserId, neonUser.id),
@@ -125,7 +124,7 @@ export async function registerRoutes(app: Express): Promise<void> {
         .json({ message: "User not found in application database" });
     }
 
-    (req as any).appUserId = user.id;
+    req.appUserId = user.id;
     next();
   });
 
@@ -135,7 +134,7 @@ export async function registerRoutes(app: Express): Promise<void> {
   =========================== */
 
   app.get("/api/devices", async (req, res) => {
-    const appUserId = (req as any).appUserId;
+    const appUserId = req.appUserId;
 
     try {
       const result = await db
@@ -161,7 +160,7 @@ export async function registerRoutes(app: Express): Promise<void> {
   =========================== */
 
   app.get("/api/pets", async (req, res) => {
-    const appUserId = (req as any).appUserId;
+    const appUserId = req.appUserId;
 
     try {
       const result = await db
@@ -189,7 +188,7 @@ export async function registerRoutes(app: Express): Promise<void> {
      POST /api/pets
   =========================== */
   app.post("/api/pets", async (req, res) => {
-    const appUserId = (req as any).appUserId;
+    const appUserId = req.appUserId;
     const { name, species, breed, birthDate, deviceId } = req.body;
 
     if (!name || !species) {
@@ -220,7 +219,7 @@ export async function registerRoutes(app: Express): Promise<void> {
      PATCH /api/pets/:petId
   =========================== */
   app.patch("/api/pets/:petId", async (req, res) => {
-    const appUserId = (req as any).appUserId;
+    const appUserId = req.appUserId;
     const petId = req.params.petId;
 
     try {
@@ -268,7 +267,7 @@ export async function registerRoutes(app: Express): Promise<void> {
      GET /api/telemetry
   =========================== */
   app.get("/api/telemetry", async (req, res) => {
-    const appUserId = (req as any).appUserId;
+    const appUserId = req.appUserId;
     const { petId, start_date, end_date, limit } = req.query;
 
     const parsedStart = dateSchema.parse(start_date);
@@ -333,7 +332,7 @@ export async function registerRoutes(app: Express): Promise<void> {
      POST /api/devices
   =========================== */
   app.post("/api/devices", async (req, res) => {
-    const appUserId = (req as any).appUserId;
+    const appUserId = req.appUserId;
 
     try {
       const parsedDevice = NewDeviceSchema.parse(req.body);
@@ -406,7 +405,7 @@ export async function registerRoutes(app: Express): Promise<void> {
     res: Response,
     next: NextFunction
   ) {
-    const appUserId = (req as any).appUserId;
+    const appUserId = req.appUserId;
     const deviceIdParam = req.params.deviceId;
 
     const device = await db.query.devices.findFirst({
@@ -422,7 +421,7 @@ export async function registerRoutes(app: Express): Promise<void> {
         .json({ message: "Device not found or not owned by user" });
     }
 
-    (req as any).deviceRecord = device;
+    req.deviceRecord = device;
     next();
   }
 

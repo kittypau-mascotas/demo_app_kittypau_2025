@@ -6,6 +6,7 @@
 Esta es la aplicación full-stack (React + Express) que debe ser desplegada en producción.
 
 *   **Carpetas Clave:**
+
     *   `client/`: Código fuente del frontend (React).
     *   `server/`: Código fuente del backend (Express API).
     *   `shared/`: Código compartido entre `client` y `server`.

@@ -6,13 +6,6 @@ export type NeonUser = {
   name?: string;
 };
 
-declare global {
-  namespace Express {
-    interface Request {
-      neonUser?: NeonUser;
-    }
-  }
-}
 
 export async function requireNeonAuth(
   req: Request,

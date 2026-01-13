@@ -7,7 +7,7 @@ import { InferSelectModel } from "drizzle-orm";
 declare global {
   namespace Express {
     interface Request {
-      neonUser?: NeonUser; // The user object from Neon Auth middleware
+      neonUser: NeonUser; // The user object from Neon Auth middleware
       appUserId?: InferSelectModel<typeof users>["id"]; // The ID of the user in our application database
       deviceRecord?: InferSelectModel<typeof devices>; // Assuming `devices` is also a drizzle schema
     }

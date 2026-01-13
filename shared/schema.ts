@@ -1,4 +1,4 @@
-import { sql } from "drizzle-orm";
+import { sql, InferSelectModel, InferInsertModel } from "drizzle-orm";
 import { pgTable, serial, text, varchar, timestamp, integer, date, real, pgEnum, primaryKey, numeric, jsonb, uuid, index } from "drizzle-orm/pg-core";
 
 // --- Enums ---
@@ -29,6 +29,8 @@ export const devices = pgTable("devices", {
   deviceId: varchar("device_id", { length: 50 }).notNull().unique(), // Physical device ID from MQTT
   userId: integer("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
   name: varchar("name", { length: 100 }).notNull().default('Mi Dispositivo KittyPaw'),
+  deviceType: varchar("device_type", { length: 50 }).notNull(),
+  mqttTopic: varchar("mqtt_topic", { length: 255 }).notNull(),
   status: varchar("status", { length: 50 }).default('offline'),
   lastSeen: timestamp("last_seen", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
@@ -82,3 +84,20 @@ export const sensorReadings = pgTable("sensor_readings", {
     pk: primaryKey({ columns: [table.deviceId, table.ts] }),
   };
 });
+
+// Exportar tipos inferidos de Drizzle
+export type User = InferSelectModel<typeof users>;
+export type InsertUser = InferInsertModel<typeof users>;
+
+export type Device = InferSelectModel<typeof devices>;
+export type InsertDevice = InferInsertModel<typeof devices>;
+
+export type Pet = InferSelectModel<typeof pets>;
+export type InsertPet = InferInsertModel<typeof pets>;
+
+export type SensorReading = InferSelectModel<typeof sensorReadings>;
+export type InsertSensorReading = InferInsertModel<typeof sensorReadings>;
+
+export type DeviceEvent = InferSelectModel<typeof deviceEvents>;
+export type InsertDeviceEvent = InferInsertModel<typeof deviceEvents>;
+

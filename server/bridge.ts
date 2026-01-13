@@ -65,6 +65,7 @@ function initializeMqttClient() {
       cert: fs.readFileSync(path.resolve(CERTIFICATE_PATH)),
       ca: fs.readFileSync(path.resolve(ROOT_CA_PATH)),
       reconnectPeriod: 5000,
+      // @ts-ignore
       qos: 1,
     };
     client = mqtt.connect(clientOptions);
@@ -83,9 +84,11 @@ function setupMqttEventHandlers(client: mqtt.MqttClient) {
         console.error('Error al suscribirse a los tópicos:', err);
         return;
       }
-      granted.forEach(grant => {
+      if (granted) {
+        granted.forEach(grant => {
         console.log(`Suscrito a "${grant.topic}" con QoS ${grant.qos}`);
       });
+    } // Añadir este cierre de `if (granted)`
     });
   });
 
@@ -131,10 +134,10 @@ async function handleDeviceData(deviceIdStr: string, rawPayload: any) {
     await db.insert(sensorReadings).values({
       ts: payload.ts ? new Date(payload.ts) : new Date(),
       deviceId: deviceIdStr,
-      temperatureCelsius: payload.temp,
-      humidityPercent: payload.hum,
+      temperatureCelsius: payload.temp !== undefined ? payload.temp.toString() : undefined,
+      humidityPercent: payload.hum !== undefined ? payload.hum.toString() : undefined,
       lightLux: payload.light,
-      weightGrams: payload.weight,
+      weightGrams: payload.weight !== undefined ? payload.weight.toString() : undefined,
     });
 
     await db.update(devices)

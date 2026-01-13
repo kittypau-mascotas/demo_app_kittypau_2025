@@ -2,7 +2,7 @@ import DeviceStatus from '@/components/DeviceStatus';
 import { useDevices } from '@/hooks/data/useDevices'; // Import useDevices
 import { useSensorReadings } from '@/hooks/data/useSensorReadings'; // Import useSensorReadings
 import { Skeleton } from '@/components/ui/skeleton'; // Import Skeleton for loading state
-import { Device, SensorReading } from '@shared/schema'; // Import types
+import { Device, SensorReading } from '@shared/schema';
 import { useMemo } from 'react'; // Import useMemo
 
 interface DeviceStatusPropsTransformed {
@@ -13,41 +13,47 @@ interface DeviceStatusPropsTransformed {
   lastUpdate: string;
 }
 
-const transformSensorData = (devices: Device[], allSensorReadings: SensorReading[]): DeviceStatusPropsTransformed[] => {
+const transformSensorData = (devices: Device[], allSensorReadings: any[]): DeviceStatusPropsTransformed[] => {
   if (!devices || devices.length === 0) return [];
 
-  const deviceLatestReadings: { [deviceId: number]: {
-    temperature?: number,
-    humidity?: number,
-    battery?: number,
+  const deviceLatestReadings: { [deviceId: string]: { // deviceId es string
+    temperatureCelsius?: string | null,
+    humidityPercent?: string | null,
+    lightLux?: number | null,
+    weightGrams?: string | null,
     lastUpdate: Date,
-    [key: string]: any // To allow dynamic properties for sensor types
   }} = {};
 
   // Group and find latest reading for each type and device
-  allSensorReadings.forEach(reading => {
-    const deviceId = reading.deviceId as number;
-    const readingTimestamp = new Date(reading.timestamp);
+  allSensorReadings.forEach((readingItem: any) => { // Cambiar a any para el elemento
+    const reading = readingItem as SensorReading; // Forzar el tipo aquí
+    const deviceId = reading.deviceId; // deviceId es string
+    const readingTimestamp = new Date(reading.ts);
 
     if (!deviceLatestReadings[deviceId]) {
       deviceLatestReadings[deviceId] = { lastUpdate: new Date(0) }; // Initialize with a very old date
     }
 
-    // Update if this reading is newer for its type
+    // Update if this reading is newer
     if (readingTimestamp > deviceLatestReadings[deviceId].lastUpdate) {
-      deviceLatestReadings[deviceId][reading.type] = reading.value;
-      deviceLatestReadings[deviceId].lastUpdate = readingTimestamp;
+      deviceLatestReadings[deviceId] = {
+        lastUpdate: readingTimestamp,
+        temperatureCelsius: reading.temperatureCelsius,
+        humidityPercent: reading.humidityPercent,
+        lightLux: reading.lightLux,
+        weightGrams: reading.weightGrams,
+      };
     }
   });
 
   return devices.map(device => {
-    const latest = deviceLatestReadings[device.id as number];
+    const latest = deviceLatestReadings[device.deviceId]; // Usar device.deviceId
     return {
       deviceName: device.name,
-      temperature: latest?.temperature as number, // Assuming 'temperature' type is mapped
-      humidity: latest?.humidity as number,     // Assuming 'humidity' type is mapped
-      battery: device.batteryLevel,            // Use device's batteryLevel directly if available
+      temperature: latest?.temperatureCelsius ? parseFloat(latest.temperatureCelsius) : undefined,
+      humidity: latest?.humidityPercent ? parseFloat(latest.humidityPercent) : undefined,
       lastUpdate: latest ? latest.lastUpdate.toLocaleString() : 'N/A',
+      battery: undefined, // No tenemos batteryLevel en el esquema, se puede dejar como undefined o 0
     };
   });
 };
@@ -55,13 +61,13 @@ const transformSensorData = (devices: Device[], allSensorReadings: SensorReading
 
 export default function Sensors() {
   const { data: devices, isLoading: isLoadingDevices, isError: isErrorDevices } = useDevices();
-  const firstDeviceId = devices && devices.length > 0 ? devices[0].id : undefined;
+  const firstDeviceId = devices && devices.length > 0 ? devices[0].deviceId : undefined; // Usar deviceId (string)
 
   // For this simplified example, we'll fetch all sensor readings for the first device
   // In a real app, you'd fetch for all devices in the household or specific ones.
-  const { data: sensorReadings, isLoading: isLoadingSensorReadings, isError: isErrorSensorReadings } = useSensorReadings(firstDeviceId as number);
+  const { data: sensorReadings, isLoading: isLoadingSensorReadings, isError: isErrorSensorReadings } = useSensorReadings({ deviceId: firstDeviceId });
 
-  const transformedSensorData = useMemo(() => transformSensorData(devices || [], sensorReadings || []), [devices, sensorReadings]);
+  const transformedSensorData = useMemo(() => transformSensorData(devices || [], sensorReadings || [] as unknown as SensorReading[]), [devices, sensorReadings]);
 
   if (isLoadingDevices || isLoadingSensorReadings) {
     return (

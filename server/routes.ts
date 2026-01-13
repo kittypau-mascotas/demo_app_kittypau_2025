@@ -17,6 +17,7 @@ import { z } from "zod";
 =========================== */
 
 const NewDeviceSchema = z.object({
+  deviceId: z.string().min(1, "Device ID is required"),
   name: z.string().min(1, "Name is required"),
   deviceType: z.string().min(1, "Device type is required"),
   mqttTopic: z.string().min(1, "MQTT topic is required"),
@@ -28,8 +29,8 @@ const LinkDeviceToPetSchema = z.object({
 
 const NewTelemetrySchema = z.object({
   deviceId: z.string().uuid("Invalid deviceId format"),
+  sensorType: z.enum(["temperatureCelsius", "humidityPercent", "lightLux", "weightGrams"]),
   value: z.number(),
-  sensorType: z.string().min(1, "Sensor type is required"),
   ts: z.string().datetime({ message: "Invalid date format, expected ISO 8601" }).optional().transform((str) => str ? new Date(str) : new Date()),
 });
 
@@ -227,7 +228,7 @@ export async function registerRoutes(app: Express): Promise<void> {
 
       // Validate pet ownership
       const existingPet = await db.query.pets.findFirst({
-        where: and(eq(pets.id, petId), eq(pets.userId, appUserId)),
+        where: and(eq(pets.id, Number(petId)), eq(pets.userId, appUserId)),
       });
 
       if (!existingPet) {
@@ -238,7 +239,7 @@ export async function registerRoutes(app: Express): Promise<void> {
       if (deviceId) {
         // Validate device ownership
         deviceToLink = await db.query.devices.findFirst({
-          where: and(eq(devices.id, deviceId), eq(devices.userId, appUserId)),
+          where: and(eq(devices.id, Number(deviceId)), eq(devices.userId, appUserId)),
         });
 
         if (!deviceToLink) {
@@ -248,8 +249,8 @@ export async function registerRoutes(app: Express): Promise<void> {
       
       const [updatedPet] = await db
         .update(pets)
-        .set({ deviceId: deviceId || null })
-        .where(eq(pets.id, petId))
+        .set({ deviceId: deviceId ? Number(deviceId) : null })
+        .where(eq(pets.id, Number(petId)))
         .returning();
 
       res.status(200).json(updatedPet);
@@ -280,14 +281,14 @@ export async function registerRoutes(app: Express): Promise<void> {
       if (petId) {
         // Validate pet ownership and get deviceId
         const pet = await db.query.pets.findFirst({
-          where: and(eq(pets.id, petId as string), eq(pets.userId, appUserId)),
+          where: and(eq(pets.id, Number(petId)), eq(pets.userId, appUserId)),
         });
 
         if (!pet) {
           return res.status(404).json({ error: "Pet not found or not owned by user" });
         }
         if (pet.deviceId) {
-          targetDeviceIds.push(pet.deviceId);
+          targetDeviceIds.push(pet.deviceId.toString());
         } else {
           return res.status(200).json([]); // Pet has no device, return empty readings
         }
@@ -341,6 +342,7 @@ export async function registerRoutes(app: Express): Promise<void> {
         .insert(devices)
         .values({
           userId: appUserId,
+          deviceId: parsedDevice.deviceId,
           name: parsedDevice.name,
           deviceType: parsedDevice.deviceType,
           mqttTopic: parsedDevice.mqttTopic,
@@ -380,8 +382,10 @@ export async function registerRoutes(app: Express): Promise<void> {
         .values({
           deviceId: parsedTelemetry.deviceId,
           ts: parsedTelemetry.ts || new Date(),
-          value: parsedTelemetry.value,
-          sensorType: parsedTelemetry.sensorType,
+          ...(parsedTelemetry.sensorType === "temperatureCelsius" && { temperatureCelsius: parsedTelemetry.value.toString() }),
+          ...(parsedTelemetry.sensorType === "humidityPercent" && { humidityPercent: parsedTelemetry.value.toString() }),
+          ...(parsedTelemetry.sensorType === "lightLux" && { lightLux: parsedTelemetry.value }),
+          ...(parsedTelemetry.sensorType === "weightGrams" && { weightGrams: parsedTelemetry.value.toString() }),
         })
         .returning();
 

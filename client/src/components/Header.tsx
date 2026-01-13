@@ -17,7 +17,7 @@ export default function Header({ onMenuToggle }: HeaderProps) {
     setLocation('/'); // Redirect to the root path, which will show AuthView
   };
 
-  const displayName = user?.name || user?.email || 'User';
+  const displayName = user?.fullName || user?.email || 'User';
 
   return (
     <header className="navbar px-6 py-4 lg:px-8 border-b">

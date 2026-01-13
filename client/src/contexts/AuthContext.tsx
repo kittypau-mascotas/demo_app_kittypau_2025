@@ -1,16 +1,15 @@
 import { createContext, useContext, useEffect, useState } from "react";
 
 type User = {
-  id: string;
+  id: number;
   email: string;
-  name?: string;
-  role: string;
-  householdId: number;
+  fullName?: string; // name en el backend es fullName
 };
 
 type AuthContextType = {
   user: User | null;
   loading: boolean;
+  isAuthenticated: boolean;
   refreshUser: () => Promise<void>;
   logout: () => Promise<void>;
 };
@@ -54,7 +53,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, loading, refreshUser, logout }}>
+    <AuthContext.Provider value={{ user, loading, isAuthenticated: !!user, refreshUser, logout }}>
       {children}
     </AuthContext.Provider>
   );

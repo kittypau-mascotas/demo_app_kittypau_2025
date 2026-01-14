@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Switch, Route, useLocation } from 'wouter';
 import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -38,6 +38,29 @@ const neonClient = createClient({
   },
 });
 
+// Componente para capturar errores de renderizado (Error Boundary)
+class ErrorBoundary extends React.Component<{children: React.ReactNode}, {hasError: boolean, error: any}> {
+  constructor(props: any) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: any) {
+    return { hasError: true, error };
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="p-4 bg-red-50 border border-red-200 text-red-600 rounded text-sm">
+          <p className="font-bold">Error cargando componente:</p>
+          <pre className="mt-2 whitespace-pre-wrap text-xs">{this.state.error?.message || JSON.stringify(this.state.error)}</pre>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 function Router() {
   const [, setLocation] = useLocation(); // Get setLocation for programmatic navigation
@@ -96,7 +119,7 @@ function App() {
   const { user, loading } = useAuth(); // Use the auth context
 
   // DEBUG: Verificar estado de autenticación en consola
-  console.log("App Render - Auth State:", { user, loading, authUrl });
+  console.log("App Render - Auth State:", JSON.stringify({ user, loading, authUrl, hasNeonClient: !!neonClient }, null, 2));
 
   useEffect(() => {
     // Show the modal only if the user is not on a public page,
@@ -133,7 +156,17 @@ function App() {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50">
         <div className="w-full max-w-md p-6 bg-white rounded-lg shadow-md">
-          <AuthView {...{ auth: neonClient.auth } as any} onSuccess={() => window.location.reload()} />
+          <div className="mb-6 text-center">
+            <h1 className="text-2xl font-bold text-gray-900">KittyPau</h1>
+            <p className="text-sm text-gray-600">Ingresa para gestionar tus mascotas</p>
+          </div>
+          {/* DEBUG: Ver si la URL está llegando bien */}
+          <div className="mb-4 p-2 bg-gray-100 rounded text-xs text-gray-500 break-all">
+            <strong>Debug Auth URL:</strong> {authUrl || "VACÍA (Error)"}
+          </div>
+          <ErrorBoundary>
+            <AuthView {...{ auth: neonClient.auth } as any} onSuccess={() => window.location.reload()} />
+          </ErrorBoundary>
         </div>
       </div>
     );

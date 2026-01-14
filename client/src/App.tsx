@@ -27,7 +27,7 @@ import { BetterAuthReactAdapter } from '@neondatabase/neon-js/auth/react/adapter
 import { AuthView } from '@neondatabase/neon-js/auth/react/ui'; // Import AuthView
 import '@neondatabase/neon-js/ui/css'; // Import Neon Auth styles
 
-const authUrl = import.meta.env.DEV ? import.meta.env.VITE_NEON_AUTH_URL : '/neon_auth';
+const authUrl = import.meta.env.VITE_NEON_AUTH_URL;
 const neonClient = createClient({
   auth: {
     url: authUrl || '',
@@ -94,6 +94,9 @@ function Router() {
 function App() {
   const [isWelcomeModalOpen, setIsWelcomeModalOpen] = useState(false);
   const { user, loading } = useAuth(); // Use the auth context
+
+  // DEBUG: Verificar estado de autenticación en consola
+  console.log("App Render - Auth State:", { user, loading, authUrl });
 
   useEffect(() => {
     // Show the modal only if the user is not on a public page,

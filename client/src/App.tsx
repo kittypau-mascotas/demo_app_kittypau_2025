@@ -27,8 +27,8 @@ import { BetterAuthReactAdapter } from '@neondatabase/neon-js/auth/react/adapter
 import { AuthView } from '@neondatabase/neon-js/auth/react/ui'; // Import AuthView
 import '@neondatabase/neon-js/ui/css'; // Import Neon Auth styles
 
-// En producción, la librería necesita la URL completa para inicializarse correctamente.
-const authUrl = import.meta.env.VITE_NEON_AUTH_URL;
+// La librería de Neon Auth necesita la URL completa para inicializarse correctamente.
+const authUrl = import.meta.env.VITE_NEON_AUTH_URL; 
 const neonClient = createClient({
   auth: {
     url: authUrl || '',
@@ -38,30 +38,6 @@ const neonClient = createClient({
     url: 'https://placeholder.neon.tech',
   },
 });
-
-// Componente para capturar errores de renderizado (Error Boundary)
-class ErrorBoundary extends React.Component<{children: React.ReactNode}, {hasError: boolean, error: any}> {
-  constructor(props: any) {
-    super(props);
-    this.state = { hasError: false, error: null };
-  }
-
-  static getDerivedStateFromError(error: any) {
-    return { hasError: true, error };
-  }
-
-  render() {
-    if (this.state.hasError) {
-      return (
-        <div className="p-4 bg-red-50 border border-red-200 text-red-600 rounded text-sm">
-          <p className="font-bold">Error cargando componente:</p>
-          <pre className="mt-2 whitespace-pre-wrap text-xs">{this.state.error?.message || JSON.stringify(this.state.error)}</pre>
-        </div>
-      );
-    }
-    return this.props.children;
-  }
-}
 
 function Router() {
   const [, setLocation] = useLocation(); // Get setLocation for programmatic navigation
@@ -158,9 +134,7 @@ function App() {
             <h1 className="text-2xl font-bold text-gray-900">KittyPau</h1>
             <p className="text-sm text-gray-600">Ingresa para gestionar tus mascotas</p>
           </div>
-          <ErrorBoundary>
-            <AuthView {...{ auth: neonClient.auth } as any} onSuccess={() => window.location.reload()} />
-          </ErrorBoundary>
+          <AuthView {...{ auth: neonClient.auth } as any} onSuccess={() => window.location.reload()} />
         </div>
       </div>
     );

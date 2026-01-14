@@ -27,7 +27,9 @@ import { BetterAuthReactAdapter } from '@neondatabase/neon-js/auth/react/adapter
 import { AuthView } from '@neondatabase/neon-js/auth/react/ui'; // Import AuthView
 import '@neondatabase/neon-js/ui/css'; // Import Neon Auth styles
 
-const authUrl = import.meta.env.VITE_NEON_AUTH_URL;
+// Usar '/neon_auth' en producción para aprovechar el proxy de Vercel y evitar CORS.
+// En desarrollo local, usar la variable de entorno directa.
+const authUrl = import.meta.env.DEV ? import.meta.env.VITE_NEON_AUTH_URL : '/neon_auth';
 const neonClient = createClient({
   auth: {
     url: authUrl || '',
@@ -37,9 +39,6 @@ const neonClient = createClient({
     url: 'https://placeholder.neon.tech',
   },
 });
-
-// DEBUG: Expose client to window for manual inspection
-(window as any).neonClient = neonClient;
 
 // Componente para capturar errores de renderizado (Error Boundary)
 class ErrorBoundary extends React.Component<{children: React.ReactNode}, {hasError: boolean, error: any}> {
@@ -120,9 +119,6 @@ function Router() {
 function App() {
   const [isWelcomeModalOpen, setIsWelcomeModalOpen] = useState(false);
   const { user, loading } = useAuth(); // Use the auth context
-
-  // DEBUG: Log the neonClient object to check if it's created correctly
-  console.log('Neon Client Object:', neonClient);
 
   useEffect(() => {
     // Show the modal only if the user is not on a public page,

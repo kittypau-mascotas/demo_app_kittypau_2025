@@ -118,9 +118,6 @@ function App() {
   const [isWelcomeModalOpen, setIsWelcomeModalOpen] = useState(false);
   const { user, loading } = useAuth(); // Use the auth context
 
-  // DEBUG: Verificar estado de autenticación en consola
-  console.log("App Render - Auth State:", JSON.stringify({ user, loading, authUrl, hasNeonClient: !!neonClient }, null, 2));
-
   useEffect(() => {
     // Show the modal only if the user is not on a public page,
     // and prevent it from showing on every navigation.
@@ -159,10 +156,6 @@ function App() {
           <div className="mb-6 text-center">
             <h1 className="text-2xl font-bold text-gray-900">KittyPau</h1>
             <p className="text-sm text-gray-600">Ingresa para gestionar tus mascotas</p>
-          </div>
-          {/* DEBUG: Ver si la URL está llegando bien */}
-          <div className="mb-4 p-2 bg-gray-100 rounded text-xs text-gray-500 break-all">
-            <strong>Debug Auth URL:</strong> {authUrl || "VACÍA (Error)"}
           </div>
           <ErrorBoundary>
             <AuthView {...{ auth: neonClient.auth } as any} onSuccess={() => window.location.reload()} />

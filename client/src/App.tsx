@@ -38,6 +38,9 @@ const neonClient = createClient({
   },
 });
 
+// DEBUG: Expose client to window for manual inspection
+(window as any).neonClient = neonClient;
+
 // Componente para capturar errores de renderizado (Error Boundary)
 class ErrorBoundary extends React.Component<{children: React.ReactNode}, {hasError: boolean, error: any}> {
   constructor(props: any) {
@@ -117,6 +120,9 @@ function Router() {
 function App() {
   const [isWelcomeModalOpen, setIsWelcomeModalOpen] = useState(false);
   const { user, loading } = useAuth(); // Use the auth context
+
+  // DEBUG: Log the neonClient object to check if it's created correctly
+  console.log('Neon Client Object:', neonClient);
 
   useEffect(() => {
     // Show the modal only if the user is not on a public page,

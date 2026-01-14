@@ -27,7 +27,6 @@ import { BetterAuthReactAdapter } from '@neondatabase/neon-js/auth/react/adapter
 import { AuthView } from '@neondatabase/neon-js/auth/react/ui'; // Import AuthView
 import '@neondatabase/neon-js/ui/css'; // Import Neon Auth styles
 
-// Usar '/neon_auth' en producción para aprovechar el proxy de Vercel y evitar CORS.
 // En producción, la librería necesita la URL completa para inicializarse correctamente.
 const authUrl = import.meta.env.VITE_NEON_AUTH_URL;
 const neonClient = createClient({

@@ -1,6 +1,6 @@
 {
   "rewrites": [
-    { "source": "/neon_auth/(.*)", "destination": "https://royal-glade-63824812.us-east-1.aws.neon.tech/$1" },
+    { "source": "/neon_auth/(.*)", "destination": "https://ep-polished-art-adllyxom.neonauth.c-2.us-east-1.aws.neon.tech/neondb/auth/$1" },
     { "source": "/api/(.*)", "destination": "/api/index.js" }
   ]
 }

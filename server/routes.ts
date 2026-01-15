@@ -86,43 +86,54 @@ export async function registerRoutes(app: Express): Promise<void> {
   });
 
   /* ===========================
-     /api/me
+     Middleware auth global para /api
   =========================== */
-
-  app.get("/api/me", auth.requireAuth, async (req, res) => {
+  app.use("/api", auth.requireAuth, async (req, res, next) => {
     if (!req.user) {
+      // Esto realmente no debería ejecutarse si auth.requireAuth funciona correctamente
       return res.status(401).json({ message: "Unauthorized" });
     }
-    const betterAuthUser = req.user;
 
+    // Aquí manejamos la lógica de provisionamiento del usuario en nuestra DB de aplicación
+    // si aún no existe, y seteamos req.appUserId
     let userRecord = await db.query.users.findFirst({
-      where: eq(users.authUserId, betterAuthUser.id),
+      where: eq(users.authUserId, req.user.id),
     });
 
     if (!userRecord) {
+      // Provisión del usuario si no existe en nuestra DB
       const inserted = await db
         .insert(users)
         .values({
-          authUserId: betterAuthUser.id,
-          email: betterAuthUser.email,
-          fullName: betterAuthUser.name || betterAuthUser.email?.split("@")[0],
+          authUserId: req.user.id,
+          email: req.user.email,
+          fullName: req.user.name || req.user.email?.split("@")[0],
         })
         .returning();
-
       userRecord = inserted[0];
     }
 
     if (!userRecord) {
-      return res.status(500).json({ error: "Failed to provision user" });
+      return res.status(500).json({ error: "Failed to provision user in app DB" });
     }
 
+    req.appUserId = userRecord.id;
+    next();
+  });
+
+
+  /* ===========================
+     /api/me (Simplificado)
+  =========================== */
+  app.get("/api/me", (req, res) => {
+    // req.user ya está disponible gracias al middleware auth.requireAuth
+    if (!req.user) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
     res.json({
-      user: {
-        id: userRecord.id,
-        authUserId: userRecord.authUserId,
-        email: userRecord.email,
-        fullName: userRecord.fullName,
-      },
+      id: req.user.id,
+      email: req.user.email,
+      name: req.user.name,
     });
   });
 
@@ -132,30 +143,6 @@ export async function registerRoutes(app: Express): Promise<void> {
 
   app.post("/api/logout", auth.logout(), (req, res) => {
     res.json({ success: true });
-  });
-
-  /* ===========================
-     Middleware auth global
-  =========================== */
-
-  app.use("/api/*", auth.requireAuth, async (req, res, next) => {
-    if (!req.user) {
-      return res.status(401).json({ message: "Unauthorized" });
-    }
-    const betterAuthUser = req.user;
-
-    const user = await db.query.users.findFirst({
-      where: eq(users.authUserId, betterAuthUser.id),
-    });
-
-    if (!user) {
-      return res
-        .status(404)
-        .json({ message: "User not found in application database" });
-    }
-
-    req.appUserId = user.id;
-    next();
   });
 
   /* ===========================
@@ -546,7 +533,11 @@ export async function registerRoutes(app: Express): Promise<void> {
 // Extend the Express Request type to include better-auth's user and appUserId
 declare module 'express' {
   export interface Request {
-    user?: import('better-auth').User;
+    user?: { // The better-auth user object
+      id: string;
+      email: string;
+      name: string;
+    };
     appUserId?: number; // Assuming appUserId is a number
   }
 }

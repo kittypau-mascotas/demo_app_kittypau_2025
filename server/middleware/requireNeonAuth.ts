@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from "express";
+import { getSession } from "@neondatabase/serverless/auth";
 
 export type NeonUser = {
   id: string;
@@ -6,45 +7,31 @@ export type NeonUser = {
   name?: string;
 };
 
-
 export async function requireNeonAuth(
   req: Request,
   res: Response,
   next: NextFunction
 ) {
   try {
-    const response = await fetch(
-      `${process.env.NEON_AUTH_URL}/session`,
-      {
-        headers: {
-          cookie: req.headers.cookie ?? "",
-        },
-      }
-    );
+    // Usar la función oficial de Neon para obtener la sesión.
+    // Esta función sabe cómo construir la petición correcta al endpoint de Neon.
+    const session = await getSession(req);
 
-    if (!response.ok) {
-      // Enhanced error logging
-      const errorBody = await response.text();
-      console.error(`[Neon Auth] Session check failed with status: ${response.status} ${response.statusText}`);
-      console.error("[Neon Auth] Response body:", errorBody);
-      return res.status(401).json({ 
-        error: "Unauthorized", 
-        neon_auth_status: response.status,
-        neon_auth_response: errorBody 
-      });
+    if (!session || !session.user) {
+      // Si no hay sesión, denegar el acceso.
+      return res.status(401).json({ error: "Unauthorized: No valid session found" });
     }
 
-    const data = await response.json();
-
+    // La sesión es válida, adjuntar los datos del usuario a la petición.
     req.neonUser = {
-      id: data.user.id,
-      email: data.user.email,
-      name: data.user.name,
+      id: session.user.id,
+      email: session.user.email,
+      name: session.user.name,
     };
 
     next();
   } catch (err) {
-    console.error("[Neon Auth] Catch block error:", err);
+    console.error("[Neon Auth] Error in getSession:", err);
     res.status(500).json({ error: "Internal Server Error during auth check" });
   }
 }

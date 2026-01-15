@@ -48,6 +48,7 @@
     "@tanstack/react-query": "^5.60.5",
     "@types/mqtt": "^0.0.34",
     "axios": "^1.13.2",
+    "better-auth": "^1.4.13",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",

@@ -1,6 +1,6 @@
 {
   "rewrites": [
-    { "source": "/neon_auth/(.*)", "destination": "https://ep-polished-art-adllyxom.neonauth.c-2.us-east-1.aws.neon.tech/neondb/auth/$1" },
-    { "source": "/api/(.*)", "destination": "/api/index.js" }
+    { "source": "/api/(.*)", "destination": "/api/index.js" },
+    { "source": "/(.*)", "destination": "/" }
   ]
 }

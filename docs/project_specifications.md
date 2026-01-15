@@ -229,6 +229,18 @@ Para una interfaz de usuario dinámica y confiable, se recomienda la siguiente l
 3.  **"🟡 Error" / "⚠️ Alerta"**:
     *   `device.status` es `'error'` **OR** el `lastEventAt` del dispositivo indica un evento de tipo `'sensor_error'` o `'low_battery'` reciente.
 
+### Interfaz de Gráficos (Requerimientos Específicos):
+
+Cada gráfico en el dashboard debe funcionar como un componente independiente que incluya:
+
+1.  **Selector de Dispositivo (`Device_ID`)**:
+    *   Permite al usuario cambiar qué dispositivo se visualiza en ese gráfico específico.
+    *   Debe listar los dispositivos disponibles para el usuario (obtenidos de `/api/devices`).
+
+2.  **Filtro Temporal (Día y Hora)**:
+    *   Controles para definir `start_date` y `end_date` con precisión de fecha y hora.
+    *   Estos valores se pasan directamente a los parámetros de la API `/api/devices/:deviceId/readings`.
+
 ### Recomendaciones Adicionales:
 
 *   **Caching de Datos**: Utilizar librerías como React Query (`@tanstack/react-query`) para la gestión inteligente de los datos, caching y sincronización con el servidor.

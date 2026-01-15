@@ -34,6 +34,15 @@ con **telemetría real desde la API**, usando React Query y sin alterar el JSX e
 
 ---
 
+## PASO 0 – Prerrequisitos (CRÍTICO - PREVENCIÓN DE ERRORES)
+
+Antes de iniciar la integración de gráficos, verificar la integridad del esquema:
+1.  **Alinear `shared/schema.ts`**: Asegurar que los campos de telemetría (temp, hum, weight, etc.) estén definidos en el schema de Drizzle.
+2.  **Tipos de Datos**: Revisar que los IDs se manejen consistentemente (string vs number) para evitar errores de tipo en las consultas (`eq(pets.id, ...)`).
+3.  **Validación**: Consultar `errores.md` si surgen problemas de inserción o tipos.
+
+---
+
 ## PASO 1 – Hooks de datos (OBLIGATORIO)
 
 ### 1.1 Crear hook `useSensorReadings`
@@ -44,12 +53,12 @@ client/src/hooks/data/useSensorReadings.ts
 ```
 
 **Responsabilidad:**
-- Obtener lecturas de sensores por `deviceId`.
+- Obtener lecturas de sensores por `deviceId` y rango de fechas (`start`, `end`).
 - Usar `apiService.getSensorReadings`.
 
 **Reglas:**
 - Usar `useQuery`.
-- `queryKey` debe incluir `deviceId`.
+- `queryKey` debe incluir `deviceId`, `start`, `end`.
 - El hook NO debe manejar UI.
 
 ---
@@ -179,4 +188,3 @@ Antes de finalizar:
 **Si un dato no existe aún en backend, retornar arrays vacíos, NO inventar mocks.**
 
 Este documento es la única fuente de verdad para esta fase.
-

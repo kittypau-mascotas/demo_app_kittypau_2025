@@ -51,6 +51,41 @@ const limitSchema = z
 
 export async function registerRoutes(app: Express): Promise<void> {
   /* ===========================
+     Ruta de diagnóstico
+  =========================== */
+  app.get("/api/diagnostic", async (req, res) => {
+    try {
+      // 1. Verificar variables críticas
+      const hasDbUrl = !!process.env.DATABASE_URL;
+      const hasAuthSecret = !!process.env.AUTH_SECRET;
+      
+      // 2. Probar conexión simple a Neon con un query usando `sql` de drizzle-orm
+      // Nota: db.execute es la forma de ejecutar un raw query en Drizzle
+      const result = await db.execute(sql`SELECT now()`);
+      
+      res.json({
+        status: "ok",
+        env: {
+          DATABASE_URL_exists: hasDbUrl,
+          AUTH_SECRET_exists: hasAuthSecret,
+          NODE_ENV: process.env.NODE_ENV,
+        },
+        db: {
+          connected: true,
+          now: (result.rows[0] as any).now,
+        },
+      });
+    } catch (error: any) {
+      console.error("Error en /api/diagnostic:", error);
+      res.status(500).json({
+        status: "error",
+        message: error.message,
+        stack: error.stack,
+      });
+    }
+  });
+
+  /* ===========================
      /api/me
   =========================== */
 

@@ -23,7 +23,15 @@ export async function requireNeonAuth(
     );
 
     if (!response.ok) {
-      return res.status(401).json({ error: "Unauthorized" });
+      // Enhanced error logging
+      const errorBody = await response.text();
+      console.error(`[Neon Auth] Session check failed with status: ${response.status} ${response.statusText}`);
+      console.error("[Neon Auth] Response body:", errorBody);
+      return res.status(401).json({ 
+        error: "Unauthorized", 
+        neon_auth_status: response.status,
+        neon_auth_response: errorBody 
+      });
     }
 
     const data = await response.json();
@@ -36,7 +44,7 @@ export async function requireNeonAuth(
 
     next();
   } catch (err) {
-    console.error("Neon auth error:", err);
-    res.status(401).json({ error: "Unauthorized" });
+    console.error("[Neon Auth] Catch block error:", err);
+    res.status(500).json({ error: "Internal Server Error during auth check" });
   }
 }

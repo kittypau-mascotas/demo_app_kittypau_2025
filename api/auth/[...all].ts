@@ -1,16 +1,9 @@
-import type { IncomingMessage, ServerResponse } from "http";
+// Using Express types as a compatible fallback since @vercel/node is missing in package.json
+import type { Request as VercelRequest, Response as VercelResponse } from 'express';
 import { auth } from "../../server/auth/neonAuth";
 import { toWebHeaders } from "../../server/api-utils";
 
-export default async function handler(
-  req: IncomingMessage & { body?: any },
-  res: ServerResponse & {
-    status: (code: number) => any;
-    json: (body: any) => any;
-    send: (body: any) => any;
-    setHeader: (name: string, value: any) => void;
-  }
-) {
+export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     /* ---------------------------------------------------------------------- */
     /*                CONSTRUIR URL ABSOLUTA (OBLIGATORIA)                     */
@@ -35,7 +28,7 @@ export default async function handler(
       body:
         req.method === "GET" || req.method === "HEAD"
           ? undefined
-          : JSON.stringify(req.body ?? {}),
+          : typeof req.body === 'string' ? req.body : JSON.stringify(req.body ?? {}),
     });
 
     /* ---------------------------------------------------------------------- */

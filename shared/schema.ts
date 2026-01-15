@@ -1,5 +1,5 @@
 import { sql, InferSelectModel, InferInsertModel } from "drizzle-orm";
-import { pgTable, serial, text, varchar, timestamp, integer, date, real, pgEnum, primaryKey, numeric, jsonb, uuid, index } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, varchar, timestamp, integer, date, boolean, pgEnum, primaryKey, numeric, jsonb, index } from "drizzle-orm/pg-core";
 
 // --- Enums ---
 // Corresponds to: CREATE TYPE device_event_type AS ENUM (...)
@@ -14,10 +14,57 @@ export const deviceEventTypeEnum = pgEnum('device_event_type', [
 
 // --- Tablas ---
 
+// --- Better Auth Tables ---
+export const user = pgTable("user", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  email: text("email").notNull().unique(),
+  emailVerified: boolean("emailVerified").notNull(),
+  image: text("image"),
+  createdAt: timestamp("createdAt").notNull(),
+  updatedAt: timestamp("updatedAt").notNull()
+});
+
+export const session = pgTable("session", {
+  id: text("id").primaryKey(),
+  expiresAt: timestamp("expiresAt").notNull(),
+  token: text("token").notNull().unique(),
+  createdAt: timestamp("createdAt").notNull(),
+  updatedAt: timestamp("updatedAt").notNull(),
+  ipAddress: text("ipAddress"),
+  userAgent: text("userAgent"),
+  userId: text("userId").notNull().references(() => user.id)
+});
+
+export const account = pgTable("account", {
+  id: text("id").primaryKey(),
+  accountId: text("accountId").notNull(),
+  providerId: text("providerId").notNull(),
+  userId: text("userId").notNull().references(() => user.id),
+  accessToken: text("accessToken"),
+  refreshToken: text("refreshToken"),
+  idToken: text("idToken"),
+  accessTokenExpiresAt: timestamp("accessTokenExpiresAt"),
+  refreshTokenExpiresAt: timestamp("refreshTokenExpiresAt"),
+  scope: text("scope"),
+  password: text("password"),
+  createdAt: timestamp("createdAt").notNull(),
+  updatedAt: timestamp("updatedAt").notNull()
+});
+
+export const verification = pgTable("verification", {
+  id: text("id").primaryKey(),
+  identifier: text("identifier").notNull(),
+  value: text("value").notNull(),
+  expiresAt: timestamp("expiresAt").notNull(),
+  createdAt: timestamp("createdAt"),
+  updatedAt: timestamp("updatedAt")
+});
+
 // Tabla de usuarios (users)
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
-  authUserId: uuid("auth_user_id").notNull().unique(), // From Neon Auth
+  authUserId: text("auth_user_id").notNull().unique(), // Changed to text to match Better Auth ID
   email: varchar("email", { length: 255 }).unique(),
   fullName: varchar("full_name", { length: 255 }),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
@@ -100,4 +147,3 @@ export type InsertSensorReading = InferInsertModel<typeof sensorReadings>;
 
 export type DeviceEvent = InferSelectModel<typeof deviceEvents>;
 export type InsertDeviceEvent = InferInsertModel<typeof deviceEvents>;
-

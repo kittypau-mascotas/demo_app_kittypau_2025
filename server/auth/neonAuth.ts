@@ -1,16 +1,23 @@
 import { betterAuth } from "better-auth";
-import { db } from "../db";
-import { users } from "../../shared/schema";
+import { neonAdapter } from "better-auth/adapters/neon";
+import { users } from "../../shared/schema"; // Keep users if it's used for betterAuth's user management
 
 if (!process.env.AUTH_SECRET) {
   throw new Error(
     "AUTH_SECRET is not set. Please set it in your .env file"
   );
 }
+if (!process.env.DATABASE_URL) {
+  throw new Error(
+    "DATABASE_URL is not set. Please set it in your .env file"
+  );
+}
 
 export const auth = betterAuth({
-  db: db,
-  users: users,
+  database: neonAdapter({
+    connectionString: process.env.DATABASE_URL,
+    users: users, // Pass users table to the adapter
+  }),
   secret: process.env.AUTH_SECRET,
-  baseURL: process.env.VITE_API_URL || "http://localhost:3000",
 });
+

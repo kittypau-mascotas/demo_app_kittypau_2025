@@ -88,7 +88,7 @@ export async function registerRoutes(app: Express): Promise<void> {
   /* ===========================
      Middleware auth global para /api
   =========================== */
-  app.use("/api", auth.requireAuth, async (req, res, next) => {
+  app.use("/api", auth.requireAuth(), async (req, res, next) => {
     if (!req.user) {
       // Esto realmente no debería ejecutarse si auth.requireAuth funciona correctamente
       return res.status(401).json({ message: "Unauthorized" });
@@ -125,15 +125,13 @@ export async function registerRoutes(app: Express): Promise<void> {
   /* ===========================
      /api/me (Simplificado)
   =========================== */
-  app.get("/api/me", (req, res) => {
+  app.get("/api/me", auth.requireAuth(), (req, res) => {
     // req.user ya está disponible gracias al middleware auth.requireAuth
     if (!req.user) {
       return res.status(401).json({ message: "Unauthorized" });
     }
     res.json({
-      id: req.user.id,
-      email: req.user.email,
-      name: req.user.name,
+      user: req.user,
     });
   });
 

@@ -21,7 +21,7 @@ app.use(express.json({
 app.use(express.urlencoded({ extended: false }));
 
 // Apply better-auth middleware
-app.use("/auth", auth.middleware());
+app.use("/auth", auth.handler);
 
 // This middleware is for logging purposes and can be kept.
 app.use((req, res, next) => {

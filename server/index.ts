@@ -1,97 +1,117 @@
-import 'dotenv/config';
+import "dotenv/config";
 
 import express, { type Request, Response, NextFunction } from "express";
+import * as http from "http";
+
 import { registerRoutes } from "./routes";
 import { initializeWebSocketServer } from "./websocket";
-import * as http from 'http';// Import http module for server instance
 
 const app = express();
 
-declare module 'http' {
+/* -------------------------------------------------------------------------- */
+/*                               RAW BODY FIX                                 */
+/* -------------------------------------------------------------------------- */
+declare module "http" {
   interface IncomingMessage {
-    rawBody: unknown
+    rawBody?: Buffer;
   }
 }
-app.use(express.json({
-  verify: (req, _res, buf) => {
-    req.rawBody = buf;
-  }
-}));
+
+app.use(
+  express.json({
+    verify: (req, _res, buf) => {
+      req.rawBody = buf;
+    },
+  })
+);
 app.use(express.urlencoded({ extended: false }));
 
-// ✅ HEALTH CHECK (Must be before auth and other routes)
-// This endpoint does not depend on DB or Auth, ensuring we can debug deployment status.
+/* -------------------------------------------------------------------------- */
+/*                               HEALTH CHECK                                  */
+/* ⚠️ DEBE SER PUBLICO Y ANTES DE CUALQUIER AUTH                                */
+/* -------------------------------------------------------------------------- */
 app.get("/api/health", (_req, res) => {
   res.status(200).json({
     ok: true,
-    env: process.env.NODE_ENV,
+    service: "kittypau-api",
+    env: process.env.NODE_ENV ?? "unknown",
     time: new Date().toISOString(),
   });
 });
 
-// This middleware is for logging purposes and can be kept.
+/* -------------------------------------------------------------------------- */
+/*                              REQUEST LOGGER                                 */
+/* -------------------------------------------------------------------------- */
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
-  let capturedJsonResponse: Record<string, any> | undefined = undefined;
 
-  const originalResJson = res.json;
-  res.json = function (bodyJson, ...args) {
-    capturedJsonResponse = bodyJson;
-    return originalResJson.apply(res, [bodyJson, ...args]);
+  let capturedJsonResponse: Record<string, unknown> | undefined;
+  const originalResJson = res.json.bind(res);
+
+  res.json = (body: any) => {
+    capturedJsonResponse = body;
+    return originalResJson(body);
   };
 
   res.on("finish", () => {
-    const duration = Date.now() - start;
-    if (path.startsWith("/api")) {
-      let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
-      if (capturedJsonResponse) {
-        logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
-      }
+    if (!path.startsWith("/api")) return;
 
-      if (logLine.length > 80) {
-        logLine = logLine.slice(0, 79) + "…";
-      }
-      // console.log(logLine); // Restoring log for debugging if needed
+    const duration = Date.now() - start;
+    let log = `${req.method} ${path} ${res.statusCode} ${duration}ms`;
+
+    if (capturedJsonResponse) {
+      const payload = JSON.stringify(capturedJsonResponse);
+      log += ` :: ${payload.slice(0, 120)}`;
     }
+
+    // console.log(log); // habilitar solo si lo necesitas
   });
 
   next();
 });
 
-// The registerRoutes function sets up all the API routes.
-// We'll await its completion before starting the server.
-async function startServer() {
+/* -------------------------------------------------------------------------- */
+/*                             ROUTES REGISTRATION                             */
+/* -------------------------------------------------------------------------- */
+async function bootstrap() {
+  // 🔐 registerRoutes DEBE manejar internamente:
+  // - auth middleware
+  // - ownership checks
+  // - API protegida
   await registerRoutes(app);
 
-  // Only listen if not running in Vercel (Serverless)
-  // Vercel sets process.env.VERCEL = '1'
-  if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
-    const PORT = process.env.PORT || 3000;
-    // Create an HTTP server instance
-    const httpServer = http.createServer(app);
+  /* ------------------------------------------------------------------------ */
+  /*                        LOCAL DEV SERVER ONLY                              */
+  /* ------------------------------------------------------------------------ */
+  // En Vercel NO se debe llamar a listen()
+  // Vercel inyecta su propio handler
+  if (!process.env.VERCEL) {
+    const PORT = Number(process.env.PORT) || 3000;
+    const server = http.createServer(app);
 
-    httpServer.listen(PORT, () => {
-      console.log(`Servidor Express escuchando en el puerto ${PORT}`);
-      // Initialize WebSocket server using the same HTTP server
-      initializeWebSocketServer(httpServer);
+    server.listen(PORT, () => {
+      console.log(`🚀 KittyPau API escuchando en http://localhost:${PORT}`);
+      initializeWebSocketServer(server);
     });
   }
 }
 
-startServer().catch(error => {
-  console.error("Error al iniciar el servidor Express:", error);
+bootstrap().catch((err) => {
+  console.error("❌ Error iniciando el servidor:", err);
 });
 
+/* -------------------------------------------------------------------------- */
+/*                            GLOBAL ERROR HANDLER                             */
+/* -------------------------------------------------------------------------- */
+app.use(
+  (err: any, _req: Request, res: Response, _next: NextFunction) => {
+    const status = err.status ?? err.statusCode ?? 500;
+    const message =
+      err.message ?? "Internal Server Error";
 
-app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-  const status = err.status || err.statusCode || 500;
-  const message = err.message || "Internal Server Error";
-
-  res.status(status).json({ message });
-  // It's better not to re-throw the error in a production serverless environment
-  // as it might cause the function to crash unexpectedly.
-  // throw err;
-});
+    res.status(status).json({ error: message });
+  }
+);
 
 export default app;

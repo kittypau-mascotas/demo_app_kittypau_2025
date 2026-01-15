@@ -189,7 +189,14 @@ export async function registerRoutes(app: Express): Promise<void> {
 
     const [row] = await db
       .insert(sensorReadings)
-      .values(payload)
+      .values({
+        deviceId: payload.deviceId,
+        ts: new Date(),
+        temperatureCelsius: payload.temperatureCelsius?.toString(),
+        humidityPercent: payload.humidityPercent?.toString(),
+        lightLux: payload.lightLux,
+        weightGrams: payload.weightGrams?.toString(),
+      })
       .returning();
 
     res.status(201).json(row);

@@ -1,12 +1,7 @@
 import { drizzle } from 'drizzle-orm/neon-http';
 import { neon } from '@neondatabase/serverless';
 import * as schema from '../shared/schema';
-
-// Cargar variables de entorno si no estamos en producción
-if (process.env.NODE_ENV !== 'production') {
-  // En un entorno real, usarías 'dotenv' o similar.
-  // Aquí asumimos que DATABASE_URL ya está disponible en el entorno de Replit o se pasó manualmente.
-}
+import "dotenv/config"; // ✅ Carga automática de .env en local
 
 // 🛡️ FIX: No lanzar error en el top-level.
 // Si DATABASE_URL falta, usamos un string vacío o placeholder para permitir que la app arranque

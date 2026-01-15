@@ -1,10 +1,6 @@
 {
   "outputDirectory": "dist",
   "rewrites": [
-    { "source": "/api/devices/:deviceId/readings", "destination": "/api/device-readings?deviceId=:deviceId" },
-    { "source": "/api/devices/:deviceId/events", "destination": "/api/device-events?deviceId=:deviceId" },
-    { "source": "/api/pets/:petId", "destination": "/api/pet-details?petId=:petId" },
-    { "source": "/api/(.*)", "destination": "/api/$1" },
-    { "source": "/(.*)", "destination": "/index.html" }
+    { "source": "/((?!api/.*).*)", "destination": "/index.html" }
   ]
 }

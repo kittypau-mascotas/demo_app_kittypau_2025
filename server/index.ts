@@ -1,3 +1,2 @@
-// Este archivo ha sido reemplazado por Serverless Functions en /api
-// Se mantiene vacío para evitar conflictos en Vercel.
+// Serverless architecture: This file is no longer used.
 export default {};

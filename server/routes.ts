@@ -1,4 +1,7 @@
 import type { Express, Request, Response, NextFunction } from "express";
+import { z } from "zod";
+import { eq, and, sql, desc } from "drizzle-orm";
+
 import { auth } from "./auth/neonAuth";
 import { db } from "./db";
 import {
@@ -8,11 +11,9 @@ import {
   sensorReadings,
   deviceEvents,
 } from "../shared/schema";
-import { eq, and, sql, desc } from "drizzle-orm";
-import { z } from "zod";
 
 /* -------------------------------------------------------------------------- */
-/*                         TYPES EXTENSION                                     */
+/*                               TYPES EXTENSION                               */
 /* -------------------------------------------------------------------------- */
 declare global {
   namespace Express {
@@ -29,7 +30,7 @@ declare global {
 }
 
 /* -------------------------------------------------------------------------- */
-/*                         HELPERS                                             */
+/*                               HELPERS                                      */
 /* -------------------------------------------------------------------------- */
 function toWebHeaders(
   nodeHeaders: import("http").IncomingHttpHeaders
@@ -37,14 +38,11 @@ function toWebHeaders(
   const headers = new Headers();
   for (const [k, v] of Object.entries(nodeHeaders)) {
     if (typeof v === "string") headers.append(k, v);
-    if (Array.isArray(v)) v.forEach((x) => headers.append(k, x));
+    else if (Array.isArray(v)) v.forEach((x) => headers.append(k, x));
   }
   return headers;
 }
 
-/* -------------------------------------------------------------------------- */
-/*                         AUTH MIDDLEWARE                                     */
-/* -------------------------------------------------------------------------- */
 const requireAuth = async (
   req: Request,
   res: Response,
@@ -60,27 +58,6 @@ const requireAuth = async (
     }
 
     req.user = session.user;
-
-    let userRecord = await db.query.users.findFirst({
-      where: eq(users.authUserId, session.user.id),
-    });
-
-    if (!userRecord) {
-      const [created] = await db
-        .insert(users)
-        .values({
-          authUserId: session.user.id,
-          email: session.user.email,
-          fullName:
-            session.user.name ??
-            session.user.email.split("@")[0],
-        })
-        .returning();
-
-      userRecord = created;
-    }
-
-    req.appUserId = userRecord.id;
     next();
   } catch (err) {
     console.error("Auth error:", err);
@@ -89,81 +66,132 @@ const requireAuth = async (
 };
 
 /* -------------------------------------------------------------------------- */
-/*                         ROUTES                                              */
+/*                               ROUTES                                       */
 /* -------------------------------------------------------------------------- */
-export async function registerRoutes(app: Express) {
-  /* ========================== */
-  /* PUBLIC ROUTES (NO AUTH)    */
-  /* ========================== */
-
-  app.get("/api/health", (_req, res) => {
-    res.json({
-      ok: true,
-      service: "kittypau-api",
-      env: process.env.NODE_ENV,
-      time: new Date().toISOString(),
-    });
-  });
-
-  app.get("/api/diagnostic", async (_req, res) => {
-    try {
-      const dbCheck = await db.execute(sql`SELECT now()`);
-      res.json({
-        status: "ok",
-        env: {
-          DATABASE_URL: !!process.env.DATABASE_URL,
-          AUTH_SECRET: !!process.env.AUTH_SECRET,
-        },
-        dbTime: (dbCheck.rows[0] as any).now,
-      });
-    } catch (err: any) {
-      res.status(500).json({
-        status: "error",
-        message: err.message,
-      });
-    }
-  });
-
-  /* ========================== */
-  /* PROTECTED ROUTES           */
-  /* ========================== */
-
+export async function registerRoutes(app: Express): Promise<void> {
+  /* ----------------------------- AUTH GLOBAL ------------------------------ */
   app.use("/api", requireAuth);
 
+  /* ----------------------- USER PROVISIONING ------------------------------ */
+  app.use("/api", async (req, res, next) => {
+    const authUser = req.user!;
+    let user = await db.query.users.findFirst({
+      where: eq(users.authUserId, authUser.id),
+    });
+
+    if (!user) {
+      const [created] = await db
+        .insert(users)
+        .values({
+          authUserId: authUser.id,
+          email: authUser.email,
+          fullName:
+            authUser.name ?? authUser.email.split("@")[0],
+        })
+        .returning();
+
+      user = created;
+    }
+
+    req.appUserId = user.id;
+    next();
+  });
+
+  /* ------------------------------- ME ------------------------------------ */
   app.get("/api/me", (req, res) => {
     res.json({ user: req.user });
   });
 
-  app.post("/api/logout", async (req, res) => {
-    await auth.api.signOut({
-      headers: toWebHeaders(req.headers),
-    });
-    res.json({ success: true });
-  });
-
+  /* ----------------------------- DEVICES --------------------------------- */
   app.get("/api/devices", async (req, res) => {
-    const devicesList = await db
+    const data = await db
       .select()
       .from(devices)
       .where(eq(devices.userId, req.appUserId!));
 
-    res.json(devicesList);
+    res.json(data);
   });
 
+  app.post("/api/devices", async (req, res) => {
+    const schema = z.object({
+      deviceId: z.string(),
+      name: z.string(),
+      deviceType: z.string(),
+      mqttTopic: z.string(),
+    });
+
+    const payload = schema.parse(req.body);
+
+    const [device] = await db
+      .insert(devices)
+      .values({
+        ...payload,
+        userId: req.appUserId!,
+        status: "offline",
+      })
+      .returning();
+
+    res.status(201).json(device);
+  });
+
+  /* ------------------------------- PETS ---------------------------------- */
   app.get("/api/pets", async (req, res) => {
-    const result = await db
+    const data = await db
       .select()
       .from(pets)
       .where(eq(pets.userId, req.appUserId!));
 
-    res.json(result);
+    res.json(data);
   });
 
+  app.post("/api/pets", async (req, res) => {
+    const schema = z.object({
+      name: z.string(),
+      species: z.string(),
+      breed: z.string().optional(),
+      birthDate: z.string().optional(),
+      deviceId: z.number().nullable().optional(),
+    });
+
+    const payload = schema.parse(req.body);
+
+    const [pet] = await db
+      .insert(pets)
+      .values({
+        ...payload,
+        userId: req.appUserId!,
+      })
+      .returning();
+
+    res.status(201).json(pet);
+  });
+
+  /* ----------------------------- TELEMETRY -------------------------------- */
   app.get("/api/telemetry", async (req, res) => {
-    const result = await db.query.sensorReadings.findMany({
+    const readings = await db.query.sensorReadings.findMany({
       orderBy: [desc(sensorReadings.ts)],
       limit: 100,
     });
-    res.json(result);
+
+    res.json(readings);
+  });
+
+  app.post("/api/telemetry", async (req, res) => {
+    const schema = z.object({
+      deviceId: z.string(),
+      temperatureCelsius: z.number().optional(),
+      humidityPercent: z.number().optional(),
+      lightLux: z.number().optional(),
+      weightGrams: z.number().optional(),
+    });
+
+    const payload = schema.parse(req.body);
+
+    const [row] = await db
+      .insert(sensorReadings)
+      .values(payload)
+      .returning();
+
+    res.status(201).json(row);
   });
 }

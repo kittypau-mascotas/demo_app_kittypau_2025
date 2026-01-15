@@ -1,21 +1,10 @@
 {
   "outputDirectory": "dist",
-
-  "builds": [
-    {
-      "src": "api/index.js",
-      "use": "@vercel/node"
-    }
-  ],
-
-  "routes": [
-    {
-      "src": "^/api/(.*)$",
-      "dest": "/api/index.js"
-    },
-    {
-      "src": "^/(.*)$",
-      "dest": "/index.html"
-    }
+  "rewrites": [
+    { "source": "/api/devices/:deviceId/readings", "destination": "/api/device-readings?deviceId=:deviceId" },
+    { "source": "/api/devices/:deviceId/events", "destination": "/api/device-events?deviceId=:deviceId" },
+    { "source": "/api/pets/:petId", "destination": "/api/pet-details?petId=:petId" },
+    { "source": "/api/(.*)", "destination": "/api/$1" },
+    { "source": "/(.*)", "destination": "/index.html" }
   ]
 }

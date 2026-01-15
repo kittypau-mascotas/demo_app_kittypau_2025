@@ -4,6 +4,7 @@ node_modules
 # Build outputs
 dist
 api
+!api/auth
 
 # Local environment variables
 .env

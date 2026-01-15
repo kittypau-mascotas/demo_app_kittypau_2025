@@ -1,6 +1,6 @@
 import { betterAuth } from "better-auth";
-import { neonAdapter } from "better-auth/adapters/neon";
-import { users } from "../../shared/schema"; // Keep users if it's used for betterAuth's user management
+import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { db } from "../db";
 
 if (!process.env.AUTH_SECRET) {
   throw new Error(
@@ -14,10 +14,8 @@ if (!process.env.DATABASE_URL) {
 }
 
 export const auth = betterAuth({
-  database: neonAdapter({
-    connectionString: process.env.DATABASE_URL,
-    users: users, // Pass users table to the adapter
+  database: drizzleAdapter(db, {
+    provider: "pg",
   }),
   secret: process.env.AUTH_SECRET,
 });
-

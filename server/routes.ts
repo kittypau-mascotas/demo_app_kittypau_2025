@@ -1,6 +1,6 @@
 import type { Express } from "express";
 import type { Request, Response, NextFunction } from "express";
-import { requireNeonAuth } from "./middleware/requireNeonAuth";
+import { auth } from "./auth/neonAuth"; // Import auth from neonAuth.ts
 import { db } from "./db";
 import {
   users,
@@ -89,23 +89,23 @@ export async function registerRoutes(app: Express): Promise<void> {
      /api/me
   =========================== */
 
-  app.get("/api/me", requireNeonAuth, async (req, res) => {
-    if (!req.neonUser) {
+  app.get("/api/me", auth.requireAuth, async (req, res) => {
+    if (!req.user) {
       return res.status(401).json({ message: "Unauthorized" });
     }
-    const neonUser = req.neonUser;
+    const betterAuthUser = req.user;
 
     let userRecord = await db.query.users.findFirst({
-      where: eq(users.authUserId, neonUser.id),
+      where: eq(users.authUserId, betterAuthUser.id),
     });
 
     if (!userRecord) {
       const inserted = await db
         .insert(users)
         .values({
-          authUserId: neonUser.id,
-          email: neonUser.email,
-          fullName: neonUser.name || neonUser.email?.split("@")[0],
+          authUserId: betterAuthUser.id,
+          email: betterAuthUser.email,
+          fullName: betterAuthUser.name || betterAuthUser.email?.split("@")[0],
         })
         .returning();
 
@@ -130,19 +130,7 @@ export async function registerRoutes(app: Express): Promise<void> {
      /api/logout
   =========================== */
 
-  app.post("/api/logout", async (req, res) => {
-    try {
-      await fetch(`${process.env.NEON_AUTH_URL}/logout`, {
-        method: "POST",
-        headers: {
-          cookie: req.headers.cookie ?? "",
-        },
-      });
-    } catch (err) {
-      console.error("Neon Auth logout error:", err);
-    }
-
-    res.clearCookie("neon_session");
+  app.post("/api/logout", auth.logout(), (req, res) => {
     res.json({ success: true });
   });
 
@@ -150,14 +138,14 @@ export async function registerRoutes(app: Express): Promise<void> {
      Middleware auth global
   =========================== */
 
-  app.use("/api/*", requireNeonAuth, async (req, res, next) => {
-    if (!req.neonUser) {
+  app.use("/api/*", auth.requireAuth, async (req, res, next) => {
+    if (!req.user) {
       return res.status(401).json({ message: "Unauthorized" });
     }
-    const neonUser = req.neonUser;
+    const betterAuthUser = req.user;
 
     const user = await db.query.users.findFirst({
-      where: eq(users.authUserId, neonUser.id),
+      where: eq(users.authUserId, betterAuthUser.id),
     });
 
     if (!user) {
@@ -459,6 +447,7 @@ export async function registerRoutes(app: Express): Promise<void> {
     res: Response,
     next: NextFunction
   ) {
+    // req.appUserId is set by the global auth.requireAuth middleware
     const appUserId = req.appUserId;
     const deviceIdParam = req.params.deviceId;
 
@@ -552,5 +541,13 @@ export async function registerRoutes(app: Express): Promise<void> {
       }
     }
   );
+}
+
+// Extend the Express Request type to include better-auth's user and appUserId
+declare module 'express' {
+  export interface Request {
+    user?: import('better-auth').User;
+    appUserId?: number; // Assuming appUserId is a number
+  }
 }
 

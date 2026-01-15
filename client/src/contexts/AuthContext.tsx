@@ -2,16 +2,15 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 
 // Ajusta esta interfaz según los datos reales de tu usuario
 interface User {
-  id: number;
-  authUserId: string;
+  id: string; // better-auth uses string for user id
   email: string;
-  fullName: string;
+  name: string; // better-auth uses 'name' not 'fullName'
 }
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  logout: () => Promise<void>;
+  logout: () => void; // Logout no es asíncrono en el frontend
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -24,19 +23,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     async function checkAuth() {
       try {
         // 🔑 CRÍTICO: credentials: "include" es obligatorio para que viajen las cookies en Vercel
-        const res = await fetch("/api/me", { credentials: "include" });
+        // Usamos el endpoint de sesión de better-auth
+        const res = await fetch("/auth/session", { credentials: "include" });
 
         if (res.ok) {
-          const data = await res.json();
-          // Tu backend devuelve { user: { ... } }
-          setUser(data.user);
-        } else if (res.status === 401) {
-          // 🛑 401 explícito: No hay sesión o expiró.
-          // Esto rompe el bucle de "Loading..."
-          setUser(null);
+          const data: User = await res.json();
+          // better-auth devuelve directamente el objeto de usuario
+          setUser(data);
         } else {
-          // Otros errores (500, etc.)
-          console.error("Error verificando sesión:", res.status);
+          // Si no está OK, el usuario no está autenticado o la sesión expiró
           setUser(null);
         }
       } catch (error) {
@@ -51,14 +46,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     checkAuth();
   }, []);
 
-  const logout = async () => {
-    try {
-      await fetch("/api/logout", { method: "POST", credentials: "include" });
-      setUser(null);
-      // Opcional: window.location.href = "/";
-    } catch (error) {
-      console.error("Error al cerrar sesión:", error);
-    }
+  const logout = () => {
+    // better-auth maneja el cierre de sesión en el backend con su propio middleware.
+    // Aquí solo limpiamos el estado local.
+    setUser(null);
+    // Redirigir a la página de inicio o login después de cerrar sesión
+    // window.location.href = "/login"; // o la ruta que desees
   };
 
   return (

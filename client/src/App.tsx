@@ -9,9 +9,8 @@ import { WelcomeModal } from '@/components/WelcomeModal';
 import { WebSocketProvider } from '@/hooks/use-websocket'; // Import WebSocketProvider
 
 import NotFound from '@/pages/not-found';
-// Login and Register are now handled by AuthView, so they are not directly routed here.
-// import Login from '@/pages/Login';
-// import Register from '@/pages/Register';
+import Login from '@/pages/Login'; // Import Login
+import Register from '@/pages/Register'; // Import Register
 import Dashboard from '@/pages/Dashboard';
 import Devices from '@/pages/Devices';
 import AddDevice from '@/pages/AddDevice';
@@ -22,22 +21,7 @@ import Alerts from '@/pages/Alerts';
 import Settings from '@/pages/Settings';
 import Planes from '@/pages/Planes';
 import Users from '@/pages/Users';
-import { createClient } from '@neondatabase/neon-js';
-import { BetterAuthReactAdapter } from '@neondatabase/neon-js/auth/react/adapters';
-import { AuthView } from '@neondatabase/neon-js/auth/react/ui'; // Import AuthView
-import '@neondatabase/neon-js/ui/css'; // Import Neon Auth styles
 
-// La librería de Neon Auth necesita la URL completa para inicializarse correctamente.
-const authUrl = import.meta.env.VITE_NEON_AUTH_URL;
-const neonClient = createClient({
-  auth: {
-    url: authUrl || '',
-    adapter: BetterAuthReactAdapter(),
-  },
-  dataApi: {
-    url: 'https://placeholder.neon.tech',
-  },
-});
 
 // Componente para capturar errores de renderizado (Error Boundary)
 class ErrorBoundary extends React.Component<{children: React.ReactNode}, {hasError: boolean, error: any}> {
@@ -76,6 +60,12 @@ function Router() {
   return (
     <AppLayout>
       <Switch>
+        <Route path="/login">
+          <Login />
+        </Route>
+        <Route path="/register">
+          <Register />
+        </Route>
         <Route path="/dashboard">
           <PrivateRoute component={Dashboard} />
         </Route>
@@ -118,6 +108,7 @@ function Router() {
 function App() {
   const [isWelcomeModalOpen, setIsWelcomeModalOpen] = useState(false);
   const { user, loading } = useAuth(); // Use the auth context
+  const [, setLocation] = useLocation();
 
   useEffect(() => {
     // Show the modal only if the user is not on a public page,
@@ -142,28 +133,11 @@ function App() {
   }
 
   if (!user) {
-    if (!authUrl) {
-      return (
-        <div className="flex items-center justify-center h-screen text-red-600 p-4 text-center">
-          Error crítico: <code>VITE_NEON_AUTH_URL</code> no está definida.<br/>
-          Revisa tus variables de entorno en Vercel.
-        </div>
-      );
+    // If not authenticated, redirect to the login page
+    if (window.location.pathname !== "/login" && window.location.pathname !== "/register") {
+      setLocation("/login", { replace: true });
     }
-    // If not authenticated, render the Neon Auth UI
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50">
-        <div className="w-full max-w-md p-6 bg-white rounded-lg shadow-md">
-          <div className="mb-6 text-center">
-            <h1 className="text-2xl font-bold text-gray-900">KittyPau</h1>
-            <p className="text-sm text-gray-600">Ingresa para gestionar tus mascotas</p>
-          </div>
-          <ErrorBoundary>
-            <AuthView {...{ auth: neonClient.auth } as any} onSuccess={() => window.location.reload()} />
-          </ErrorBoundary>
-        </div>
-      </div>
-    );
+    return null; // Don't render anything while redirecting or on login/register pages
   }
 
   return (
@@ -178,3 +152,4 @@ function App() {
 }
 
 export default App;
+

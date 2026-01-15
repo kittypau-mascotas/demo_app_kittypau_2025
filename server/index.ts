@@ -4,6 +4,7 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { initializeWebSocketServer } from "./websocket";
 import * as http from 'http';// Import http module for server instance
+import { auth } from "./auth/neonAuth"; // Import auth from neonAuth.ts
 
 const app = express();
 
@@ -18,6 +19,9 @@ app.use(express.json({
   }
 }));
 app.use(express.urlencoded({ extended: false }));
+
+// Apply better-auth middleware
+app.use("/auth", auth.middleware());
 
 // This middleware is for logging purposes and can be kept.
 app.use((req, res, next) => {

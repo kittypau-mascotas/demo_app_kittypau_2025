@@ -4,7 +4,6 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { initializeWebSocketServer } from "./websocket";
 import * as http from 'http';// Import http module for server instance
-import { auth } from "./auth/neonAuth"; // Import auth from neonAuth.ts
 
 const app = express();
 
@@ -20,8 +19,15 @@ app.use(express.json({
 }));
 app.use(express.urlencoded({ extended: false }));
 
-// Apply better-auth middleware
-app.use("/auth", auth.handler);
+// ✅ HEALTH CHECK (Must be before auth and other routes)
+// This endpoint does not depend on DB or Auth, ensuring we can debug deployment status.
+app.get("/api/health", (_req, res) => {
+  res.status(200).json({
+    ok: true,
+    env: process.env.NODE_ENV,
+    time: new Date().toISOString(),
+  });
+});
 
 // This middleware is for logging purposes and can be kept.
 app.use((req, res, next) => {
@@ -58,15 +64,19 @@ app.use((req, res, next) => {
 async function startServer() {
   await registerRoutes(app);
 
-  const PORT = process.env.PORT || 3000;
-  // Create an HTTP server instance
-  const httpServer = http.createServer(app);
+  // Only listen if not running in Vercel (Serverless)
+  // Vercel sets process.env.VERCEL = '1'
+  if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
+    const PORT = process.env.PORT || 3000;
+    // Create an HTTP server instance
+    const httpServer = http.createServer(app);
 
-  httpServer.listen(PORT, () => {
-    console.log(`Servidor Express escuchando en el puerto ${PORT}`);
-    // Initialize WebSocket server using the same HTTP server
-    initializeWebSocketServer(httpServer);
-  });
+    httpServer.listen(PORT, () => {
+      console.log(`Servidor Express escuchando en el puerto ${PORT}`);
+      // Initialize WebSocket server using the same HTTP server
+      initializeWebSocketServer(httpServer);
+    });
+  }
 }
 
 startServer().catch(error => {

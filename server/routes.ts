@@ -12,6 +12,21 @@ import {
 import { eq, and, sql, desc } from "drizzle-orm";
 import { z } from "zod";
 
+// ✅ FIX: Type augmentation for Express Request to include user and appUserId
+declare global {
+  namespace Express {
+    interface Request {
+      user?: {
+        id: string;
+        email: string;
+        name: string;
+      };
+      appUserId?: number;
+      deviceRecord?: any;
+    }
+  }
+}
+
 /* ===========================
    Helpers de validación
 =========================== */
@@ -24,11 +39,11 @@ const NewDeviceSchema = z.object({
 });
 
 const LinkDeviceToPetSchema = z.object({
-  deviceId: z.string().uuid("Invalid deviceId format").nullable().optional(), // Allow null to unlink
+  deviceId: z.string().nullable().optional(), // Allow null to unlink. Removed .uuid() as IDs are numbers/strings
 });
 
 const NewTelemetrySchema = z.object({
-  deviceId: z.string().uuid("Invalid deviceId format"),
+  deviceId: z.string().min(1, "Device ID is required"), // Removed .uuid() to allow IDs like "KPCL0033"
   sensorType: z.enum(["temperatureCelsius", "humidityPercent", "lightLux", "weightGrams"]),
   value: z.number(),
   ts: z.string().datetime({ message: "Invalid date format, expected ISO 8601" }).optional().transform((str) => str ? new Date(str) : new Date()),
@@ -44,6 +59,19 @@ const limitSchema = z
   .regex(/^\d+$/, "Limit must be a number")
   .transform(Number)
   .optional();
+
+// ✅ FIX: Helper to convert Node headers to Web Standard Headers for Better Auth
+function toWebHeaders(nodeHeaders: import("http").IncomingHttpHeaders): Headers {
+  const headers = new Headers();
+  for (const [key, value] of Object.entries(nodeHeaders)) {
+    if (typeof value === "string") {
+      headers.append(key, value);
+    } else if (Array.isArray(value)) {
+      value.forEach((v) => headers.append(key, v));
+    }
+  }
+  return headers;
+}
 
 /* ===========================
    Registro de rutas
@@ -85,12 +113,28 @@ export async function registerRoutes(app: Express): Promise<void> {
     }
   });
 
+  // ✅ Middleware manual de autenticación para Better Auth
+  // Reemplaza a auth.requireAuth() que puede no existir o fallar en serverless
+  const requireAuth = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const session = await auth.api.getSession({ headers: toWebHeaders(req.headers) });
+      if (!session) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      req.user = session.user;
+      next();
+    } catch (error) {
+      console.error("Auth check failed:", error);
+      res.status(500).json({ message: "Internal Auth Error" });
+    }
+  };
+
   /* ===========================
      Middleware auth global para /api
   =========================== */
-  app.use("/api", auth.requireAuth(), async (req, res, next) => {
+  app.use("/api", requireAuth, async (req, res, next) => {
+    // req.user ya está garantizado por requireAuth
     if (!req.user) {
-      // Esto realmente no debería ejecutarse si auth.requireAuth funciona correctamente
       return res.status(401).json({ message: "Unauthorized" });
     }
 
@@ -125,7 +169,7 @@ export async function registerRoutes(app: Express): Promise<void> {
   /* ===========================
      /api/me (Simplificado)
   =========================== */
-  app.get("/api/me", auth.requireAuth(), (req, res) => {
+  app.get("/api/me", requireAuth, (req, res) => {
     // req.user ya está disponible gracias al middleware auth.requireAuth
     if (!req.user) {
       return res.status(401).json({ message: "Unauthorized" });
@@ -139,8 +183,9 @@ export async function registerRoutes(app: Express): Promise<void> {
      /api/logout
   =========================== */
 
-  app.post("/api/logout", auth.logout(), (req, res) => {
-    res.json({ success: true });
+  app.post("/api/logout", async (req, res) => {
+    await auth.api.signOut({ headers: toWebHeaders(req.headers) });
+    res.status(200).json({ success: true });
   });
 
   /* ===========================
@@ -149,7 +194,7 @@ export async function registerRoutes(app: Express): Promise<void> {
   =========================== */
 
   app.get("/api/devices", async (req, res) => {
-    const appUserId = req.appUserId;
+    const appUserId = req.appUserId!;
 
     try {
       const result = await db
@@ -175,7 +220,7 @@ export async function registerRoutes(app: Express): Promise<void> {
   =========================== */
 
   app.get("/api/pets", async (req, res) => {
-    const appUserId = req.appUserId;
+    const appUserId = req.appUserId!;
 
     try {
       const result = await db
@@ -203,7 +248,7 @@ export async function registerRoutes(app: Express): Promise<void> {
      POST /api/pets
   =========================== */
   app.post("/api/pets", async (req, res) => {
-    const appUserId = req.appUserId;
+    const appUserId = req.appUserId!;
     const { name, species, breed, birthDate, deviceId } = req.body;
 
     if (!name || !species) {
@@ -234,7 +279,7 @@ export async function registerRoutes(app: Express): Promise<void> {
      PATCH /api/pets/:petId
   =========================== */
   app.patch("/api/pets/:petId", async (req, res) => {
-    const appUserId = req.appUserId;
+    const appUserId = req.appUserId!;
     const petIdParam = req.params.petId;
 
     const petId = Number(petIdParam);
@@ -287,7 +332,7 @@ export async function registerRoutes(app: Express): Promise<void> {
      GET /api/telemetry
   =========================== */
   app.get("/api/telemetry", async (req, res) => {
-    const appUserId = req.appUserId;
+    const appUserId = req.appUserId!;
     const { petId, start_date, end_date, limit } = req.query;
 
     const parsedStart = dateSchema.parse(start_date);
@@ -356,7 +401,7 @@ export async function registerRoutes(app: Express): Promise<void> {
      POST /api/devices
   =========================== */
   app.post("/api/devices", async (req, res) => {
-    const appUserId = req.appUserId;
+    const appUserId = req.appUserId!;
 
     try {
       const parsedDevice = NewDeviceSchema.parse(req.body);
@@ -433,7 +478,7 @@ export async function registerRoutes(app: Express): Promise<void> {
     next: NextFunction
   ) {
     // req.appUserId is set by the global auth.requireAuth middleware
-    const appUserId = req.appUserId;
+    const appUserId = req.appUserId!;
     const deviceIdParam = req.params.deviceId;
 
     const device = await db.query.devices.findFirst({
@@ -527,16 +572,3 @@ export async function registerRoutes(app: Express): Promise<void> {
     }
   );
 }
-
-// Extend the Express Request type to include better-auth's user and appUserId
-declare module 'express' {
-  export interface Request {
-    user?: { // The better-auth user object
-      id: string;
-      email: string;
-      name: string;
-    };
-    appUserId?: number; // Assuming appUserId is a number
-  }
-}
-

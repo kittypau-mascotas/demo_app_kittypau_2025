@@ -5,6 +5,12 @@ import { toWebHeaders } from "../../server/api-utils";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
+    // Verificar si Better Auth se inicializó correctamente
+    if (!auth) {
+      console.error("❌ Auth instance is null. Check server logs for initialization errors.");
+      return res.status(500).json({ error: "Auth system failed to initialize. Missing env vars?" });
+    }
+
     /* ---------------------------------------------------------------------- */
     /*                CONSTRUIR URL ABSOLUTA (OBLIGATORIA)                     */
     /* ---------------------------------------------------------------------- */

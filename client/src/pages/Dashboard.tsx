@@ -4,13 +4,14 @@ import ActivityChart from '@/components/ActivityChart';
 import ConsumptionChart from '@/components/ConsumptionChart';
 import PetAvatar from '@/components/PetAvatar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Activity, Home, AlertTriangle, Heart, Fish, Droplets } from 'lucide-react';
+import { Activity, Home, AlertTriangle, Heart, Fish, Droplets, LogOut } from 'lucide-react';
 import { usePets } from '@/hooks/data/usePets';
 import { useDevices } from '@/hooks/data/useDevices';
 import { useSensorReadings } from '@/hooks/data/useSensorReadings'; // Import useSensorReadings
 import { Skeleton } from '@/components/ui/skeleton';
 import { SensorReading, Device } from '@shared/schema';
 import { useMemo } from 'react';
+import { Button } from '@/components/ui/button';
 
 // Helper to transform raw consumption events into chart-friendly format for ConsumptionChart
 interface ChartData {
@@ -126,6 +127,15 @@ export default function Dashboard() {
   const consumptionChartData = useMemo(() => transformConsumptionData([], devices || [], timeRange), [devices, timeRange]); // Pasar array vacío
   const activityChartData = useMemo(() => transformSensorDataForActivityChart(sensorReadings || [] as unknown as SensorReading[], timeRange), [sensorReadings, timeRange]);
 
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/auth/sign-out", { method: "POST" });
+      window.location.href = "/login";
+    } catch (error) {
+      console.error("Error logging out:", error);
+    }
+  };
+
 
   if (isLoadingPets || isLoadingDevices || isLoadingSensorReadings) {
     return (
@@ -161,7 +171,15 @@ export default function Dashboard() {
       <div className="space-y-2">
         <h2 className="text-4xl font-bold titulo">Dashboard</h2>
         <p className="text-lg text-muted-foreground">
-          Resumen del estado de tus mascotas
+          Resumen del estado de tus mascotas 
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="ml-4 text-red-500 hover:text-red-700 hover:bg-red-50"
+            onClick={handleLogout}
+          >
+            <LogOut className="w-4 h-4 mr-2" /> Cerrar Sesión
+          </Button>
         </p>
       </div>
 

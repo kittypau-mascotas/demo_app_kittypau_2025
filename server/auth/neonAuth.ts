@@ -18,4 +18,9 @@ export const auth = betterAuth({
     provider: "pg",
   }),
   secret: process.env.AUTH_SECRET,
+  baseURL: process.env.BETTER_AUTH_URL || process.env.NEON_AUTH_URL || "https://demo-app-kittypau-2025.vercel.app",
+  trustedOrigins: [
+    "https://demo-app-kittypau-2025.vercel.app",
+    "http://localhost:3000"
+  ]
 });

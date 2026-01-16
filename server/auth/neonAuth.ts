@@ -14,7 +14,7 @@ try {
       provider: "pg",
     }),
     secret: process.env.AUTH_SECRET || "placeholder-secret-for-build", // Fallback para evitar crash en build
-    baseURL: process.env.BETTER_AUTH_URL || process.env.VITE_NEON_AUTH_URL || process.env.NEON_AUTH_URL || "https://demo-app-kittypau-2025.vercel.app",
+    baseURL: process.env.BETTER_AUTH_URL || "https://demo-app-kittypau-2025.vercel.app", // Priorizar URL de la app, ignorar URLs de Neon
     trustedOrigins: [
       "https://demo-app-kittypau-2025.vercel.app",
       "http://localhost:3000"

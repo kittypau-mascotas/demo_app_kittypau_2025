@@ -33,6 +33,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const url = req.url || "/api/auth"; // Fallback seguro
     const fullUrl = `${protocol}://${host}${url}`;
 
+    console.log(`🔐 Auth Request: ${req.method} ${fullUrl}`);
+
     /* ---------------------------------------------------------------------- */
     /*              ADAPTAR NODE REQUEST → FETCH REQUEST                       */
     /* ---------------------------------------------------------------------- */

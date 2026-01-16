@@ -1,6 +1,6 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { db } from "../db";
+import { db } from "../../server/db";
 
 let authInstance: any = null;
 
@@ -13,13 +13,17 @@ try {
     database: drizzleAdapter(db, {
       provider: "pg",
     }),
-    secret: process.env.AUTH_SECRET || "placeholder-secret-for-build", // Fallback para evitar crash en build
-    baseURL: process.env.BETTER_AUTH_URL || "https://demo-app-kittypau-2025.vercel.app", // Priorizar URL de la app, ignorar URLs de Neon
+    secret: process.env.AUTH_SECRET || "placeholder-secret-for-build",
+    baseURL:
+      process.env.BETTER_AUTH_URL ||
+      "https://demo-app-kittypau-2025.vercel.app",
     trustedOrigins: [
       "https://demo-app-kittypau-2025.vercel.app",
-      "http://localhost:3000"
-    ]
+      "http://localhost:3000",
+    ],
   });
+
+  console.log("✅ Better Auth initialized");
 } catch (error) {
   console.error("❌ Failed to initialize Better Auth:", error);
 }

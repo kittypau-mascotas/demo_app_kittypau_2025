@@ -2,7 +2,7 @@ import type { Express, Request, Response, NextFunction } from "express";
 import { z } from "zod";
 import { eq, and, sql, desc } from "drizzle-orm";
 
-import { auth } from "./auth/neonAuth";
+import { auth } from "../api/auth/neonAuth";
 import { db } from "./db";
 import {
   users,

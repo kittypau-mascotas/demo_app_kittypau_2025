@@ -1,12 +1,8 @@
 import type { Request, Response } from "express";
-import { auth } from "../../server/auth/neonAuth";
+import { auth } from "./neonAuth";
 import { toWebHeaders } from "../../server/api-utils";
 
-export default async function handler(
-  req: Request,
-  res: Response
-) {
-  // 🔴 Auth no inicializado (env vars, DB, etc.)
+export default async function handler(req: Request, res: Response) {
   if (!auth) {
     console.error("❌ Auth system not initialized");
     return res.status(500).json({
@@ -15,9 +11,9 @@ export default async function handler(
   }
 
   try {
-    /* ------------------------------------------------------------------ */
-    /*                    BUILD FULL URL                                   */
-    /* ------------------------------------------------------------------ */
+    /* ------------------------------------------------------------ */
+    /*                    BUILD FULL URL                            */
+    /* ------------------------------------------------------------ */
 
     const protocolHeader = req.headers["x-forwarded-proto"] || "https";
     const protocol = Array.isArray(protocolHeader)
@@ -29,9 +25,9 @@ export default async function handler(
 
     const url = `${protocol}://${host}${req.url}`;
 
-    /* ------------------------------------------------------------------ */
-    /*                    NODE → WEB REQUEST                                */
-    /* ------------------------------------------------------------------ */
+    /* ------------------------------------------------------------ */
+    /*                    NODE → WEB REQUEST                        */
+    /* ------------------------------------------------------------ */
 
     const webRequest = new Request(url, {
       method: req.method,
@@ -44,9 +40,9 @@ export default async function handler(
 
     const response = await auth.handler(webRequest);
 
-    /* ------------------------------------------------------------------ */
-    /*                    STATUS + HEADERS                                  */
-    /* ------------------------------------------------------------------ */
+    /* ------------------------------------------------------------ */
+    /*                    STATUS + HEADERS                          */
+    /* ------------------------------------------------------------ */
 
     res.status(response.status);
 
@@ -56,11 +52,10 @@ export default async function handler(
       }
     });
 
-    /* ------------------------------------------------------------------ */
-    /*                    COOKIES                                           */
-    /* ------------------------------------------------------------------ */
+    /* ------------------------------------------------------------ */
+    /*                    COOKIES                                   */
+    /* ------------------------------------------------------------ */
 
-    // Node 18 / undici: getSetCookie (fallback incluido)
     const anyHeaders = response.headers as any;
 
     if (typeof anyHeaders.getSetCookie === "function") {
@@ -75,9 +70,9 @@ export default async function handler(
       }
     }
 
-    /* ------------------------------------------------------------------ */
-    /*                    BODY                                              */
-    /* ------------------------------------------------------------------ */
+    /* ------------------------------------------------------------ */
+    /*                    BODY                                      */
+    /* ------------------------------------------------------------ */
 
     const text = await response.text();
     res.send(text);

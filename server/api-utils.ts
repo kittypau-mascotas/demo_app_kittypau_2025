@@ -1,6 +1,6 @@
 // Using Express types as a compatible fallback since @vercel/node is missing
 import type { Request as VercelRequest, Response as VercelResponse } from 'express';
-import { auth } from "./auth/neonAuth";
+import { auth } from "../api/auth/neonAuth";
 import { db } from "./db";
 import { users, devices } from "../shared/schema";
 import { eq, and } from "drizzle-orm";

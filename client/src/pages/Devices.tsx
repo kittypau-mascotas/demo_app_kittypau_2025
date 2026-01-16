@@ -63,9 +63,9 @@ export default function Devices() {
             key={device.id} 
             name={device.name}
             type={device.deviceType}
-            status={device.status as any}
+            status={device.status}
             lastUpdate={device.lastSeen ? new Date(device.lastSeen).toLocaleString() : 'N/A'}
-            batteryLevel={0} // Placeholder hasta tener dato real
+            batteryLevel={device.batteryLevel}
           />
         ))}
       </div>

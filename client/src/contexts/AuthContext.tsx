@@ -1,49 +1,63 @@
-// Mock AuthContext
-import React, { createContext, useContext, useMemo } from 'react';
+import React, { createContext, useContext, useMemo, useState, useEffect } from 'react';
+import { createAuthClient, useSession, useLogin, useLogout } from 'better-auth/react';
+import { useLocation } from 'wouter'; // To redirect after login/logout if not handled by better-auth
 
-// 1. Defino el tipo de sesión que espero (puede ser null)
-type Session = {
-  user: {
-    id: string;
-    email: string;
-    // Agrega cualquier otro campo que venga del proveedor de Auth
-  };
-} | null;
+// Initialize Better Auth client
+// Ensure VITE_API_URL is correctly set in your .env file
+const authClient = createAuthClient({
+  baseURL: import.meta.env.VITE_API_URL,
+  basePath: '/api/auth', // This should match your backend API auth routes
+});
 
-// 2. Defino el tipo del contexto
+// Define the type of session
+// Better Auth's useSession hook returns a session object or null
+// with a `user` property if authenticated.
+type Session = ReturnType<typeof useSession>['session'];
+
+// Define the type of the context
 interface AuthContextType {
   session: Session;
   isLoading: boolean;
-  login: () => void;
-  logout: () => void;
+  login: ReturnType<typeof useLogin>['login'];
+  logout: ReturnType<typeof useLogout>['logout'];
+  error: ReturnType<typeof useSession>['error'];
 }
 
-// 3. Creo el contexto con un valor inicial undefined
+// Create the context
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// 4. Props del Provider
+// Auth Provider Component
 interface AuthProviderProps {
   children: React.ReactNode;
 }
 
-// 5. Mock del Provider
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  // Simulamos una sesión de usuario y un estado de carga
-  const mockSession: Session = {
-    user: { id: "user_mock_123", email: "test@example.com" },
-  };
+  const { session, isLoading, error } = useSession(authClient);
+  const { login } = useLogin(authClient);
+  const { logout } = useLogout(authClient);
+  const [, setLocation] = useLocation();
+
+  useEffect(() => {
+    // Optionally handle redirection after logout
+    if (!session && !isLoading && !error && window.location.pathname !== '/login') {
+      setLocation('/login');
+    }
+    // Optionally handle redirection after successful login if needed,
+    // though typically the login function itself handles this.
+  }, [session, isLoading, error, setLocation]);
 
   const value = useMemo(() => ({
-    session: mockSession,
-    isLoading: false,
-    login: () => console.log("Mock login..."),
-    logout: () => console.log("Mock logout..."),
-  }), []);
+    session,
+    isLoading,
+    login,
+    logout,
+    error,
+  }), [session, isLoading, login, logout, error]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
-// 6. Hook para consumir el contexto
+// Hook to consume the context
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {

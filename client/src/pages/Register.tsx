@@ -6,27 +6,52 @@ import { Label } from '@/components/ui/label';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLocation } from 'wouter';
 import { Logo } from '@/components/ui/Logo';
+import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext'; // Import useAuth to get the login function
 
 export default function Register() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const { signup } = useAuth();
+  const { login } = useAuth(); // We might automatically log in after successful registration
   const [, setLocation] = useLocation();
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (password !== confirmPassword) {
-      // Handle password mismatch
-      console.error("Passwords don't match");
+      toast({
+        title: 'Error de registro',
+        description: 'Las contraseñas no coinciden.',
+        variant: 'destructive',
+      });
       return;
     }
     try {
-      await signup(name, email, password);
-      setLocation('/dashboard');
-    } catch (error) {
+      const response = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name, email, password }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Error desconocido al registrarse.');
+      }
+
+      // Automatically log in the user after successful registration
+      await login(email, password); 
+      // setLocation('/dashboard'); // Redirection will be handled by Better Auth's login
+      
+    } catch (error: any) {
       console.error('Failed to register:', error);
+      toast({
+        title: 'Error de registro',
+        description: error.message || 'No se pudo crear la cuenta. Inténtalo de nuevo más tarde.',
+        variant: 'destructive',
+      });
     }
   };
 

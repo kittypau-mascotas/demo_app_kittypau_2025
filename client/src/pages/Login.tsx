@@ -6,21 +6,26 @@ import { Label } from '@/components/ui/label';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLocation } from 'wouter';
 import { Logo } from '@/components/ui/Logo';
+import { useToast } from '@/hooks/use-toast';
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { login } = useAuth();
+  const { login } = useAuth(); // login is now from Better Auth
   const [, setLocation] = useLocation();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await login(email, password);
-      setLocation('/dashboard');
-    } catch (error) {
+      await login(email, password); // Better Auth's login typically handles redirection on success
+      // setLocation('/dashboard'); // Remove this line as Better Auth's login will handle redirection
+    } catch (error: any) { // Catch as any to access error.message
       console.error('Failed to login:', error);
-      // Here you would typically show an error message to the user
+      toast({
+        title: 'Error de inicio de sesión',
+        description: error.message || 'Verifica tus credenciales y vuelve a intentarlo.', // Use error.message if available
+        variant: 'destructive',
+      });
     }
   };
 

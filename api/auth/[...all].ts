@@ -12,6 +12,8 @@ function toWebHeaders(nodeHeaders: import("http").IncomingHttpHeaders): Headers 
   return headers;
 }
 
+console.log("🚀 Auth Function Loaded");
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     // Verificar si Better Auth se inicializó correctamente
@@ -60,7 +62,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     res.status(response.status);
 
-    response.headers.forEach((value, key) => {
+    response.headers.forEach((value: string, key: string) => {
       if (key.toLowerCase() !== "set-cookie") {
         res.setHeader(key, value);
       }

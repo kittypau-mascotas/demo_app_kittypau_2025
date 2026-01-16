@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 interface LinkDeviceModalProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  petId: string | null;
+  petId: number | null; // Changed from string | null to number | null
   onDeviceLinked: () => void;
 }
 

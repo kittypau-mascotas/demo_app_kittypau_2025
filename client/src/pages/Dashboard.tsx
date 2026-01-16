@@ -4,7 +4,7 @@ import ActivityChart from '@/components/ActivityChart';
 import ConsumptionChart from '@/components/ConsumptionChart';
 import PetAvatar from '@/components/PetAvatar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Activity, Home, AlertTriangle, Heart, Fish, Droplets, LogOut } from 'lucide-react';
+import { Activity, Home, AlertTriangle, Heart, Fish, Droplets, LogOut, Plus } from 'lucide-react';
 import { usePets } from '@/hooks/data/usePets';
 import { useDevices } from '@/hooks/data/useDevices';
 import { useSensorReadings } from '@/hooks/data/useSensorReadings'; // Import useSensorReadings
@@ -12,6 +12,9 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { SensorReading, Device } from '@shared/schema';
 import { useMemo } from 'react';
 import { Button } from '@/components/ui/button';
+import { useTheme } from 'next-themes';
+import AddPetModal from '@/components/AddPetModal';
+import LinkDeviceModal from '@/components/LinkDeviceModal';
 
 // Helper to transform raw consumption events into chart-friendly format for ConsumptionChart
 interface ChartData {
@@ -97,8 +100,10 @@ const transformSensorDataForActivityChart = (readings: any[], timeRange: string)
 
 
 export default function Dashboard() {
-  const { data: pets, isLoading: isLoadingPets, isError: isErrorPets } = usePets();
-  const { data: devices, isLoading: isLoadingDevices, isError: isErrorDevices } = useDevices();
+  const { data: pets, isLoading: isLoadingPets, isError: isErrorPets, refetch: refetchPets } = usePets();
+  const [showAddPetModal, setShowAddPetModal] = useState(false);
+  const { data: devices, isLoading: isLoadingDevices, isError: isErrorDevices, refetch: refetchDevices } = useDevices();
+  const [showLinkDeviceModal, setShowLinkDeviceModal] = useState(false);
   
   const firstDeviceId = devices && devices.length > 0 ? devices[0].deviceId : undefined;
 
@@ -171,7 +176,7 @@ export default function Dashboard() {
       <div className="space-y-2">
         <h2 className="text-4xl font-bold titulo">Dashboard</h2>
         <p className="text-lg text-muted-foreground">
-          Resumen del estado de tus mascotas 
+          Un vistazo rápido al bienestar de tus compañeros peludos. 
           <Button 
             variant="ghost" 
             size="sm" 
@@ -189,28 +194,28 @@ export default function Dashboard() {
           value={totalActivePets.toString()}
           description="Todas saludables"
           icon={Heart}
-          variant="info"
+          statusVariant="ok"
         />
         <StatWidget
           title="Comidas Hoy"
           value={totalMealsToday.toString()}
-          description="Consumos registrados hoy"
+          description="¡Cuán llenita ha estado su pancita hoy!"
           icon={Fish}
-          variant="data"
+          statusVariant="default"
         />
         <StatWidget
           title="Nivel Promedio Agua"
           value={averageWaterLevel}
-          description="Última lectura del sensor"
+          description="Sed de la aventura: su último nivel de agua."
           icon={Droplets}
-          variant="info"
+          statusVariant="ok"
         />
         <StatWidget
           title="Alertas Pendientes"
           value={pendingAlerts}
-          description="Datos no disponibles"
+          description="Algo requiere tu atención, ¡revisa pronto!"
           icon={AlertTriangle}
-          variant="device"
+          statusVariant="alert"
         />
       </div>
 
@@ -247,7 +252,12 @@ export default function Dashboard() {
             </Card>
           ))}
           {pets?.length === 0 && (
-            <p className="text-muted-foreground col-span-full text-center">No tienes mascotas registradas.</p>
+            <div className="col-span-full text-center space-y-4 py-8">
+              <p className="text-muted-foreground">¡Oh! Parece que aún no tienes compañeros peludos. ¡Añade tu primera mascota!</p>
+              <Button onClick={() => setShowAddPetModal(true)} className="btn-primary">
+                <Plus className="h-4 w-4 mr-2" /> Agregar Mascota
+              </Button>
+            </div>
           )}
         </div>
       </div>
@@ -272,10 +282,34 @@ export default function Dashboard() {
             />
           ))}
           {devices?.length === 0 && (
-            <p className="text-muted-foreground col-span-full text-center">No tienes dispositivos registrados.</p>
+            <div className="col-span-full text-center space-y-4 py-8">
+              <p className="text-muted-foreground">¿Sin huellitas tecnológicas aún? ¡Vincula tu primer dispositivo para empezar a cuidarlos!</p>
+              <Button onClick={() => setShowLinkDeviceModal(true)} className="btn-primary">
+                <Plus className="h-4 w-4 mr-2" /> Vincular Dispositivo
+              </Button>
+            </div>
           )}
         </div>
       </div>
+
+      <AddPetModal 
+        onPetAdded={() => {
+          refetchPets(); // Refresh pet list
+          setShowAddPetModal(false); // Close modal after adding
+        }}
+        isOpen={showAddPetModal}
+        onOpenChange={setShowAddPetModal}
+      />
+
+      <LinkDeviceModal
+        petId={pets && pets.length > 0 ? pets[0].id : null} // Assuming we link to the first pet for simplicity, or add logic to select pet
+        onDeviceLinked={() => {
+          refetchDevices(); // Refresh device list
+          setShowLinkDeviceModal(false); // Close modal after linking
+        }}
+        isOpen={showLinkDeviceModal}
+        onOpenChange={setShowLinkDeviceModal}
+      />
     </div>
   );
 }

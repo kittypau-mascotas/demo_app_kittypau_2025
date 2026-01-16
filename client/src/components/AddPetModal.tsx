@@ -9,11 +9,12 @@ import { useToast } from '@/hooks/use-toast';
 
 interface AddPetModalProps {
   onPetAdded: () => void;
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
-export default function AddPetModal({ onPetAdded }: AddPetModalProps) {
+export default function AddPetModal({ onPetAdded, isOpen, onOpenChange }: AddPetModalProps) {
   const { toast } = useToast();
-  const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   // Form state
@@ -87,13 +88,7 @@ export default function AddPetModal({ onPetAdded }: AddPetModalProps) {
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button className="btn-primary" data-testid="button-add-pet">
-          <Plus className="h-4 w-4 mr-2" />
-          Agregar Mascota
-        </Button>
-      </DialogTrigger>
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent data-testid="modal-add-pet">
         <DialogHeader>
           <DialogTitle>Agregar Nueva Mascota</DialogTitle>

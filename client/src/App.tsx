@@ -1,6 +1,7 @@
 import React, { lazy, Suspense } from 'react';
 import { Switch, Route, Redirect, useLocation } from 'wouter';
 import { Toaster } from '@/components/ui/toaster';
+import { ThemeProvider } from 'next-themes';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { useAuth } from '@/contexts/AuthContext';
 import AppLayout from '@/components/AppLayout';
@@ -47,39 +48,41 @@ function App() {
   }
 
   return (
-    <TooltipProvider>
-      <WebSocketProvider url={import.meta.env.VITE_WS_URL}>
-        <Suspense fallback={<PageLoader />}>
-          <Switch>
-            <Route path="/login" component={Login} />
-            <Route path="/register" component={Register} />
+    <ThemeProvider defaultTheme="system" attribute="class" enableSystem>
+      <TooltipProvider>
+        <WebSocketProvider url={import.meta.env.VITE_WS_URL}>
+          <Suspense fallback={<PageLoader />}>
+            <Switch>
+              <Route path="/login" component={Login} />
+              <Route path="/register" component={Register} />
 
-            <AppLayout>
-              <PrivateRoute path="/dashboard" component={Dashboard} />
-              <PrivateRoute path="/devices" component={Devices} />
-              <PrivateRoute path="/devices/add" component={AddDevice} />
-              <PrivateRoute path="/mascotas" component={Mascotas} />
-              <PrivateRoute path="/sensors" component={Sensors} />
-              <PrivateRoute path="/analytics" component={Analytics} />
-              <PrivateRoute path="/alerts" component={Alerts} />
-              <PrivateRoute path="/settings" component={Settings} />
-              <PrivateRoute path="/planes" component={Planes} />
-              <PrivateRoute path="/users" component={Users} />
-              {/* Redirect root to dashboard */}
-              <Route path="/">
-                <Redirect to="/dashboard" />
+              <AppLayout>
+                <PrivateRoute path="/dashboard" component={Dashboard} />
+                <PrivateRoute path="/devices" component={Devices} />
+                <PrivateRoute path="/devices/add" component={AddDevice} />
+                <PrivateRoute path="/mascotas" component={Mascotas} />
+                <PrivateRoute path="/sensors" component={Sensors} />
+                <PrivateRoute path="/analytics" component={Analytics} />
+                <PrivateRoute path="/alerts" component={Alerts} />
+                <PrivateRoute path="/settings" component={Settings} />
+                <PrivateRoute path="/planes" component={Planes} />
+                <PrivateRoute path="/users" component={Users} />
+                {/* Redirect root to dashboard */}
+                <Route path="/">
+                  <Redirect to="/dashboard" />
+                </Route>
+              </AppLayout>
+              
+              {/* Fallback for unknown routes */}
+              <Route>
+                <NotFound />
               </Route>
-            </AppLayout>
-            
-            {/* Fallback for unknown routes */}
-            <Route>
-              <NotFound />
-            </Route>
-          </Switch>
-        </Suspense>
-        <Toaster />
-      </WebSocketProvider>
-    </TooltipProvider>
+            </Switch>
+          </Suspense>
+          <Toaster />
+        </WebSocketProvider>
+      </TooltipProvider>
+    </ThemeProvider>
   );
 }
 

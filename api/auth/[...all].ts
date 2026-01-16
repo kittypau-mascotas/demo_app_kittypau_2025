@@ -1,64 +1,52 @@
-// Using Express types as a compatible fallback since @vercel/node is missing in package.json
-import type { Request as VercelRequest, Response as VercelResponse } from 'express';
+import type { Request, Response } from "express";
 import { auth } from "../../server/auth/neonAuth";
+import { toWebHeaders } from "../../server/api-utils";
 
-// Inline helper to avoid importing dependencies that might crash
-function toWebHeaders(nodeHeaders: import("http").IncomingHttpHeaders): Headers {
-  const headers = new Headers();
-  for (const [k, v] of Object.entries(nodeHeaders)) {
-    if (typeof v === "string") headers.append(k, v);
-    else if (Array.isArray(v)) v.forEach((x) => headers.append(k, x));
+export default async function handler(
+  req: Request,
+  res: Response
+) {
+  // 🔴 Auth no inicializado (env vars, DB, etc.)
+  if (!auth) {
+    console.error("❌ Auth system not initialized");
+    return res.status(500).json({
+      error: "Auth system not initialized. Check environment variables.",
+    });
   }
-  return headers;
-}
 
-console.log("🚀 Auth Function Loaded");
-
-export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
-    // Verificar si Better Auth se inicializó correctamente
-    if (!auth) {
-      console.error("❌ Auth instance is null. Check server logs for initialization errors.");
-      return res.status(500).json({ error: "Auth system failed to initialize. Missing env vars?" });
-    }
+    /* ------------------------------------------------------------------ */
+    /*                    BUILD FULL URL                                   */
+    /* ------------------------------------------------------------------ */
 
-    /* ---------------------------------------------------------------------- */
-    /*                CONSTRUIR URL ABSOLUTA (OBLIGATORIA)                     */
-    /* ---------------------------------------------------------------------- */
+    const protocolHeader = req.headers["x-forwarded-proto"] || "https";
+    const protocol = Array.isArray(protocolHeader)
+      ? protocolHeader[0]
+      : protocolHeader;
 
-    const protoHeader = req.headers["x-forwarded-proto"] ?? "http";
-    const protocol = Array.isArray(protoHeader) ? protoHeader[0] : protoHeader;
-
-    const hostHeader = req.headers["host"] ?? "localhost:3000";
+    const hostHeader = req.headers.host || "localhost";
     const host = Array.isArray(hostHeader) ? hostHeader[0] : hostHeader;
 
-    const url = req.url || "/api/auth"; // Fallback seguro
-    const fullUrl = `${protocol}://${host}${url}`;
+    const url = `${protocol}://${host}${req.url}`;
 
-    console.log(`🔐 Auth Request: ${req.method} ${fullUrl}`);
+    /* ------------------------------------------------------------------ */
+    /*                    NODE → WEB REQUEST                                */
+    /* ------------------------------------------------------------------ */
 
-    /* ---------------------------------------------------------------------- */
-    /*              ADAPTAR NODE REQUEST → FETCH REQUEST                       */
-    /* ---------------------------------------------------------------------- */
-
-    const webRequest = new Request(fullUrl, {
+    const webRequest = new Request(url, {
       method: req.method,
       headers: toWebHeaders(req.headers),
       body:
         req.method === "GET" || req.method === "HEAD"
           ? undefined
-          : typeof req.body === 'string' ? req.body : JSON.stringify(req.body ?? {}),
+          : JSON.stringify(req.body),
     });
-
-    /* ---------------------------------------------------------------------- */
-    /*                         EJECUTAR BETTER AUTH                            */
-    /* ---------------------------------------------------------------------- */
 
     const response = await auth.handler(webRequest);
 
-    /* ---------------------------------------------------------------------- */
-    /*                   COPIAR STATUS + HEADERS                               */
-    /* ---------------------------------------------------------------------- */
+    /* ------------------------------------------------------------------ */
+    /*                    STATUS + HEADERS                                  */
+    /* ------------------------------------------------------------------ */
 
     res.status(response.status);
 
@@ -68,27 +56,33 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
     });
 
-    /* ---------------------------------------------------------------------- */
-    /*                          MANEJO DE COOKIES                              */
-    /* ---------------------------------------------------------------------- */
+    /* ------------------------------------------------------------------ */
+    /*                    COOKIES                                           */
+    /* ------------------------------------------------------------------ */
 
-    // @ts-ignore - getSetCookie puede no estar en los tipos de TS antiguos pero existe en runtime
-    if (typeof response.headers.getSetCookie === 'function') {
-      const cookies = response.headers.getSetCookie();
-      if (cookies.length > 0) res.setHeader('Set-Cookie', cookies);
+    // Node 18 / undici: getSetCookie (fallback incluido)
+    const anyHeaders = response.headers as any;
+
+    if (typeof anyHeaders.getSetCookie === "function") {
+      const cookies: string[] = anyHeaders.getSetCookie();
+      if (cookies.length > 0) {
+        res.setHeader("Set-Cookie", cookies);
+      }
     } else {
-      const cookie = response.headers.get('Set-Cookie');
-      if (cookie) res.setHeader('Set-Cookie', cookie);
+      const cookie = response.headers.get("set-cookie");
+      if (cookie) {
+        res.setHeader("Set-Cookie", cookie);
+      }
     }
 
-    /* ---------------------------------------------------------------------- */
-    /*                          ENVIAR BODY                                    */
-    /* ---------------------------------------------------------------------- */
+    /* ------------------------------------------------------------------ */
+    /*                    BODY                                              */
+    /* ------------------------------------------------------------------ */
 
     const text = await response.text();
     res.send(text);
   } catch (err) {
     console.error("❌ Better Auth handler error:", err);
-    res.status(500).json({ error: "Internal Auth Error" });
+    res.status(500).json({ error: "Internal auth error" });
   }
 }

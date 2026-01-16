@@ -12,11 +12,19 @@ export default function AddPetOnboarding() {
   const { refetch: refetchOnboardingStatus } = useOnboardingStatus();
   const [, setLocation] = useLocation();
 
-  const handlePetAdded = () => {
+  const handlePetAdded = async () => {
+    // Call backend to update hasPets status
+    await fetch('/api/onboarding/update-status', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ hasPets: true }),
+    });
+
     refetchOnboardingStatus();
     setShowAddPetModal(false);
     // After adding pet, OnboardingGuard should redirect to link-device or dashboard
-    setLocation('/dashboard'); // Temporarily redirect to dashboard, OnboardingGuard will handle the next step
+    // setLocation('/dashboard'); // OnboardingGuard will handle the next step
   };
 
   return (

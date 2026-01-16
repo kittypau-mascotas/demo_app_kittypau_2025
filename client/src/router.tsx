@@ -19,6 +19,10 @@ const Alerts = lazy(() => import('@/pages/Alerts'));
 const Settings = lazy(() => import('@/pages/Settings'));
 const Planes = lazy(() => import('@/pages/Planes'));
 const Users = lazy(() => import('@/pages/Users'));
+// Onboarding pages
+const AddPetOnboarding = lazy(() => import('@/pages/onboarding/AddPetOnboarding'));
+const LinkDeviceOnboarding = lazy(() => import('@/pages/onboarding/LinkDeviceOnboarding'));
+const IndexOnboarding = lazy(() => import('@/pages/onboarding/IndexOnboarding'));
 
 function PageLoader() {
   return <div className="flex items-center justify-center h-full min-h-[50vh]">Cargando...</div>;
@@ -49,6 +53,11 @@ export default function AppRouter() {
       <Switch>
         <Route path="/login" component={Login} />
         <Route path="/register" component={Register} />
+
+        {/* Onboarding Routes - these should not be wrapped by AppLayout */}
+        <PrivateRoute path="/onboarding/add-pet" component={AddPetOnboarding} />
+        <PrivateRoute path="/onboarding/link-device" component={LinkDeviceOnboarding} />
+        <PrivateRoute path="/onboarding" component={IndexOnboarding} /> {/* Generic onboarding route */}
 
         <AppLayout>
           <OnboardingGuard>

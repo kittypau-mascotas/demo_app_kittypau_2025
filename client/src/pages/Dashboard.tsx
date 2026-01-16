@@ -5,16 +5,15 @@ import ConsumptionChart from '@/components/ConsumptionChart';
 import PetAvatar from '@/components/PetAvatar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Activity, Home, AlertTriangle, Heart, Fish, Droplets, LogOut, Plus } from 'lucide-react';
-import { usePets } from '@/hooks/data/usePets';
-import { useDevices } from '@/hooks/data/useDevices';
-import { useSensorReadings } from '@/hooks/data/useSensorReadings'; // Import useSensorReadings
 import { Skeleton } from '@/components/ui/skeleton';
-import { SensorReading, Device } from '@shared/schema';
+import { SensorReading, Device, Pet } from '@shared/schema'; // Keep Pet, Device, SensorReading types
 import { useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { useTheme } from 'next-themes';
+import HeroCard from '@/components/HeroCard'; // Import HeroCard
 import AddPetModal from '@/components/AddPetModal';
 import LinkDeviceModal from '@/components/LinkDeviceModal';
+import { useDashboardSummary } from '@/hooks/useDashboardSummary'; // Import the new hook
 
 // Helper to transform raw consumption events into chart-friendly format for ConsumptionChart
 interface ChartData {
@@ -100,37 +99,27 @@ const transformSensorDataForActivityChart = (readings: any[], timeRange: string)
 
 
 export default function Dashboard() {
-  const { data: pets, isLoading: isLoadingPets, isError: isErrorPets, refetch: refetchPets } = usePets();
   const [showAddPetModal, setShowAddPetModal] = useState(false);
-  const { data: devices, isLoading: isLoadingDevices, isError: isErrorDevices, refetch: refetchDevices } = useDevices();
   const [showLinkDeviceModal, setShowLinkDeviceModal] = useState(false);
-  
-  const firstDeviceId = devices && devices.length > 0 ? devices[0].deviceId : undefined;
 
-  const { data: sensorReadings, isLoading: isLoadingSensorReadings, isError: isErrorSensorReadings } = useSensorReadings({ deviceId: firstDeviceId }); // Modificar el parámetro
+  const {
+    data: dashboardSummary,
+    isLoading: isLoadingSummary,
+    isError: isErrorSummary,
+    refetch: refetchDashboardSummary,
+  } = useDashboardSummary();
 
-  // Aggregate data for StatWidgets
-  const totalActivePets = pets?.length || 0;
-  const totalMealsToday = 0; // Poner un valor por defecto o calcular de otra forma
-  
-  const averageWaterLevel = useMemo(() => {
-    // Assuming a 'water' sensor type and averaging its last values
-    const waterReadings = sensorReadings?.filter(reading => (reading as unknown as SensorReading).humidityPercent !== null && (reading as unknown as SensorReading).humidityPercent !== undefined); // Filtrar por humedad
-    if (waterReadings && waterReadings.length > 0) {
-      // Sumar los valores de humedad (recordar que son strings)
-      const sum = waterReadings.reduce((acc, curr) => acc + parseFloat((curr as unknown as SensorReading).humidityPercent || '0'), 0);
-      return `${(sum / waterReadings.length).toFixed(1)}%`;
-    }
-    return "N/A";
-  }, [sensorReadings]);
-  
-  // Placeholder for alerts
-  const pendingAlerts = "N/A";
+  const pets = dashboardSummary?.pets;
+  const devices = dashboardSummary?.devices;
+  const sensorReadings = dashboardSummary?.sensorReadings;
+  const kpis = dashboardSummary?.kpis;
+  const lastUpdate = dashboardSummary?.lastUpdate || "N/A";
+  const heroCardStatus = dashboardSummary?.heroCardStatus || "loading";
 
-  // Transformed data for charts
+  // Transformed data for charts - these functions will remain for now, but use data from summary
   const timeRange = 'week'; // Default for dashboard charts
-  const consumptionChartData = useMemo(() => transformConsumptionData([], devices || [], timeRange), [devices, timeRange]); // Pasar array vacío
-  const activityChartData = useMemo(() => transformSensorDataForActivityChart(sensorReadings || [] as unknown as SensorReading[], timeRange), [sensorReadings, timeRange]);
+  const consumptionChartData = useMemo(() => transformConsumptionData(sensorReadings || [], devices || [], timeRange), [sensorReadings, devices, timeRange]);
+  const activityChartData = useMemo(() => transformSensorDataForActivityChart(sensorReadings || [], timeRange), [sensorReadings, timeRange]);
 
   const handleLogout = async () => {
     try {
@@ -142,7 +131,7 @@ export default function Dashboard() {
   };
 
 
-  if (isLoadingPets || isLoadingDevices || isLoadingSensorReadings) {
+  if (isLoadingSummary) {
     return (
       <div className="p-6 lg:p-8 space-y-8 max-w-screen-2xl mx-auto">
         <Skeleton className="h-10 w-1/4" />
@@ -162,7 +151,7 @@ export default function Dashboard() {
     );
   }
 
-  if (isErrorPets || isErrorDevices || isErrorSensorReadings) {
+  if (isErrorSummary) {
     return (
       <div className="p-6 lg:p-8 space-y-8 max-w-screen-2xl mx-auto text-red-500">
         <h2 className="text-4xl font-bold titulo">Dashboard</h2>
@@ -173,46 +162,45 @@ export default function Dashboard() {
 
   return (
     <div className="p-6 lg:p-8 space-y-8 max-w-screen-2xl mx-auto">
-      <div className="space-y-2">
-        <h2 className="text-4xl font-bold titulo">Dashboard</h2>
-        <p className="text-lg text-muted-foreground">
-          Un vistazo rápido al bienestar de tus compañeros peludos. 
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className="ml-4 text-red-500 hover:text-red-700 hover:bg-red-50"
-            onClick={handleLogout}
-          >
-            <LogOut className="w-4 h-4 mr-2" /> Cerrar Sesión
-          </Button>
-        </p>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+                  <div className="flex justify-between items-start mb-8">
+                    <HeroCard
+                      pet={pets && pets.length > 0 ? pets[0] : null} // Display info for the first pet for now
+                      status={heroCardStatus}
+                      lastUpdate={lastUpdate}
+                    />
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                      onClick={handleLogout}
+                    >
+                      <LogOut className="w-4 h-4 mr-2" /> Cerrar Sesión
+                    </Button>
+                  </div>      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
         <StatWidget
           title="Mascotas Activas"
-          value={totalActivePets.toString()}
+          value={kpis?.totalActivePets.toString() || 'N/A'}
           description="Todas saludables"
           icon={Heart}
           statusVariant="ok"
         />
         <StatWidget
           title="Comidas Hoy"
-          value={totalMealsToday.toString()}
+          value={kpis?.totalMealsToday.toString() || 'N/A'}
           description="¡Cuán llenita ha estado su pancita hoy!"
           icon={Fish}
           statusVariant="default"
         />
         <StatWidget
           title="Nivel Promedio Agua"
-          value={averageWaterLevel}
+          value={kpis?.averageWaterLevel || 'N/A'}
           description="Sed de la aventura: su último nivel de agua."
           icon={Droplets}
           statusVariant="ok"
         />
         <StatWidget
           title="Alertas Pendientes"
-          value={pendingAlerts}
+          value={kpis?.pendingAlerts || 'N/A'}
           description="Algo requiere tu atención, ¡revisa pronto!"
           icon={AlertTriangle}
           statusVariant="alert"
@@ -294,7 +282,7 @@ export default function Dashboard() {
 
       <AddPetModal 
         onPetAdded={() => {
-          refetchPets(); // Refresh pet list
+          refetchDashboardSummary(); // Refresh all dashboard data
           setShowAddPetModal(false); // Close modal after adding
         }}
         isOpen={showAddPetModal}

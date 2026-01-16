@@ -1,3 +1,3 @@
-export function Skeleton() {
+export function Skeleton(props: any) {
   return null;
 }

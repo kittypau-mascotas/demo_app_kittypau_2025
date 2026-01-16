@@ -1,21 +1,17 @@
 {
+  "extends": "./tsconfig.base.json",
   "compilerOptions": {
-    "target": "ES2022",
     "module": "ESNext",
-    "moduleResolution": "Node",
-    "strict": true,
-    "jsx": "react-jsx",
     "baseUrl": ".",
     "paths": {
+      "@lib/*": ["lib/*"],
       "@shared/*": ["../shared/*"]
     },
-    "types": ["node"],
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
-    "skipLibCheck": true
+    "types": ["node"]
   },
   "include": [
-    "src/**/*",
-    "../shared/**/*"
+    "api/**/*",
+    "lib/**/*",
+    "shared/**/*"
   ]
 }

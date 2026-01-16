@@ -1,3 +1,4 @@
+import React from 'react';
 export default function Login() {
-  return null;
+  return <div className="flex items-center justify-center min-h-screen">Login Page Placeholder</div>;
 }

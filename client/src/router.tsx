@@ -19,6 +19,8 @@ const Alerts = lazy(() => import('@/pages/Alerts'));
 const Settings = lazy(() => import('@/pages/Settings'));
 const Planes = lazy(() => import('@/pages/Planes'));
 const Users = lazy(() => import('@/pages/Users'));
+// Pet Detail Page
+const PetDetail = lazy(() => import('@/pages/PetDetail'));
 // Onboarding pages
 const AddPetOnboarding = lazy(() => import('@/pages/onboarding/AddPetOnboarding'));
 const LinkDeviceOnboarding = lazy(() => import('@/pages/onboarding/LinkDeviceOnboarding'));
@@ -65,6 +67,7 @@ export default function AppRouter() {
             <PrivateRoute path="/devices" component={Devices} />
             <PrivateRoute path="/devices/add" component={AddDevice} />
             <PrivateRoute path="/mascotas" component={Mascotas} />
+            <PrivateRoute path="/mascotas/:id" component={PetDetail} />
             <PrivateRoute path="/sensors" component={Sensors} />
             <PrivateRoute path="/analytics" component={Analytics} />
             <PrivateRoute path="/alerts" component={Alerts} />

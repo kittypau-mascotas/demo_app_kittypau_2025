@@ -20,18 +20,22 @@ interface ChartData {
   name: string; // Day of the week or date
   [deviceName: string]: number | string; // Dynamic keys for device consumption
 }
-const transformConsumptionData = (events: any[], devices: Device[], timeRange: string): ChartData[] => { // Cambiar a any[]
-  if (!events || events.length === 0 || !devices || devices.length === 0) {
+const transformConsumptionData = (sensorReadings: SensorReading[], devices: Device[], timeRange: string): ChartData[] => {
+  if (!sensorReadings || sensorReadings.length === 0 || !devices || devices.length === 0) {
     return [];
   }
 
-  const deviceMap = new Map<number, string>();
-  devices.forEach(device => deviceMap.set(device.id as number, device.name));
+  const deviceMap = new Map<string, string>(); // deviceId is string
+  devices.forEach(device => deviceMap.set(device.deviceId, device.name));
 
   const dailyConsumption = new Map<string, { [deviceName: string]: number }>();
 
-  events.forEach(event => {
-    const date = new Date(event.timestamp);
+  sensorReadings.forEach(reading => {
+    // Only consider readings that have weightGrams
+    if (reading.weightGrams === null || reading.weightGrams === undefined) {
+        return;
+    }
+    const date = new Date(reading.ts); // Use reading.ts for timestamp
     let dayKey: string;
 
     if (timeRange === 'day') {
@@ -46,12 +50,12 @@ const transformConsumptionData = (events: any[], devices: Device[], timeRange: s
       dailyConsumption.set(dayKey, {});
     }
     const consumptionForDay = dailyConsumption.get(dayKey)!;
-    const deviceName = deviceMap.get(event.deviceId) || `Device ${event.deviceId}`;
+    const deviceName = deviceMap.get(reading.deviceId) || `Device ${reading.deviceId}`; // Use reading.deviceId
 
     if (!consumptionForDay[deviceName]) {
       consumptionForDay[deviceName] = 0;
     }
-    consumptionForDay[deviceName] += event.amountGrams;
+    consumptionForDay[deviceName] += parseFloat(reading.weightGrams as any); // Use weightGrams as consumption
   });
 
   const result: ChartData[] = [];
@@ -63,14 +67,13 @@ const transformConsumptionData = (events: any[], devices: Device[], timeRange: s
 };
 
 // Helper to transform sensor readings for ActivityChart
-const transformSensorDataForActivityChart = (readings: any[], timeRange: string): ChartData[] => {
-  if (!readings || readings.length === 0) return [];
+const transformSensorDataForActivityChart = (sensorReadings: SensorReading[], timeRange: string): ChartData[] => {
+  if (!sensorReadings || sensorReadings.length === 0) return [];
 
   const dailyActivity = new Map<string, number>();
 
-  readings.forEach((readingItem: any) => { // Cambiar a any para el elemento
-    const reading = readingItem as SensorReading; // Forzar el tipo aquí
-    const date = new Date(reading.ts); // Usar reading.ts
+  sensorReadings.forEach((reading: SensorReading) => { // Directly use SensorReading type
+    const date = new Date(reading.ts); // Use reading.ts for timestamp
     let dayKey: string;
 
     if (timeRange === 'day') {
@@ -250,10 +253,21 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <ActivityChart data={activityChartData} />
-        <ConsumptionChart data={consumptionChartData} />
-      </div>
+      {sensorReadings && sensorReadings.length > 0 ? (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <ActivityChart data={activityChartData} />
+          <ConsumptionChart data={consumptionChartData} />
+        </div>
+      ) : (
+        <Card className="col-span-full text-center p-8 space-y-4">
+          <CardTitle className="text-2xl">¡Esperando datos de tu mascota! 🐾</CardTitle>
+          <CardDescription>Todavía no recibimos información de los sensores de {pets && pets.length > 0 ? pets[0].name : 'tu mascota'}.</CardDescription>
+          <p className="text-muted-foreground">Asegúrate de que tu dispositivo esté conectado y funcionando correctamente.</p>
+          <Button className="btn-primary" onClick={() => setShowLinkDeviceModal(true)}>
+            <Plus className="h-4 w-4 mr-2" /> Vincular Dispositivo
+          </Button>
+        </Card>
+      )}
 
       <div className="space-y-4">
         <h3 className="text-2xl font-bold">Dispositivos Recientes</h3>
@@ -292,7 +306,7 @@ export default function Dashboard() {
       <LinkDeviceModal
         petId={pets && pets.length > 0 ? pets[0].id : null} // Assuming we link to the first pet for simplicity, or add logic to select pet
         onDeviceLinked={() => {
-          refetchDevices(); // Refresh device list
+          refetchDashboardSummary(); // Refresh all dashboard data
           setShowLinkDeviceModal(false); // Close modal after linking
         }}
         isOpen={showLinkDeviceModal}

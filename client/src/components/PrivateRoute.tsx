@@ -1,15 +1,19 @@
 import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useLocation } from 'wouter';
+import { Redirect } from 'wouter';
 
-export default function PrivateRoute({ component: Component, ...rest }: any) {
+const PrivateRoute = ({ component: Component, ...rest }: { component: React.ComponentType<any>; [key: string]: any }) => {
   const { user, loading } = useAuth();
-  const [, setLocation] = useLocation();
 
-  if (loading) return null;
-  if (!user) {
-    setLocation('/login');
-    return null;
+  if (loading) {
+    return <div className="flex items-center justify-center h-screen">Loading authentication...</div>;
   }
+
+  if (!user) {
+    return <Redirect to="/login" />;
+  }
+
   return <Component {...rest} />;
-}
+};
+
+export default PrivateRoute;

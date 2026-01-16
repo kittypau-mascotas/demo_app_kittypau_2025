@@ -1,24 +1,28 @@
 # KittyPau 🐾
 
-Plataforma IoT end-to-end para monitoreo de datos (telemetría) con enfoque multi-tenant y seguridad por diseño.
+Plataforma IoT inteligente para el cuidado y monitoreo de mascotas.
 
-## Stack principal
+## 🚀 Características
 
-- Dispositivos IoT: ESP8266 / ESP32
-- Broker MQTT: AWS IoT Core (certificados X.509)
-- Bridge de ingestión: Node.js persistente en EC2
-- Base de datos: Neon (PostgreSQL)
-- Backend API: Vercel (Node / TypeScript)
-- Frontend: Vercel (Vite + React)
+*   **Monitoreo en tiempo real:** Visualiza datos de sensores (peso, temperatura, humedad).
+*   **Gestión de Dispositivos:** Administra múltiples dispositivos IoT desde un solo dashboard.
+*   **Multi-usuario:** Soporte seguro para múltiples cuentas y perfiles.
+*   **Diseño Moderno:** Interfaz responsiva y amigable.
 
-## Flujo general
+## 🛠️ Stack Tecnológico
 
-Dispositivo → AWS IoT Core → Bridge EC2 → Neon DB → API Vercel → Frontend
+*   **Frontend:** React, Vite, Tailwind CSS, Shadcn UI.
+*   **Backend:** Node.js (Serverless Functions), TypeScript.
+*   **Base de Datos:** PostgreSQL (Neon).
+*   **Autenticación:** Better Auth.
 
-## Desarrollo local
+## 💻 Desarrollo Local
 
 ```bash
+# Instalar dependencias
 npm install
+
+# Iniciar entorno de desarrollo
 npm run dev
 ```
 

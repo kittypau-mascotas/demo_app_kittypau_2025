@@ -2,60 +2,40 @@ import { Button } from '@/components/ui/button';
 import DeviceCard from '@/components/DeviceCard';
 import { Plus } from 'lucide-react';
 import { useLocation } from 'wouter';
-
-type DeviceStatus = 'active' | 'warning' | 'error';
-
-interface MockDevice {
-  name: string;
-  type: string;
-  status: DeviceStatus;
-  lastUpdate: string;
-  batteryLevel: number;
-  imageUrl?: string;
-}
+import { useDevices } from '@/hooks/data/useDevices';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function Devices() {
   const [, setLocation] = useLocation();
+  const { data: devices, isLoading, isError } = useDevices();
 
-  // TODO: reemplazar por fetch a /api/devices
-  const mockDevices: MockDevice[] = [
-    {
-      name: 'Comedero Principal',
-      type: 'Dispensador de Comida',
-      status: 'active',
-      lastUpdate: 'Hace 5 minutos',
-      batteryLevel: 85,
-      imageUrl: '/images/device-placeholder.png',
-    },
-    {
-      name: 'Arenero Inteligente',
-      type: 'Monitor de Arenero',
-      status: 'warning',
-      lastUpdate: 'Hace 2 horas',
-      batteryLevel: 45,
-    },
-    {
-      name: 'Bebedero Automático',
-      type: 'Dispensador de Agua',
-      status: 'error',
-      lastUpdate: 'Hace 1 día',
-      batteryLevel: 15,
-    },
-    {
-      name: 'Cámara de Vigilancia',
-      type: 'Cámara IoT',
-      status: 'active',
-      lastUpdate: 'Hace 10 minutos',
-      batteryLevel: 90,
-    },
-    {
-      name: 'Collar GPS',
-      type: 'Rastreador',
-      status: 'active',
-      lastUpdate: 'Hace 1 minuto',
-      batteryLevel: 70,
-    },
-  ];
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <Skeleton className="h-10 w-48" />
+          <Skeleton className="h-10 w-40" />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[1, 2, 3].map((i) => (
+            <Skeleton key={i} className="h-[200px] w-full rounded-xl" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="space-y-6 text-center py-10">
+        <h2 className="text-2xl font-bold text-red-500">Error al cargar dispositivos</h2>
+        <p className="text-muted-foreground">Por favor, intenta recargar la página.</p>
+        <Button onClick={() => window.location.reload()} variant="outline">
+          Recargar
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6" data-testid="page-devices">
@@ -73,8 +53,20 @@ export default function Devices() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {mockDevices.map((device) => (
-          <DeviceCard key={device.name} {...device} />
+        {devices?.length === 0 && (
+          <div className="col-span-full text-center py-10 text-muted-foreground">
+            No tienes dispositivos registrados. ¡Agrega uno nuevo!
+          </div>
+        )}
+        {devices?.map((device) => (
+          <DeviceCard 
+            key={device.id} 
+            name={device.name}
+            type={device.deviceType}
+            status={device.status as any}
+            lastUpdate={device.lastSeen ? new Date(device.lastSeen).toLocaleString() : 'N/A'}
+            batteryLevel={0} // Placeholder hasta tener dato real
+          />
         ))}
       </div>
     </div>

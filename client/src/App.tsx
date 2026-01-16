@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { Switch, Route, useLocation } from 'wouter';
 import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -8,19 +8,21 @@ import PrivateRoute from '@/components/PrivateRoute';
 import { WelcomeModal } from '@/components/WelcomeModal';
 import { WebSocketProvider } from '@/hooks/use-websocket'; // Import WebSocketProvider
 
-import NotFound from '@/pages/not-found';
-import Login from '@/pages/Login'; // Import Login
-import Register from '@/pages/Register'; // Import Register
-import Dashboard from '@/pages/Dashboard';
-import Devices from '@/pages/Devices';
-import AddDevice from '@/pages/AddDevice';
-import Mascotas from '@/pages/Mascotas';
-import Sensors from '@/pages/Sensors';
-import Analytics from '@/pages/Analytics';
-import Alerts from '@/pages/Alerts';
-import Settings from '@/pages/Settings';
-import Planes from '@/pages/Planes';
-import Users from '@/pages/Users';
+// Lazy load pages
+const NotFound = lazy(() => import('@/pages/not-found'));
+const Login = lazy(() => import('@/pages/Login'));
+const Register = lazy(() => import('@/pages/Register'));
+const Dashboard = lazy(() => import('@/pages/Dashboard'));
+const Devices = lazy(() => import('@/pages/Devices'));
+const AddDevice = lazy(() => import('@/pages/AddDevice'));
+const Mascotas = lazy(() => import('@/pages/Mascotas'));
+const Sensors = lazy(() => import('@/pages/Sensors'));
+const Analytics = lazy(() => import('@/pages/Analytics'));
+const Alerts = lazy(() => import('@/pages/Alerts'));
+const Settings = lazy(() => import('@/pages/Settings'));
+const Planes = lazy(() => import('@/pages/Planes'));
+const Users = lazy(() => import('@/pages/Users'));
+
 
 
 // Componente para capturar errores de renderizado (Error Boundary)
@@ -47,6 +49,10 @@ class ErrorBoundary extends React.Component<{children: React.ReactNode}, {hasErr
   }
 }
 
+function PageLoader() {
+  return <div className="flex items-center justify-center h-full min-h-[50vh]">Cargando...</div>;
+}
+
 function Router() {
   const [, setLocation] = useLocation(); // Get setLocation for programmatic navigation
 
@@ -59,48 +65,50 @@ function Router() {
 
   return (
     <AppLayout>
-      <Switch>
-        <Route path="/login">
-          <Login />
-        </Route>
-        <Route path="/register">
-          <Register />
-        </Route>
-        <Route path="/dashboard">
-          <PrivateRoute component={Dashboard} />
-        </Route>
-        <Route path="/devices">
-          <PrivateRoute component={Devices} />
-        </Route>
-        <Route path="/devices/add">
-          <PrivateRoute component={AddDevice} />
-        </Route>
-        <Route path="/mascotas">
-          <PrivateRoute component={Mascotas} />
-        </Route>
-        <Route path="/sensors">
-          <PrivateRoute component={Sensors} />
-        </Route>
-        <Route path="/analytics">
-          <PrivateRoute component={Analytics} />
-        </Route>
-        <Route path="/alerts">
-          <PrivateRoute component={Alerts} />
-        </Route>
-        <Route path="/settings">
-          <PrivateRoute component={Settings} />
-        </Route>
-        <Route path="/planes">
-          <PrivateRoute component={Planes} />
-        </Route>
-        <Route path="/users">
-          <PrivateRoute component={Users} />
-        </Route>
-        {/* Fallback for unknown routes */}
-        <Route>
-          <NotFound />
-        </Route>
-      </Switch>
+      <Suspense fallback={<PageLoader />}>
+        <Switch>
+          <Route path="/login">
+            <Login />
+          </Route>
+          <Route path="/register">
+            <Register />
+          </Route>
+          <Route path="/dashboard">
+            <PrivateRoute component={Dashboard} />
+          </Route>
+          <Route path="/devices">
+            <PrivateRoute component={Devices} />
+          </Route>
+          <Route path="/devices/add">
+            <PrivateRoute component={AddDevice} />
+          </Route>
+          <Route path="/mascotas">
+            <PrivateRoute component={Mascotas} />
+          </Route>
+          <Route path="/sensors">
+            <PrivateRoute component={Sensors} />
+          </Route>
+          <Route path="/analytics">
+            <PrivateRoute component={Analytics} />
+          </Route>
+          <Route path="/alerts">
+            <PrivateRoute component={Alerts} />
+          </Route>
+          <Route path="/settings">
+            <PrivateRoute component={Settings} />
+          </Route>
+          <Route path="/planes">
+            <PrivateRoute component={Planes} />
+          </Route>
+          <Route path="/users">
+            <PrivateRoute component={Users} />
+          </Route>
+          {/* Fallback for unknown routes */}
+          <Route>
+            <NotFound />
+          </Route>
+        </Switch>
+      </Suspense>
     </AppLayout>
   );
 }
@@ -152,4 +160,3 @@ function App() {
 }
 
 export default App;
-

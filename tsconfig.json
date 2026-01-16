@@ -1,17 +1,20 @@
 {
-  "extends": "./tsconfig.base.json",
   "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Node",
+    "strict": true,
     "baseUrl": ".",
     "paths": {
-      "@lib/*": ["lib/*"],
       "@shared/*": ["shared/*"]
     },
-    "module": "ESNext",
-    "types": ["node"]
+    "types": ["node"],
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true
   },
   "include": [
     "api/**/*",
-    "lib/**/*",
     "shared/**/*"
   ]
 }

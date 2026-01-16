@@ -2,46 +2,56 @@ import { Button } from '@/components/ui/button';
 import DeviceCard from '@/components/DeviceCard';
 import { Plus } from 'lucide-react';
 import { useLocation } from 'wouter';
-import feederImage from '@assets/generated_images/Smart_feeder_device_6415df93.png';
+
+type DeviceStatus = 'active' | 'warning' | 'error';
+
+interface MockDevice {
+  name: string;
+  type: string;
+  status: DeviceStatus;
+  lastUpdate: string;
+  batteryLevel: number;
+  imageUrl?: string;
+}
 
 export default function Devices() {
-  //todo: remove mock functionality
   const [, setLocation] = useLocation();
 
-  const mockDevices = [
+  // TODO: reemplazar por fetch a /api/devices
+  const mockDevices: MockDevice[] = [
     {
       name: 'Comedero Principal',
       type: 'Dispensador de Comida',
-      status: 'active' as const,
+      status: 'active',
       lastUpdate: 'Hace 5 minutos',
       batteryLevel: 85,
-      imageUrl: feederImage,
+      imageUrl: '/images/device-placeholder.png',
     },
     {
       name: 'Arenero Inteligente',
       type: 'Monitor de Arenero',
-      status: 'warning' as const,
+      status: 'warning',
       lastUpdate: 'Hace 2 horas',
       batteryLevel: 45,
     },
     {
       name: 'Bebedero Automático',
       type: 'Dispensador de Agua',
-      status: 'error' as const,
+      status: 'error',
       lastUpdate: 'Hace 1 día',
       batteryLevel: 15,
     },
     {
       name: 'Cámara de Vigilancia',
       type: 'Cámara IoT',
-      status: 'active' as const,
+      status: 'active',
       lastUpdate: 'Hace 10 minutos',
       batteryLevel: 90,
     },
     {
       name: 'Collar GPS',
       type: 'Rastreador',
-      status: 'active' as const,
+      status: 'active',
       lastUpdate: 'Hace 1 minuto',
       batteryLevel: 70,
     },
@@ -51,6 +61,7 @@ export default function Devices() {
     <div className="space-y-6" data-testid="page-devices">
       <div className="flex items-center justify-between">
         <h1 className="titulo text-3xl">Dispositivos</h1>
+
         <Button
           className="btn-primary"
           onClick={() => setLocation('/devices/add')}

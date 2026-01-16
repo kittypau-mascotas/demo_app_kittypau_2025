@@ -1,14 +1,21 @@
-{
-  "extends": "../tsconfig.base.json",
+﻿{
   "compilerOptions": {
-    "jsx": "react-jsx",
+    "target": "ES2022",
     "module": "ESNext",
-    "lib": ["ES2020", "DOM", "DOM.Iterable"],
-    "baseUrl": "src",
+    "moduleResolution": "Node",
+    "strict": true,
+    "jsx": "react-jsx",
+    "baseUrl": ".",
     "paths": {
-      "@/*": ["*"],
-      "@shared/*": ["../../shared/*"]
-    }
+      "@shared/*": ["../shared/*"]
+    },
+    "types": ["node"],
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true
   },
-  "include": ["src"]
+  "include": [
+    "src/**/*",
+    "../shared/**/*"
+  ]
 }

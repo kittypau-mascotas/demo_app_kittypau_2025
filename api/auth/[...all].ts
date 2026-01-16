@@ -1,7 +1,16 @@
 // Using Express types as a compatible fallback since @vercel/node is missing in package.json
 import type { Request as VercelRequest, Response as VercelResponse } from 'express';
 import { auth } from "../../server/auth/neonAuth";
-import { toWebHeaders } from "../../server/api-utils";
+
+// Inline helper to avoid importing dependencies that might crash
+function toWebHeaders(nodeHeaders: import("http").IncomingHttpHeaders): Headers {
+  const headers = new Headers();
+  for (const [k, v] of Object.entries(nodeHeaders)) {
+    if (typeof v === "string") headers.append(k, v);
+    else if (Array.isArray(v)) v.forEach((x) => headers.append(k, x));
+  }
+  return headers;
+}
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {

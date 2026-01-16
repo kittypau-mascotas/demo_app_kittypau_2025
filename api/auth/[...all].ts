@@ -15,7 +15,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const hostHeader = req.headers["host"] ?? "localhost:3000";
     const host = Array.isArray(hostHeader) ? hostHeader[0] : hostHeader;
 
-    const url = req.url ?? "/";
+    const url = req.url || "/api/auth"; // Fallback seguro
     const fullUrl = `${protocol}://${host}${url}`;
 
     /* ---------------------------------------------------------------------- */

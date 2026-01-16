@@ -1,10 +1,10 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { getUser, verifyDeviceOwnership, dateSchema, limitSchema, sendError } from '../../../lib/api-utils';
-import { db } from '../../../shared/db';
-import { deviceEvents } from '../../../shared/schema';
+import type { Request, Response } from 'express';
+import { getUser, verifyDeviceOwnership, dateSchema, limitSchema, sendError } from '../../lib/api-utils';
+import { db } from '../../shared/db';
+import { deviceEvents } from '../../shared/schema';
 import { eq, and, sql, desc } from 'drizzle-orm';
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+export default async function handler(req: Request, res: Response) {
   // Solo permitimos GET
   if (req.method !== 'GET') return res.status(405).json({ error: "Method not allowed" });
 

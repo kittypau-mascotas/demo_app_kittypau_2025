@@ -1,8 +1,7 @@
-import type { Request, Response } from "express";
 import { auth } from "./neonAuth";
-import { toWebHeaders } from "../../server/api-utils";
+import { toWebHeaders } from "../../lib/api-utils";
 
-export default async function handler(req: Request, res: Response) {
+export default async function handler(req: any, res: any) {
   if (!auth) {
     console.error("❌ Auth system not initialized");
     return res.status(500).json({

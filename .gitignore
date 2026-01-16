@@ -1,31 +1,28 @@
+# =========================
 # Dependencies
+# =========================
 node_modules
 
+# =========================
 # Build outputs
+# =========================
 dist
 
-# Local environment variables
+# =========================
+# Environment variables
+# =========================
 .env
 .env.*
 !.env.example
 
-# Local state and caches
+# =========================
+# Local / platform state
+# =========================
 .local
 .vercel
-
-# Archived mockups
-__archive_public/
-
-# Database migrations (often auto-generated)
-migrations
-
-# OS-specific
 .DS_Store
 
+# =========================
 # Archives
+# =========================
 *.tar.gz
-
-# Vite cache
-vite.config.ts.*
-Datos KPCL0033/telemetry (2).csv
-Datos KPCL0033/analisis_kittypaw.ipynb

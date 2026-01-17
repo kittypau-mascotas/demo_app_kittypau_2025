@@ -10,12 +10,101 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { PawPrint, Edit, Trash2, Save, X } from 'lucide-react';
 import PetAvatar from '@/components/PetAvatar';
+import ActivityChart from '@/components/ActivityChart';
+import ConsumptionChart from '@/components/ConsumptionChart';
+import { usePetSensorReadings } from '@/hooks/data/usePetSensorReadings';
+import { SensorReading, Device } from '@shared/schema'; // Also need Device for chart transformations
+import { useMemo } from 'react'; // Needed for data transformations
+import { cn } from '@/lib/utils'; // For cn in charts
+
+interface ChartData {
+  name: string;
+  [deviceName: string]: number | string;
+}
+
+const transformConsumptionData = (sensorReadings: SensorReading[], devices: Device[], timeRange: string): ChartData[] => {
+  if (!sensorReadings || sensorReadings.length === 0 || !devices || devices.length === 0) {
+    return [];
+  }
+
+  const deviceMap = new Map<string, string>();
+  devices.forEach(device => deviceMap.set(device.deviceId, device.name));
+
+  const dailyConsumption = new Map<string, { [deviceName: string]: number }>();
+
+  sensorReadings.forEach(reading => {
+    if (reading.weightGrams === null || reading.weightGrams === undefined) {
+        return;
+    }
+    const date = new Date(reading.ts);
+    let dayKey: string;
+
+    if (timeRange === 'day') {
+      dayKey = date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+    } else if (timeRange === 'week' || timeRange === 'month') {
+      dayKey = date.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric' });
+    } else { // 'year' or default
+      dayKey = date.toLocaleDateString('es-ES', { month: 'short', day: 'numeric' });
+    }
+
+    if (!dailyConsumption.has(dayKey)) {
+      dailyConsumption.set(dayKey, {});
+    }
+    const consumptionForDay = dailyConsumption.get(dayKey)!;
+    const deviceName = deviceMap.get(reading.deviceId) || `Device ${reading.deviceId}`;
+
+    if (!consumptionForDay[deviceName]) {
+      consumptionForDay[deviceName] = 0;
+    }
+    consumptionForDay[deviceName] += parseFloat(reading.weightGrams as any);
+  });
+
+  const result: ChartData[] = [];
+  dailyConsumption.forEach((values, dayKey) => {
+    result.push({ name: dayKey, ...values });
+  });
+
+  return result.sort((a,b) => a.name.localeCompare(b.name));
+};
+
+const transformSensorDataForActivityChart = (sensorReadings: SensorReading[], timeRange: string): ChartData[] => {
+  if (!sensorReadings || sensorReadings.length === 0) return [];
+
+  const dailyActivity = new Map<string, number>();
+
+  sensorReadings.forEach((reading: SensorReading) => {
+    const date = new Date(reading.ts);
+    let dayKey: string;
+
+    if (timeRange === 'day') {
+      dayKey = date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+    } else if (timeRange === 'week' || timeRange === 'month') {
+      dayKey = date.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric' });
+    } else { // 'year' or default
+      dayKey = date.toLocaleDateString('es-ES', { month: 'short', day: 'numeric' });
+    }
+
+    if (!dailyActivity.has(dayKey)) {
+      dailyActivity.set(dayKey, 0);
+    }
+    dailyActivity.set(dayKey, dailyActivity.get(dayKey)! + 1);
+  });
+
+  const result: ChartData[] = [];
+  dailyActivity.forEach((value, dayKey) => {
+    result.push({ name: dayKey, Activity: value });
+  });
+
+  return result.sort((a,b) => a.name.localeCompare(b.name));
+};
+
 
 export default function PetDetail() {
   const params = useParams();
   const petId = params.id ? parseInt(params.id) : null;
   const { session } = useAuth();
   const { data: pet, isLoading, isError, error, refetch } = usePet(petId);
+  const { data: petSensorData, isLoading: isLoadingPetSensorData, isError: isErrorPetSensorData } = usePetSensorReadings(petId);
   const { toast } = useToast();
   const [, setLocation] = useLocation();
 
@@ -100,7 +189,12 @@ export default function PetDetail() {
     }
   };
 
-  if (isLoading) {
+  const timeRange = 'week'; // Default for pet detail charts
+  const consumptionChartData = useMemo(() => transformConsumptionData(petSensorData?.sensorReadings || [], petSensorData?.devices || [], timeRange), [petSensorData, timeRange]);
+  const activityChartData = useMemo(() => transformSensorDataForActivityChart(petSensorData?.sensorReadings || [], timeRange), [petSensorData, timeRange]);
+
+
+  if (isLoading || isLoadingPetSensorData) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[80vh] p-4">
         <Skeleton className="h-48 w-48 rounded-full mb-4" />
@@ -114,8 +208,8 @@ export default function PetDetail() {
     );
   }
 
-  if (isError) {
-    return <div className="text-center text-red-500 p-4">Error al cargar la mascota: {error?.message}</div>;
+  if (isError || isErrorPetSensorData) {
+    return <div className="text-center text-red-500 p-4">Error al cargar los datos de la mascota: {error?.message || (isErrorPetSensorData as any)?.message}</div>;
   }
 
   if (!pet) {
@@ -187,10 +281,9 @@ export default function PetDetail() {
 
           {/* Section for charts or associated devices will go here */}
           <CardTitle className="text-2xl">Actividad y Salud</CardTitle>
-          <p className="text-muted-foreground">Gráficas de actividad y consumo irán aquí.</p>
-          {/* Placeholder for charts */}
-          <div className="h-64 w-full bg-muted flex items-center justify-center rounded-md">
-            <span>Gráficos de la mascota</span>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <ActivityChart data={activityChartData} />
+            <ConsumptionChart data={consumptionChartData} />
           </div>
 
         </CardContent>

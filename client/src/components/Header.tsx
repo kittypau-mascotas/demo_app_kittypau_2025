@@ -1,7 +1,9 @@
 import { Button } from '@/components/ui/button';
-import { Menu, LogOut } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Menu, LogOut, PawPrint } from 'lucide-react'; // Add PawPrint icon
 import { useAuth } from '@/contexts/AuthContext';
 import { useLocation } from 'wouter';
+import { usePets } from '@/hooks/data/usePets'; // Import usePets to get the list of pets
 // import logo from '@assets/generated_images/KittyPau_app_logo_icon_4a2bd296.png'; // No longer needed directly here
 
 interface HeaderProps {
@@ -50,6 +52,22 @@ export default function Header({ onMenuToggle }: HeaderProps) {
               {displayName}
             </span>
           </div>
+
+          {/* Pet Selector */}
+          {pets && pets.length > 0 && (
+            <Select onValueChange={(petId) => setActivePet(parseInt(petId))} value={session?.user?.activePetId?.toString() || (pets.length > 0 ? pets[0].id.toString() : '')}>
+              <SelectTrigger className="w-[180px]">
+                <PawPrint className="h-4 w-4 mr-2" />
+                <SelectValue placeholder="Seleccionar Mascota" />
+              </SelectTrigger>
+              <SelectContent>
+                {pets.map(pet => (
+                  <SelectItem key={pet.id} value={pet.id.toString()}>{pet.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+
           <Button variant="outline" size="sm" onClick={handleLogout} className="hover-elevate">
             Cerrar Sesión
           </Button>

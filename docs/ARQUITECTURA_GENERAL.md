@@ -20,30 +20,46 @@ El sistema KittyPau está diseñado como una plataforma IoT desacoplada y escala
     
 5.  **Backend API (Lógica de Negocio)**: Un conjunto de Vercel Serverless Functions escritas en TypeScript. Exponen una API RESTful que el frontend consume. Estas funciones se conectan a la base de datos Neon para leer o modificar datos, siempre aplicando estrictas reglas de negocio y seguridad.
     
-6.  **Frontend Web (Interfaz de Usuario)**: Una aplicación de página única (SPA) desarrollada con Vite y React. Se despliega en Vercel y se sirve globalmente a través de su CDN. Los usuarios interactúan con esta interfaz para ver los datos de sus mascotas, gestionar dispositivos y configurar alertas.
+6.  **Frontend Web (Interfaz de Usuario)**: Una aplicación de página única (SPA) desarrollada con Vite, React 18 y TypeScript. Utiliza Tailwind CSS y Shadcn/ui para un diseño moderno y responsive. La gestión del estado del servidor se realiza con TanStack Query, y la autenticación a través de Better Auth React. Se despliega en Vercel y se sirve globalmente a través de su CDN. Los usuarios interactúan con esta interfaz para ver los datos de sus mascotas, gestionar dispositivos y configurar alertas.
     
-7.  **Usuario Autenticado**: El usuario final que accede a la plataforma a través de un navegador web. La autenticación se gestiona a través de un sistema de cookies seguras y rutas protegidas en el frontend.
+7.  **Usuario Autenticado**: El usuario final que accede a la plataforma a través de un navegador web. La autenticación se gestiona a través de un sistema de cookies seguras y rutas protegidas en el frontend (`PrivateRoute`, `OnboardingGuard`).
 
 ## Diagrama Conceptual
 
+```mermaid
+graph LR
+    Device[Dispositivo IoT] -->|MQTT mTLS| AWS[AWS IoT Core]
+    AWS -->|Sub| Bridge[Bridge MQTT (Node.js/EC2)]
+    Bridge -->|Write| DB[(Neon PostgreSQL)]
+
+    Frontend[Frontend Web (React/Vite)] -->|HTTPS| API[Backend API (Vercel Functions)]
+    API -->|Read/Write| DB
+
+    User[Usuario Final] -->|Accede vía Browser| Frontend
 ```
-┌───────────────┐      ┌────────────────┐      ┌────────────────┐
-│ Dispositivo IoT │──────│ AWS IoT Core   │──────│ Bridge MQTT    │
-│ (ESP32)       │─MQTT─>│ (Certificados) │─MQTT─>│ (Node.js/EC2)  │
-└───────────────┘      └────────────────┘      └────────────────┘
-                                                        │
-                                                        │ SQL
-                                                        ▼
-┌───────────────┐      ┌────────────────┐      ┌────────────────┐
-│ Usuario Final │<───┐  │ Frontend       │<───┐  │ Neon DB        │
-│ (Navegador)   │    │  │ (React/Vercel) │    │  │ (PostgreSQL)   │
-└───────────────┘    │  └────────────────┘    │  └────────────────┘
-      ▲              │          ▲             │          ▲
-      │ HTTPS          │          │ HTTPS         │          │
-      └──────────────┴──────────┴─────────────┴──────────┘
-                                │
-                      ┌────────────────┐
-                      │ Backend API    │
-                      │ (Vercel Funcs) │
-                      └────────────────┘
+
+## Stack Tecnológico Detallado (Frontend)
+
+*   **Framework:** React 18
+*   **Lenguaje:** TypeScript
+*   **Build Tool:** Vite
+*   **Routing:** Wouter (centralizado con `router.tsx`, incluyendo `PrivateRoute` y `OnboardingGuard`)
+*   **Styling:** Tailwind CSS + Shadcn/ui
+*   **Estado (Server):** TanStack Query
+*   **Autenticación:** Better Auth React (integrado en `AuthContext`)
+*   **Formularios:** React Hook Form + Zod
+*   **Gráficas:** Recharts
+*   **Animaciones:** Framer Motion
+*   **Iconos:** Lucide React
+*   **Manejo de Errores:** Global ErrorBoundary, centralizado `logger` utility, `useToast` para feedback UX.
+*   **Temas:** `next-themes` para gestión de modo claro/oscuro.
+
+## Patrones de Arquitectura Frontend
+
+*   **Feature-based Architecture:** Organización por dominios funcionales (e.g., `features/pets`, `features/devices`).
+*   **Global Providers:** `AuthProvider`, `QueryClientProvider`, `ThemeProvider` gestionan el estado global.
+*   **Centralized Router:** Lógica de ruteo y guards encapsulada para una gestión de flujo de usuario clara.
+*   **Client API Layer:** Capa dedicada para comunicación con el backend, evitando llamadas `fetch` directas en componentes.
+*   **Logging:** `logger` utility para un logging estructurado y centralizado.
 ```
+I will perform this `write_file` operation now.

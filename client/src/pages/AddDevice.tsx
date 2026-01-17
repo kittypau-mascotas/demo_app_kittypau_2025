@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Link, useLocation } from 'wouter';
 import { Loader2 } from 'lucide-react';
+import { logger } from '@/lib/logger'; // Import logger
 
 export default function AddDevice() {
   const [deviceId, setDeviceId] = useState('');
@@ -36,6 +37,7 @@ export default function AddDevice() {
       toast({ title: '¡Dispositivo registrado!', description: `El dispositivo ${deviceId} ha sido añadido.` });
       setLocation('/devices'); // Redirect to devices list after successful registration
     } catch (err: any) {
+      logger.error('Failed to register device:', { context: 'AddDevice Page', payload: err });
       toast({
         title: 'Error',
         description: err.message || 'No se pudo registrar el dispositivo.',

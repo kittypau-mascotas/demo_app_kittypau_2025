@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useLocation } from 'wouter';
 import { Logo } from '@/components/ui/Logo';
 import { useToast } from '@/hooks/use-toast';
+import { logger } from '@/lib/logger'; // Import logger
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -20,7 +21,7 @@ export default function Login() {
       await login(email, password); // Better Auth's login typically handles redirection on success
       // setLocation('/dashboard'); // Remove this line as Better Auth's login will handle redirection
     } catch (error: any) { // Catch as any to access error.message
-      console.error('Failed to login:', error);
+      logger.error('Failed to login:', { context: 'Login Page', payload: error });
       toast({
         title: 'Error de inicio de sesión',
         description: error.message || 'Verifica tus credenciales y vuelve a intentarlo.', // Use error.message if available

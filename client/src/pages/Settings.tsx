@@ -10,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { Link } from 'wouter'; // For linking to other sections if needed
 import { Loader2 } from 'lucide-react';
+import { logger } from '@/lib/logger'; // Import logger
 
 // Assuming a hook to fetch active sessions, similar to useQuery
 const useActiveSessions = () => {
@@ -67,6 +68,7 @@ export default function Settings() {
       setNewPassword('');
       setConfirmNewPassword('');
     } catch (err: any) {
+      logger.error('Failed to change password:', { context: 'Settings Page', payload: err });
       toast({
         title: 'Error',
         description: err.message || 'No se pudo cambiar la contraseña.',

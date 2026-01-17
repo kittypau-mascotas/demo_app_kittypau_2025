@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Edit, Trash2, Save, X, Wifi, WifiOff, Clock } from 'lucide-react'; // Add Clock icon
 import { DeviceCardProps } from '@/components/DeviceCard'; // For status types
 import { usePets } from '@/hooks/data/usePets'; // To get pet data for associated pet
+import { logger } from '@/lib/logger'; // Import logger
 import { useDeviceEvents } from '@/hooks/data/useDeviceEvents'; // Import useDeviceEvents
 
 export default function DeviceDetail() {
@@ -66,6 +67,7 @@ export default function DeviceDetail() {
       refetch(); // Refetch device data
       setIsEditing(false);
     } catch (err: any) {
+      logger.error('Failed to update device:', { context: 'DeviceDetail Page', payload: err });
       toast({
         title: 'Error',
         description: err.message || 'No se pudo actualizar el dispositivo.',
@@ -96,6 +98,7 @@ export default function DeviceDetail() {
       toast({ title: '¡Dispositivo eliminado!', description: `${device?.name} ha sido eliminado.` });
       setLocation('/devices'); // Redirect to devices list
     } catch (err: any) {
+      logger.error('Failed to delete device:', { context: 'DeviceDetail Page', payload: err });
       toast({
         title: 'Error',
         description: err.message || 'No se pudo eliminar el dispositivo.',

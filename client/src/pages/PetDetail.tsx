@@ -17,6 +17,7 @@ import { SensorReading, Device } from '@shared/schema'; // Also need Device for 
 import { useMemo } from 'react'; // Needed for data transformations
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'; // Import Select components
 import { cn } from '@/lib/utils'; // For cn in charts
+import { logger } from '@/lib/logger'; // Import logger
 
 interface ChartData {
   name: string;
@@ -156,6 +157,7 @@ export default function PetDetail() {
       refetch(); // Refetch pet data
       setIsEditing(false);
     } catch (err: any) {
+      logger.error('Failed to update pet:', { context: 'PetDetail Page', payload: err });
       toast({
         title: 'Error',
         description: err.message || 'No se pudo actualizar la mascota.',
@@ -186,6 +188,7 @@ export default function PetDetail() {
       toast({ title: '¡Mascota eliminada!', description: `${pet?.name} ha sido eliminada.` });
       setLocation('/mascotas'); // Redirect to pets list
     } catch (err: any) {
+      logger.error('Failed to delete pet:', { context: 'PetDetail Page', payload: err });
       toast({
         title: 'Error',
         description: err.message || 'No se pudo eliminar la mascota.',

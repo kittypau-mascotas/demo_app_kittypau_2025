@@ -8,6 +8,7 @@ import { useLocation } from 'wouter';
 import { Logo } from '@/components/ui/Logo';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext'; // Import useAuth to get the login function
+import { logger } from '@/lib/logger'; // Import logger
 
 export default function Register() {
   const [name, setName] = useState('');
@@ -46,7 +47,7 @@ export default function Register() {
       // setLocation('/dashboard'); // Redirection will be handled by Better Auth's login
       
     } catch (error: any) {
-      console.error('Failed to register:', error);
+      logger.error('Failed to register:', { context: 'Register Page', payload: error });
       toast({
         title: 'Error de registro',
         description: error.message || 'No se pudo crear la cuenta. Inténtalo de nuevo más tarde.',

@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { Label } from '@/components/ui/label';
+import { logger } from '@/lib/logger'; // Import logger
 
 interface LinkDeviceModalProps {
   isOpen: boolean;
@@ -90,10 +91,11 @@ export default function LinkDeviceModal({ isOpen, onOpenChange, petId, onDeviceL
       });
       onOpenChange(false);
       onDeviceLinked(); // Refresh pets list
-    } catch (error) {
+    } catch (error: any) {
+      logger.error('Failed to link device:', { context: 'LinkDeviceModal', payload: error });
       toast({
         title: 'Error al vincular dispositivo',
-        description: error instanceof Error ? error.message : 'Ocurrió un error inesperado.',
+        description: error.message || 'Ocurrió un error inesperado.',
         variant: 'destructive',
       });
     } finally {

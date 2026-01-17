@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useMemo, useState, useEffect } from 'react';
 import { createAuthClient, useSession, useLogin, useLogout } from 'better-auth/react';
 import { useLocation } from 'wouter'; // To redirect after login/logout if not handled by better-auth
+import { logger } from '@/lib/logger'; // Import logger
 
 // Initialize Better Auth client
 // Ensure VITE_API_URL is correctly set in your .env file
@@ -51,7 +52,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   useEffect(() => {
     // Optionally handle redirection after logout
     if (!session && !isLoading && !error && window.location.pathname !== '/login') {
+      logger.info('User logged out or session expired. Redirecting to login.', { context: 'AuthContext' });
       setLocation('/login');
+    }
+    if (error) {
+      logger.error('Authentication error:', { context: 'AuthContext', payload: error });
     }
     // Optionally handle redirection after successful login if needed,
     // though typically the login function itself handles this.
@@ -73,8 +78,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // For now, Better Auth's useSession doesn't provide a direct refetch method.
       // We might need to refresh the page or rely on polling if better-auth doesn't update session on its own
       setLocation(window.location.pathname); // Simple page refresh to re-fetch session
-    } catch (err) {
-      console.error('Error setting active pet:', err);
+    } catch (err: any) {
+      logger.error('Error setting active pet:', { context: 'AuthContext', payload: err });
       // Handle error, e.g., with a toast notification
     }
   };

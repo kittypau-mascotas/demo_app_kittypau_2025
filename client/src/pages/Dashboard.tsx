@@ -7,13 +7,15 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Activity, Home, AlertTriangle, Heart, Fish, Droplets, LogOut, Plus } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { SensorReading, Device, Pet } from '@shared/schema'; // Keep Pet, Device, SensorReading types
-import { useMemo } from 'react';
+import { useMemo } from 'react'; // Needed for data transformations
 import { Button } from '@/components/ui/button';
 import { useTheme } from 'next-themes';
 import HeroCard from '@/components/HeroCard'; // Import HeroCard
 import AddPetModal from '@/components/AddPetModal';
 import LinkDeviceModal from '@/components/LinkDeviceModal';
 import { useDashboardSummary } from '@/hooks/useDashboardSummary'; // Import the new hook
+import { usePets } from '@/hooks/data/usePets'; // Import usePets to get the list of pets
+import { DeviceCardProps } from '@/components/DeviceCard'; // Import DeviceCardProps
 
 // Helper to transform raw consumption events into chart-friendly format for ConsumptionChart
 interface ChartData {
@@ -271,18 +273,23 @@ export default function Dashboard() {
 
       <div className="space-y-4">
         <h3 className="text-2xl font-bold">Dispositivos Recientes</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
-          {devices?.map((device) => (
-            <DeviceCard
-              key={device.id}
-              name={device.name}
-              type={device.deviceType || 'Dispositivo'} // Modificado a device.deviceType
-              status={device.status as any} // Cast status as it's a string, DeviceCard expects specific literals
-              lastUpdate={device.lastSeen ? new Date(device.lastSeen).toLocaleString() : 'N/A'} // Modificado a device.lastSeen
-              batteryLevel={0} // Asumiendo que no hay batteryLevel, ponemos 0
-              // imageUrl={device.imageUrl} // Assuming Device has an imageUrl
-            />
-          ))}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4"> {/* Adjusted lg:grid-cols-6 for better layout */}
+          {devices?.map((device) => {
+            const associatedPet = pets?.find(pet => pet.deviceId === device.id); // Assuming pet.deviceId is device.id
+            const associatedPetName = associatedPet ? associatedPet.name : undefined;
+            return (
+              <DeviceCard
+                key={device.id}
+                id={device.id} // Pass the id prop
+                name={device.name}
+                type={device.deviceType} // Modificado a device.deviceType
+                status={device.status as DeviceCardProps['status']} // Cast status for type compatibility
+                lastUpdate={device.lastSeen ? new Date(device.lastSeen).toLocaleString() : 'N/A'}
+                batteryLevel={device.batteryLevel}
+                associatedPetName={associatedPetName} // Pass associated pet name
+              />
+            );
+          })}
           {devices?.length === 0 && (
             <div className="col-span-full text-center space-y-4 py-8">
               <p className="text-muted-foreground">¿Sin huellitas tecnológicas aún? ¡Vincula tu primer dispositivo para empezar a cuidarlos!</p>

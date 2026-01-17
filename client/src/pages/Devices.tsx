@@ -3,6 +3,7 @@ import DeviceCard from '@/components/DeviceCard';
 import { Plus } from 'lucide-react';
 import { useLocation } from 'wouter';
 import { useDevices } from '@/hooks/data/useDevices';
+import { usePets } from '@/hooks/data/usePets'; // Import usePets
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function Devices() {
@@ -58,16 +59,24 @@ export default function Devices() {
             No tienes dispositivos registrados. ¡Agrega uno nuevo!
           </div>
         )}
-        {devices?.map((device) => (
-          <DeviceCard 
-            key={device.id} 
-            name={device.name}
-            type={device.deviceType}
-            status={device.status}
-            lastUpdate={device.lastSeen ? new Date(device.lastSeen).toLocaleString() : 'N/A'}
-            batteryLevel={device.batteryLevel}
-          />
-        ))}
+        {devices?.map((device) => {
+          const associatedPet = pets?.find(pet => pet.deviceId === device.id);
+          const associatedPetName = associatedPet ? associatedPet.name : undefined;
+
+          return (
+            <DeviceCard 
+              key={device.id} 
+              id={device.id} // Pass the id prop
+              name={device.name}
+              type={device.deviceType}
+              status={device.status as DeviceCardProps['status']} // Cast status for type compatibility
+              lastUpdate={device.lastSeen ? new Date(device.lastSeen).toLocaleString() : 'N/A'}
+              batteryLevel={device.batteryLevel}
+              associatedPetName={associatedPetName} // Pass associated pet name
+              // Add imageUrl if available
+            />
+          );
+        })}
       </div>
     </div>
   );

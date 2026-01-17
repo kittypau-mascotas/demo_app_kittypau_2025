@@ -21,6 +21,8 @@ const Planes = lazy(() => import('@/pages/Planes'));
 const Users = lazy(() => import('@/pages/Users'));
 // Pet Detail Page
 const PetDetail = lazy(() => import('@/pages/PetDetail'));
+// Device Detail Page
+const DeviceDetail = lazy(() => import('@/pages/DeviceDetail'));
 // Onboarding pages
 const AddPetOnboarding = lazy(() => import('@/pages/onboarding/AddPetOnboarding'));
 const LinkDeviceOnboarding = lazy(() => import('@/pages/onboarding/LinkDeviceOnboarding'));
@@ -65,6 +67,7 @@ export default function AppRouter() {
           <OnboardingGuard>
             <PrivateRoute path="/dashboard" component={Dashboard} />
             <PrivateRoute path="/devices" component={Devices} />
+            <PrivateRoute path="/devices/:id" component={DeviceDetail} />
             <PrivateRoute path="/devices/add" component={AddDevice} />
             <PrivateRoute path="/mascotas" component={Mascotas} />
             <PrivateRoute path="/mascotas/:id" component={PetDetail} />

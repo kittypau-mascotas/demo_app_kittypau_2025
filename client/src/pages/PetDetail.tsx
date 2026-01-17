@@ -8,13 +8,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
-import { PawPrint, Edit, Trash2, Save, X } from 'lucide-react';
+import { Edit, Trash2, Save, X, Wifi, WifiOff } from 'lucide-react';
 import PetAvatar from '@/components/PetAvatar';
 import ActivityChart from '@/components/ActivityChart';
 import ConsumptionChart from '@/components/ConsumptionChart';
 import { usePetSensorReadings } from '@/hooks/data/usePetSensorReadings';
 import { SensorReading, Device } from '@shared/schema'; // Also need Device for chart transformations
 import { useMemo } from 'react'; // Needed for data transformations
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'; // Import Select components
 import { cn } from '@/lib/utils'; // For cn in charts
 
 interface ChartData {
@@ -104,7 +105,8 @@ export default function PetDetail() {
   const petId = params.id ? parseInt(params.id) : null;
   const { session } = useAuth();
   const { data: pet, isLoading, isError, error, refetch } = usePet(petId);
-  const { data: petSensorData, isLoading: isLoadingPetSensorData, isError: isErrorPetSensorData } = usePetSensorReadings(petId);
+  const [selectedTimeRange, setSelectedTimeRange] = useState<'24h' | '7d' | '30d' | 'custom'>('7d');
+  const { data: petSensorData, isLoading: isLoadingPetSensorData, isError: isErrorPetSensorData } = usePetSensorReadings(petId, selectedTimeRange);
   const { toast } = useToast();
   const [, setLocation] = useLocation();
 
@@ -122,6 +124,9 @@ export default function PetDetail() {
       setEditedBirthDate(pet.birthDate ? new Date(pet.birthDate).toISOString().split('T')[0] : '');
     }
   }, [pet]);
+
+  const associatedPet = pets?.find(p => p.id === pet?.id); // Find associated pet (actually this component is for THE pet)
+  const associatedPetName = associatedPet ? associatedPet.name : 'N/A'; // This is redundant for this component
 
   const handleUpdatePet = async () => {
     if (!petId) return;
@@ -189,7 +194,7 @@ export default function PetDetail() {
     }
   };
 
-  const timeRange = 'week'; // Default for pet detail charts
+  const timeRange = selectedTimeRange; // Use selectedTimeRange
   const consumptionChartData = useMemo(() => transformConsumptionData(petSensorData?.sensorReadings || [], petSensorData?.devices || [], timeRange), [petSensorData, timeRange]);
   const activityChartData = useMemo(() => transformSensorDataForActivityChart(petSensorData?.sensorReadings || [], timeRange), [petSensorData, timeRange]);
 
@@ -279,11 +284,25 @@ export default function PetDetail() {
 
           <hr className="my-4" />
 
-          {/* Section for charts or associated devices will go here */}
+          {/* Time Range Selector for Charts */}
+          <div className="flex justify-end mb-4">
+            <Select value={selectedTimeRange} onValueChange={(value: '24h' | '7d' | '30d' | 'custom') => setSelectedTimeRange(value)}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Rango de Tiempo" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="24h">Últimas 24h</SelectItem>
+                <SelectItem value="7d">Últimos 7 días</SelectItem>
+                <SelectItem value="30d">Últimos 30 días</SelectItem>
+                {/* <SelectItem value="custom">Rango Personalizado</SelectItem> */}
+              </SelectContent>
+            </Select>
+          </div>
+
           <CardTitle className="text-2xl">Actividad y Salud</CardTitle>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <ActivityChart data={activityChartData} />
-            <ConsumptionChart data={consumptionChartData} />
+            <ActivityChart data={activityChartData} title="Actividad" unit="eventos" />
+            <ConsumptionChart data={consumptionChartData} title="Consumo" unit="g" />
           </div>
 
         </CardContent>

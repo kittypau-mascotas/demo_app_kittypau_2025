@@ -19,6 +19,7 @@ export default function DeviceDetail() {
   const { session } = useAuth();
   const { data: device, isLoading, isError, error, refetch } = useDevice(deviceId);
   const { data: pets, isLoading: isLoadingPets } = usePets(); // Fetch all pets to find associated one
+  const { data: deviceEvents, isLoading: isLoadingDeviceEvents, isError: isErrorDeviceEvents } = useDeviceEvents(deviceId); // Fetch device events
   const { toast } = useToast();
   const [, setLocation] = useLocation();
 
@@ -113,7 +114,7 @@ export default function DeviceDetail() {
     }
   };
 
-  if (isLoading || isLoadingPets) {
+  if (isLoading || isLoadingPets || isLoadingDeviceEvents) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[80vh] p-4">
         <Skeleton className="h-32 w-32 rounded-lg mb-4" />
@@ -127,8 +128,8 @@ export default function DeviceDetail() {
     );
   }
 
-  if (isError) {
-    return <div className="text-center text-red-500 p-4">Error al cargar el dispositivo: {error?.message}</div>;
+  if (isError || isErrorDeviceEvents) {
+    return <div className="text-center text-red-500 p-4">Error al cargar el dispositivo: {error?.message || (isErrorDeviceEvents as any)?.message}</div>;
   }
 
   if (!device) {
@@ -203,10 +204,23 @@ export default function DeviceDetail() {
 
           <hr className="my-4" />
 
-          {/* Section for charts or connection history will go here */}
           <CardTitle className="text-2xl">Historial de Conexión y Datos</CardTitle>
-          <p className="text-muted-foreground">Aquí se mostrarán las gráficas y el historial de conexión.</p>
-          {/* Placeholder for charts */}
+          {deviceEvents && deviceEvents.length > 0 ? (
+            <div className="space-y-2 max-h-64 overflow-y-auto">
+              {deviceEvents.map((event) => (
+                <div key={event.id} className="flex items-center space-x-2 text-sm">
+                  <Clock className="h-4 w-4 text-muted-foreground" />
+                  <span>{new Date(event.ts).toLocaleString()} - {event.eventType}</span>
+                  {event.payload && <span className="text-xs text-muted-foreground">({JSON.stringify(event.payload)})</span>}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-muted-foreground">No hay eventos de conexión recientes.</p>
+          )}
+
+          {/* Placeholder for charts if any will be added later */}
+          <p className="text-muted-foreground mt-4">Aquí se mostrarán gráficas de telemetría del dispositivo.</p>
           <div className="h-64 w-full bg-muted flex items-center justify-center rounded-md">
             <span>Gráficos del dispositivo</span>
           </div>

@@ -14,7 +14,8 @@ export default function Register() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const { login } = useAuth(); // We might automatically log in after successful registration
+  const { signIn } = useAuth(); // We might automatically log in after successful registration
+  const { toast } = useToast();
   const [, setLocation] = useLocation();
 
   const handleRegister = async (e: React.FormEvent) => {
@@ -42,7 +43,7 @@ export default function Register() {
       }
 
       // Automatically log in the user after successful registration
-      await login(email, password); 
+      await signIn.email({ email, password }); 
       // setLocation('/dashboard'); // Redirection will be handled by Better Auth's login
       
     } catch (error: any) {

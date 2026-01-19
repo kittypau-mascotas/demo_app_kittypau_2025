@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useAuth } from '@/contexts/AuthContext';
+import { authClient } from '@/lib/auth-client';
 import { useLocation } from 'wouter';
 import { Logo } from '@/components/ui/Logo';
 import { useToast } from '@/hooks/use-toast';
@@ -14,7 +14,6 @@ export default function Register() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const { signIn } = useAuth(); // We might automatically log in after successful registration
   const { toast } = useToast();
   const [, setLocation] = useLocation();
 
@@ -28,32 +27,25 @@ export default function Register() {
       });
       return;
     }
-    try {
-      const response = await fetch('/api/auth/signup', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ name, email, password }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Error desconocido al registrarse.');
+    
+    await authClient.signUp.email({
+      email,
+      password,
+      name,
+    }, {
+      onSuccess: () => {
+        toast({ title: '¡Cuenta creada!', description: 'Bienvenido a KittyPau.' });
+        setLocation('/');
+      },
+      onError: (ctx) => {
+        logger.error('Failed to register:', { context: 'Register Page', payload: ctx.error });
+        toast({
+          title: 'Error de registro',
+          description: ctx.error.message || 'No se pudo crear la cuenta.',
+          variant: 'destructive',
+        });
       }
-
-      // Automatically log in the user after successful registration
-      await signIn.email({ email, password }); 
-      // setLocation('/dashboard'); // Redirection will be handled by Better Auth's login
-      
-    } catch (error: any) {
-      logger.error('Failed to register:', { context: 'Register Page', payload: error });
-      toast({
-        title: 'Error de registro',
-        description: error.message || 'No se pudo crear la cuenta. Inténtalo de nuevo más tarde.',
-        variant: 'destructive',
-      });
-    }
+    });
   };
 
   return (

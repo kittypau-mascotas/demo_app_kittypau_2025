@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express';
-import { getUser, verifyDeviceOwnership, dateSchema, limitSchema, sendError } from '../../lib/api-utils';
+import { getUser, verifyDeviceOwnership, dateSchema, limitSchema, sendError } from '../../api-utils';
 import { db } from '../../shared/db'; // Assuming shared is in root
 import { deviceEvents } from '../../shared/schema'; // Assuming shared is in root
 import { eq, and, sql, desc } from 'drizzle-orm';

@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { getUser, verifyDeviceOwnership, dateSchema, limitSchema, sendError } from '../lib/api-utils';
+import { getUser, verifyDeviceOwnership, dateSchema, limitSchema, sendError } from '../api-utils';
 import { db } from '@shared/db';
 import { deviceEvents } from '@shared/schema';
 import { eq, and, sql, desc } from 'drizzle-orm';

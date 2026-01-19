@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useMemo, useState, useEffect } from 'react';
 import { authClient } from '@/lib/auth-client';
-import { api } from '@/lib/api';
+import { api } from '../lib/api';
 import { useLocation } from 'wouter'; // To redirect after login/logout if not handled by better-auth
 import { logger } from '@/lib/logger'; // Import logger
 

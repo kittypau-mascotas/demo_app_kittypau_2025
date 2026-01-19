@@ -96,8 +96,6 @@ export default function Register() {
                 />
                 <Button
                   type="button"
-                  variant="ghost"
-                  size="icon"
                   className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                   onClick={() => setShowPassword(!showPassword)}
                 >
@@ -123,8 +121,6 @@ export default function Register() {
                 />
                 <Button
                   type="button"
-                  variant="ghost"
-                  size="icon"
                   className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 >

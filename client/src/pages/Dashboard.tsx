@@ -7,6 +7,9 @@ import { useToast } from '@/hooks/use-toast';
 import PetAvatar from '@/components/PetAvatar';
 import Navbar from '@/components/Navbar';
 import ActivityChart from '@/components/ActivityChart';
+import StatWidget from '@/components/StatWidget';
+import { useWebSocket } from '@/hooks/use-websocket';
+import { PawPrint, Wifi } from 'lucide-react';
 
 // Función auxiliar para procesar los eventos para el gráfico
 const transformEventsToChartData = (events: any[]): { name: string; Activity: number }[] => {
@@ -45,6 +48,7 @@ export default function Dashboard() {
   const [devices, setDevices] = useState<any[]>([]);
   const [events, setEvents] = useState<any[]>([]);
   const { toast } = useToast();
+  const { lastMessage } = useWebSocket();
   
   // Estados de formularios
   const [petName, setPetName] = useState('');
@@ -69,7 +73,21 @@ export default function Dashboard() {
     loadData();
   }, []);
 
+  // Escuchar eventos en tiempo real
+  useEffect(() => {
+    const currentUserId = localStorage.getItem('userId');
+    // Verificar si el mensaje existe y pertenece al usuario actual
+    if (lastMessage && lastMessage.userId === currentUserId) {
+      // Asumiendo que el mensaje es un nuevo evento de dispositivo
+      // Agregamos el nuevo evento al inicio de la lista y mantenemos los más recientes
+      setEvents(prev => [lastMessage, ...prev].slice(0, 100)); // Keep latest 100 events
+    }
+  }, [lastMessage]);
+
   const activityChartData = useMemo(() => transformEventsToChartData(events), [events]);
+
+  // Calcular métricas
+  const activeDevices = devices.filter(d => d.status === 'online' || d.status === 'active').length;
 
   const handleAddPet = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -99,6 +117,23 @@ export default function Dashboard() {
     <div className="p-8 space-y-8 min-h-screen bg-gray-50 dark:bg-gray-900">
       <Navbar title="Panel de Control (Prueba CRUD)" />
       
+      {/* Widgets de Estadísticas */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <StatWidget
+          title="Total Mascotas"
+          value={pets.length.toString()}
+          description="Mascotas registradas"
+          icon={PawPrint}
+        />
+        <StatWidget
+          title="Dispositivos Activos"
+          value={activeDevices.toString()}
+          description="Dispositivos en línea"
+          icon={Wifi}
+          statusVariant={activeDevices > 0 ? 'ok' : 'warning'}
+        />
+      </div>
+
       <div className="grid lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2">
           <ActivityChart data={activityChartData} title="Actividad Reciente (Últimos 7 días)" unit="eventos" />

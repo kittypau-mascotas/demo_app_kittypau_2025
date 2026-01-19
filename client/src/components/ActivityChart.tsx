@@ -72,7 +72,8 @@ export default function ActivityChart({ data, dataKey = 'Activity', title = 'Act
               strokeWidth={2}
               activeDot={{ r: 8 }}
               isAnimationActive={true} // Animated line drawing
-              animationDuration={1500}
+              animationDuration={500} // Faster animation for real-time updates
+              animationEasing="ease-in-out"
             />
           </LineChart>
         </ResponsiveContainer>

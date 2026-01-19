@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useMemo, useState, useEffect } from 'react';
-import { createAuthClient, useSession, useLogin, useLogout } from 'better-auth/react';
+import { createAuthClient } from 'better-auth/react';
 import { useLocation } from 'wouter'; // To redirect after login/logout if not handled by better-auth
 import { logger } from '@/lib/logger'; // Import logger
 
@@ -10,10 +10,12 @@ const authClient = createAuthClient({
   basePath: '/api/auth', // This should match your backend API auth routes
 });
 
+type AuthClient = ReturnType<typeof createAuthClient>;
+
 // Define the type of session
 // Better Auth's useSession hook returns a session object or null
 // with a `user` property if authenticated.
-type BetterAuthSession = ReturnType<typeof useSession>['session'];
+type BetterAuthSession = ReturnType<AuthClient['useSession']>['session'];
 
 // Extend the User type within the session to include activePetId
 interface CustomSession extends BetterAuthSession {
@@ -29,9 +31,9 @@ interface CustomSession extends BetterAuthSession {
 interface AuthContextType {
   session: CustomSession; // Use CustomSession
   isLoading: boolean;
-  login: ReturnType<typeof useLogin>['login'];
-  logout: ReturnType<typeof useLogout>['logout'];
-  error: ReturnType<typeof useSession>['error'];
+  login: ReturnType<AuthClient['useLogin']>['login'];
+  logout: ReturnType<AuthClient['useLogout']>['logout'];
+  error: ReturnType<AuthClient['useSession']>['error'];
   setActivePet: (petId: number | null) => Promise<void>; // Function to set active pet
 }
 
@@ -44,9 +46,9 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const { session, isLoading, error } = useSession(authClient);
-  const { login } = useLogin(authClient);
-  const { logout } = useLogout(authClient);
+  const { session, isLoading, error } = authClient.useSession();
+  const { login } = authClient.useLogin();
+  const { logout } = authClient.useLogout();
   const [, setLocation] = useLocation();
 
   useEffect(() => {

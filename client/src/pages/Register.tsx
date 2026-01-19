@@ -7,7 +7,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useLocation } from 'wouter';
 import { Logo } from '@/components/ui/Logo';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/contexts/AuthContext'; // Import useAuth to get the login function
 import { logger } from '@/lib/logger'; // Import logger
 
 export default function Register() {

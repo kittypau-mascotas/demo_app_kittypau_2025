@@ -3,24 +3,23 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useAuth } from '@/contexts/AuthContext';
 import { useLocation } from 'wouter';
 import { Logo } from '@/components/ui/Logo';
 import { useToast } from '@/hooks/use-toast';
 import { logger } from '@/lib/logger'; // Import logger
+import { authService } from '@/services/api';
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { login } = useAuth(); // login is now from Better Auth
   const [, setLocation] = useLocation();
   const { toast } = useToast();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await login(email, password); // Better Auth's login typically handles redirection on success
-      // setLocation('/dashboard'); // Remove this line as Better Auth's login will handle redirection
+      await authService.login({ email, password });
+      setLocation('/dashboard');
     } catch (error: any) { // Catch as any to access error.message
       logger.error('Failed to login:', { context: 'Login Page', payload: error });
       toast({

@@ -23,6 +23,13 @@ export const authService = {
     }
     return response.data;
   },
+  login: async (data: any) => {
+    const response = await api.post('/auth/login', data);
+    if (response.data.user?.id) {
+      localStorage.setItem('userId', response.data.user.id);
+    }
+    return response.data;
+  },
 };
 
 export const petsService = {

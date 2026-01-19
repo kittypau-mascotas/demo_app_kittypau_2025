@@ -1,87 +1,38 @@
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL;
-
-export const apiClient = axios.create({
-  baseURL: API_URL,
+const api = axios.create({
+  baseURL: '/api',
   headers: {
     'Content-Type': 'application/json',
   },
-  withCredentials: true, // NECESARIO para Neon Auth (cookies)
 });
 
-// Manejo global de 401 (sesión expirada)
-apiClient.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      console.warn('Sesión expirada. Recargando la página.');
-      // window.location.reload();
-    }
-    return Promise.reject(error);
+api.interceptors.request.use((config) => {
+  const userId = localStorage.getItem('userId'); 
+  if (userId) {
+    config.headers['x-user-id'] = userId;
   }
-);
+  return config;
+});
 
-export const apiService = {
-  /* ======================
-     🐾 PETS
-     ====================== */
-  getPets: async () => {
-    const { data } = await apiClient.get('/api/pets');
-    return data;
-  },
-
-  /* ======================
-     📟 DEVICES
-     ====================== */
-  getDevices: async () => {
-    const { data } = await apiClient.get('/api/devices');
-    return data;
-  },
-
-  /* ======================
-     📡 IOT – SENSOR READINGS
-     ====================== */
-  getSensorReadings: async (
-    deviceId: string,
-    params?: {
-      start_date?: string;
-      end_date?: string;
-      limit?: number;
+export const authService = {
+  register: async (data: any) => {
+    const response = await api.post('/auth/register', data);
+    if (response.data.user?.id) {
+      localStorage.setItem('userId', response.data.user.id);
     }
-  ) => {
-    try {
-      const { data } = await apiClient.get(
-        `/api/devices/${deviceId}/readings`,
-        { params }
-      );
-      return data;
-    } catch (error) {
-      console.error('[API] Error fetching sensor readings', error);
-      throw error;
-    }
-  },
-
-  /* ======================
-     ⚡ IOT – EVENTS
-     ====================== */
-  getDeviceEvents: async (
-    deviceId: string,
-    params?: {
-      start_date?: string;
-      end_date?: string;
-      limit?: number;
-    }
-  ) => {
-    try {
-      const { data } = await apiClient.get(
-        `/api/devices/${deviceId}/events`,
-        { params }
-      );
-      return data;
-    } catch (error) {
-      console.error('[API] Error fetching device events', error);
-      throw error;
-    }
+    return response.data;
   },
 };
+
+export const petsService = {
+  getAll: async () => (await api.get('/pets')).data,
+  create: async (data: any) => (await api.post('/pets', data)).data,
+};
+
+export const devicesService = {
+  getAll: async () => (await api.get('/devices')).data,
+  create: async (data: any) => (await api.post('/devices', data)).data,
+};
+
+export default api;

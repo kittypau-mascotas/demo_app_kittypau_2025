@@ -14,6 +14,7 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const { login } = useAuth(); // login is now from Better Auth
   const [, setLocation] = useLocation();
+  const { toast } = useToast();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();

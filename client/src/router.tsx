@@ -9,6 +9,7 @@ import { useAuth } from './contexts/AuthContext'; // Relative path for useAuth
 const NotFound = lazy(() => import('@/pages/not-found'));
 const Login = lazy(() => import('@/pages/Login'));
 const Register = lazy(() => import('@/pages/Register'));
+const ResetPassword = lazy(() => import('@/pages/ResetPassword'));
 const Dashboard = lazy(() => import('@/pages/Dashboard'));
 const Devices = lazy(() => import('@/pages/Devices'));
 const AddDevice = lazy(() => import('@/pages/AddDevice'));
@@ -41,7 +42,7 @@ export default function AppRouter() {
   }
 
   // Define public and private routes
-  const publicRoutes = ['/login', '/register'];
+  const publicRoutes = ['/login', '/register', '/reset-password'];
   const isPublicRoute = publicRoutes.includes(location);
 
   if (!user && !isPublicRoute) {
@@ -57,6 +58,7 @@ export default function AppRouter() {
       <Switch>
         <Route path="/login" component={Login} />
         <Route path="/register" component={Register} />
+        <Route path="/reset-password" component={ResetPassword} />
 
         {/* Onboarding Routes - these should not be wrapped by AppLayout */}
         <PrivateRoute path="/onboarding/add-pet" component={AddPetOnboarding} />

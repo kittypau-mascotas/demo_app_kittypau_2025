@@ -1,7 +1,7 @@
 import type { Request, Response } from 'express';
 import { getUser, verifyDeviceOwnership, dateSchema, limitSchema, sendError } from '../../lib/api-utils';
-import { db } from '../../shared/db';
-import { deviceEvents } from '../../shared/schema';
+import { db } from '../../shared/db'; // Assuming shared is in root
+import { deviceEvents } from '../../shared/schema'; // Assuming shared is in root
 import { eq, and, sql, desc } from 'drizzle-orm';
 
 export default async function handler(req: Request, res: Response) {

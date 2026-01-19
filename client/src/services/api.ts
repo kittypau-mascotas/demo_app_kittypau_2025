@@ -30,6 +30,10 @@ export const authService = {
     }
     return response.data;
   },
+  resetPassword: async (data: any) => {
+    const response = await api.post('/auth/reset-password', data);
+    return response.data;
+  },
 };
 
 export const petsService = {

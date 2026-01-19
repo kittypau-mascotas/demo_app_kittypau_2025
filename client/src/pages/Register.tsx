@@ -7,16 +7,19 @@ import { useLocation } from 'wouter';
 import { Logo } from '@/components/ui/Logo';
 import { useToast } from '@/hooks/use-toast';
 import { authService } from '@/services/api';
+import { Loader2 } from 'lucide-react';
 
 export default function Register() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const [, setLocation] = useLocation();
   const { toast } = useToast();
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
     try {
       await authService.register({ name, email, password });
       toast({
@@ -26,11 +29,14 @@ export default function Register() {
       // Redirigir al dashboard tras registro exitoso (el servicio ya guardó el userId)
       setLocation('/dashboard');
     } catch (error: any) {
+      console.error("Registration error:", error);
       toast({
         title: 'Error en el registro',
-        description: error.response?.data?.error || 'Ocurrió un error al registrarse.',
+        description: error.response?.data?.error || error.message || 'Ocurrió un error al registrarse.',
         variant: 'destructive',
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -50,13 +56,14 @@ export default function Register() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+              <Input id="email" type="email" placeholder="nombre@ejemplo.com" required value={email} onChange={(e) => setEmail(e.target.value)} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Contraseña</Label>
               <Input id="password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} />
             </div>
-            <Button type="submit" className="w-full bg-pink-500 hover:bg-pink-600 text-white">
+            <Button type="submit" className="w-full bg-pink-500 hover:bg-pink-600 text-white" disabled={isLoading}>
+              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Registrarse
             </Button>
           </form>

@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import pool from '../db'; 
+import pool from '../db';
 import { hash } from 'bcrypt';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -40,6 +40,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     } catch (err: any) {
       await client.query('ROLLBACK');
+      console.error('Database error during registration:', err);
       if (err.code === '23505') {
         return res.status(409).json({ error: 'El email ya está registrado' });
       }

@@ -1,21 +1,29 @@
 {
   "compilerOptions": {
-    "target": "ES2022",
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
-    "strict": true,
-    "esModuleInterop": true,
+    "target": "ESNext",
+    "useDefineForClassFields": true,
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
+
+    /* Bundler mode */
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+
+    /* Linting */
+    "strict": true,
+
+    /* Aliases: This is the part that fixes your error */
     "baseUrl": ".",
     "paths": {
-      "@lib/*": ["lib/*"],
+      "@/*": ["client/src/*"],
       "@shared/*": ["shared/*"]
     }
   },
-  "include": [
-    "api/**/*",
-    "lib/**/*",
-    "shared/**/*"
-  ]
+  "include": ["client/src", "shared"],
+  "references": [{ "path": "./tsconfig.node.json" }]
 }

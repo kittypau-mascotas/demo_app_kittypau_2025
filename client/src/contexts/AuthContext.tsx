@@ -1,14 +1,8 @@
 import React, { createContext, useContext, useMemo, useState, useEffect } from 'react';
-import { createAuthClient } from 'better-auth/react';
+import { authClient } from '@/lib/auth-client';
+import { api } from '@/lib/api';
 import { useLocation } from 'wouter'; // To redirect after login/logout if not handled by better-auth
 import { logger } from '@/lib/logger'; // Import logger
-
-// Initialize Better Auth client
-// Ensure VITE_API_URL is correctly set in your .env file
-const authClient = createAuthClient({
-  baseURL: import.meta.env.VITE_API_URL,
-  basePath: '/api/auth', // This should match your backend API auth routes
-});
 
 type AuthClient = typeof authClient;
 
@@ -66,15 +60,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const setActivePet = async (petId: number | null) => {
     try {
-      const response = await fetch(`/api/pets/${petId}/activate`, { // Assuming this endpoint
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ activePetId: petId }),
-      });
-      if (!response.ok) {
-        throw new Error('Failed to set active pet');
-      }
+      if (petId === null) return; // Handle null case if needed or create a deactivate endpoint
+      await api.pets.activate(petId);
+      
       // Re-fetch session to update activePetId locally
       // Assuming useSession automatically refetches or we can trigger it.
       // For now, Better Auth's useSession doesn't provide a direct refetch method.

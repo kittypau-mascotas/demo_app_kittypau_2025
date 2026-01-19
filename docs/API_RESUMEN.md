@@ -7,9 +7,11 @@ La API es RESTful y se ejecuta en funciones serverless.
 *   **Base:** `/api/auth`
 *   **Librería:** Better Auth
 *   **Endpoints:**
-    *   `POST /api/auth/signup`: Registro de nuevos usuarios.
-    *   `POST /api/auth/signin`: Inicio de sesión de usuarios.
+    *   `POST /api/auth/register`: Registro de nuevos usuarios (Custom implementation).
+    *   `POST /api/auth/login`: Inicio de sesión de usuarios (Custom implementation).
     *   `POST /api/auth/signout`: Cierre de sesión del usuario.
+    *   `POST /api/auth/forgot-password`: Solicitar recuperación de contraseña.
+    *   `POST /api/auth/reset-password`: Restablecer contraseña con token.
     *   `GET /api/auth/session`: Obtiene la sesión actual del usuario.
     *   `POST /api/auth/change-password`: Permite al usuario cambiar su contraseña.
     *   `GET /api/auth/sessions`: Lista las sesiones activas del usuario.
@@ -41,6 +43,7 @@ La API es RESTful y se ejecuta en funciones serverless.
 ## Dashboard
 
 *   `GET /api/dashboard/summary`: Proporciona un resumen consolidado de KPIs, última telemetría y alertas activas para el dashboard.
+*   `GET /api/dashboard/events`: Obtiene los eventos recientes de los dispositivos del usuario para gráficos de actividad.
 
 ## Telemetría
 

@@ -48,6 +48,7 @@ graph LR
 *   **Estado (Server):** TanStack Query
 *   **Autenticación:** Better Auth React (integrado en `AuthContext`)
 *   **Formularios:** React Hook Form + Zod
+*   **Tiempo Real:** WebSockets nativos (`useWebSocket` hook) para actualizaciones en vivo.
 *   **Gráficas:** Recharts
 *   **Animaciones:** Framer Motion
 *   **Iconos:** Lucide React
@@ -60,6 +61,7 @@ graph LR
 *   **Global Providers:** `AuthProvider`, `QueryClientProvider`, `ThemeProvider` gestionan el estado global.
 *   **Centralized Router:** Lógica de ruteo y guards encapsulada para una gestión de flujo de usuario clara.
 *   **Client API Layer:** Capa dedicada para comunicación con el backend, evitando llamadas `fetch` directas en componentes.
+*   **Shared Utilities:** Funciones comunes (como `api-utils`) movidas a `lib/` para mejor organización y resolución de rutas.
 *   **Logging:** `logger` utility para un logging estructurado y centralizado.
 ```
 I will perform this `write_file` operation now.

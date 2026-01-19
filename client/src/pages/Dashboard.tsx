@@ -1,324 +1,105 @@
-import StatWidget from '@/components/StatWidget';
-import DeviceCard from '@/components/DeviceCard';
-import ActivityChart from '@/components/ActivityChart';
-import ConsumptionChart from '@/components/ConsumptionChart';
-import PetAvatar from '@/components/PetAvatar';
+import { useEffect, useState } from 'react';
+import { petsService, devicesService } from '@/services/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Activity, Home, AlertTriangle, Heart, Fish, Droplets, LogOut, Plus } from 'lucide-react';
-import { Skeleton } from '@/components/ui/skeleton';
-import { SensorReading, Device, Pet } from '@shared/schema'; // Keep Pet, Device, SensorReading types
-import { useMemo } from 'react'; // Needed for data transformations
 import { Button } from '@/components/ui/button';
-import { useTheme } from 'next-themes';
-import HeroCard from '@/components/HeroCard'; // Import HeroCard
-import AddPetModal from '@/components/AddPetModal';
-import LinkDeviceModal from '@/components/LinkDeviceModal';
-import { useDashboardSummary } from '@/hooks/useDashboardSummary'; // Import the new hook
-import { usePets } from '@/hooks/data/usePets'; // Import usePets to get the list of pets
-import { DeviceCardProps } from '@/components/DeviceCard'; // Import DeviceCardProps
-
-// Helper to transform raw consumption events into chart-friendly format for ConsumptionChart
-interface ChartData {
-  name: string; // Day of the week or date
-  [deviceName: string]: number | string; // Dynamic keys for device consumption
-}
-const transformConsumptionData = (sensorReadings: SensorReading[], devices: Device[], timeRange: string): ChartData[] => {
-  if (!sensorReadings || sensorReadings.length === 0 || !devices || devices.length === 0) {
-    return [];
-  }
-
-  const deviceMap = new Map<string, string>(); // deviceId is string
-  devices.forEach(device => deviceMap.set(device.deviceId, device.name));
-
-  const dailyConsumption = new Map<string, { [deviceName: string]: number }>();
-
-  sensorReadings.forEach(reading => {
-    // Only consider readings that have weightGrams
-    if (reading.weightGrams === null || reading.weightGrams === undefined) {
-        return;
-    }
-    const date = new Date(reading.ts); // Use reading.ts for timestamp
-    let dayKey: string;
-
-    if (timeRange === 'day') {
-      dayKey = date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-    } else if (timeRange === 'week' || timeRange === 'month') {
-      dayKey = date.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric' });
-    } else { // 'year' or default
-      dayKey = date.toLocaleDateString('es-ES', { month: 'short', day: 'numeric' });
-    }
-
-    if (!dailyConsumption.has(dayKey)) {
-      dailyConsumption.set(dayKey, {});
-    }
-    const consumptionForDay = dailyConsumption.get(dayKey)!;
-    const deviceName = deviceMap.get(reading.deviceId) || `Device ${reading.deviceId}`; // Use reading.deviceId
-
-    if (!consumptionForDay[deviceName]) {
-      consumptionForDay[deviceName] = 0;
-    }
-    consumptionForDay[deviceName] += parseFloat(reading.weightGrams as any); // Use weightGrams as consumption
-  });
-
-  const result: ChartData[] = [];
-  dailyConsumption.forEach((values, dayKey) => {
-    result.push({ name: dayKey, ...values });
-  });
-
-  return result.sort((a,b) => a.name.localeCompare(b.name));
-};
-
-// Helper to transform sensor readings for ActivityChart
-const transformSensorDataForActivityChart = (sensorReadings: SensorReading[], timeRange: string): ChartData[] => {
-  if (!sensorReadings || sensorReadings.length === 0) return [];
-
-  const dailyActivity = new Map<string, number>();
-
-  sensorReadings.forEach((reading: SensorReading) => { // Directly use SensorReading type
-    const date = new Date(reading.ts); // Use reading.ts for timestamp
-    let dayKey: string;
-
-    if (timeRange === 'day') {
-      dayKey = date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-    } else if (timeRange === 'week' || timeRange === 'month') {
-      dayKey = date.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric' });
-    } else { // 'year' or default
-      dayKey = date.toLocaleDateString('es-ES', { month: 'short', day: 'numeric' });
-    }
-
-    // For activity, we can count events or sum a specific value if available
-    // For now, let's just count readings as "activity"
-    if (!dailyActivity.has(dayKey)) {
-      dailyActivity.set(dayKey, 0);
-    }
-    dailyActivity.set(dayKey, dailyActivity.get(dayKey)! + 1);
-  });
-
-  const result: ChartData[] = [];
-  dailyActivity.forEach((value, dayKey) => {
-    result.push({ name: dayKey, Activity: value }); // Assuming 'Activity' is the dataKey
-  });
-
-  return result.sort((a,b) => a.name.localeCompare(b.name));
-};
-
+import { Input } from '@/components/ui/input';
+import { useToast } from '@/hooks/use-toast';
 
 export default function Dashboard() {
-  const [showAddPetModal, setShowAddPetModal] = useState(false);
-  const [showLinkDeviceModal, setShowLinkDeviceModal] = useState(false);
+  const [pets, setPets] = useState<any[]>([]);
+  const [devices, setDevices] = useState<any[]>([]);
+  const { toast } = useToast();
+  
+  // Estados de formularios
+  const [petName, setPetName] = useState('');
+  const [deviceName, setDeviceName] = useState('');
 
-  const {
-    data: dashboardSummary,
-    isLoading: isLoadingSummary,
-    isError: isErrorSummary,
-    refetch: refetchDashboardSummary,
-  } = useDashboardSummary();
-
-  const pets = dashboardSummary?.pets;
-  const devices = dashboardSummary?.devices;
-  const sensorReadings = dashboardSummary?.sensorReadings;
-  const kpis = dashboardSummary?.kpis;
-  const lastUpdate = dashboardSummary?.lastUpdate || "N/A";
-  const heroCardStatus = dashboardSummary?.heroCardStatus || "loading";
-
-  // Transformed data for charts - these functions will remain for now, but use data from summary
-  const timeRange = 'week'; // Default for dashboard charts
-  const consumptionChartData = useMemo(() => transformConsumptionData(sensorReadings || [], devices || [], timeRange), [sensorReadings, devices, timeRange]);
-  const activityChartData = useMemo(() => transformSensorDataForActivityChart(sensorReadings || [], timeRange), [sensorReadings, timeRange]);
-
-  const handleLogout = async () => {
+  const loadData = async () => {
     try {
-      await fetch("/api/auth/sign-out", { method: "POST" });
-      window.location.href = "/login";
+      const [petsData, devicesData] = await Promise.all([
+        petsService.getAll(),
+        devicesService.getAll()
+      ]);
+      setPets(petsData);
+      setDevices(devicesData);
     } catch (error) {
-      console.error("Error logging out:", error);
+      console.error('Error cargando datos:', error);
     }
   };
 
+  useEffect(() => {
+    loadData();
+  }, []);
 
-  if (isLoadingSummary) {
-    return (
-      <div className="p-6 lg:p-8 space-y-8 max-w-screen-2xl mx-auto">
-        <Skeleton className="h-10 w-1/4" />
-        <Skeleton className="h-6 w-1/2" />
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
-          <Skeleton className="h-[120px]" />
-          <Skeleton className="h-[120px]" />
-          <Skeleton className="h-[120px]" />
-          <Skeleton className="h-[120px]" />
-        </div>
-        <Skeleton className="h-8 w-1/3" />
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
-          <Skeleton className="h-[200px]" />
-          <Skeleton className="h-[200px]" />
-        </div>
-      </div>
-    );
-  }
+  const handleAddPet = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await petsService.create({ name: petName, species: 'cat', breed: 'unknown', weight: 0, birthDate: new Date().toISOString() });
+      toast({ title: 'Mascota agregada' });
+      setPetName('');
+      loadData();
+    } catch (error) {
+      toast({ title: 'Error al agregar mascota', variant: 'destructive' });
+    }
+  };
 
-  if (isErrorSummary) {
-    return (
-      <div className="p-6 lg:p-8 space-y-8 max-w-screen-2xl mx-auto text-red-500">
-        <h2 className="text-4xl font-bold titulo">Dashboard</h2>
-        <p className="text-lg">Error al cargar datos del dashboard. Inténtalo de nuevo más tarde.</p>
-      </div>
-    );
-  }
+  const handleAddDevice = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await devicesService.create({ name: deviceName, type: 'feeder' });
+      toast({ title: 'Dispositivo agregado' });
+      setDeviceName('');
+      loadData();
+    } catch (error) {
+      toast({ title: 'Error al agregar dispositivo', variant: 'destructive' });
+    }
+  };
 
   return (
-    <div className="p-6 lg:p-8 space-y-8 max-w-screen-2xl mx-auto">
-                  <div className="flex justify-between items-start mb-8">
-                    <HeroCard
-                      pet={pets && pets.length > 0 ? pets[0] : null} // Display info for the first pet for now
-                      status={heroCardStatus}
-                      lastUpdate={lastUpdate}
-                    />
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                      onClick={handleLogout}
-                    >
-                      <LogOut className="w-4 h-4 mr-2" /> Cerrar Sesión
-                    </Button>
-                  </div>      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
-        <StatWidget
-          title="Mascotas Activas"
-          value={kpis?.totalActivePets.toString() || 'N/A'}
-          description="Todas saludables"
-          icon={Heart}
-          statusVariant="ok"
-        />
-        <StatWidget
-          title="Comidas Hoy"
-          value={kpis?.totalMealsToday.toString() || 'N/A'}
-          description="¡Cuán llenita ha estado su pancita hoy!"
-          icon={Fish}
-          statusVariant="default"
-        />
-        <StatWidget
-          title="Nivel Promedio Agua"
-          value={kpis?.averageWaterLevel || 'N/A'}
-          description="Sed de la aventura: su último nivel de agua."
-          icon={Droplets}
-          statusVariant="ok"
-        />
-        <StatWidget
-          title="Alertas Pendientes"
-          value={kpis?.pendingAlerts || 'N/A'}
-          description="Algo requiere tu atención, ¡revisa pronto!"
-          icon={AlertTriangle}
-          statusVariant="alert"
-        />
-      </div>
-
-      <div className="space-y-4">
-        <h3 className="text-2xl font-bold">Tus Mascotas</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
-          {pets?.map((pet) => (
-            <Card key={pet.id} className="card-info border-0 hover-elevate">
-              <CardHeader className="flex flex-col items-center text-center">
-                <PetAvatar name={pet.name} imageUrl={'/placeholder-pet.png'} size="responsive" />
-                <div className="mt-4">
-                  <CardTitle>{pet.name}</CardTitle>
-                  <p className="text-sm text-muted-foreground">{pet.species || 'Desconocida'}</p>
+    <div className="p-8 space-y-8 min-h-screen bg-gray-50 dark:bg-gray-900">
+      <h1 className="text-3xl font-bold">Panel de Control (Prueba CRUD)</h1>
+      
+      <div className="grid md:grid-cols-2 gap-8">
+        <Card>
+          <CardHeader><CardTitle>Mis Mascotas</CardTitle></CardHeader>
+          <CardContent className="space-y-4">
+            <form onSubmit={handleAddPet} className="flex gap-2">
+              <Input placeholder="Nombre mascota" value={petName} onChange={e => setPetName(e.target.value)} required />
+              <Button type="submit">Agregar</Button>
+            </form>
+            <div className="space-y-2">
+              {pets.map((pet) => (
+                <div key={pet.id} className="p-3 border rounded-lg bg-white dark:bg-gray-800 shadow-sm flex justify-between items-center">
+                  <span className="font-medium">{pet.name}</span>
+                  <span className="text-xs text-gray-500">{pet.species}</span>
                 </div>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Última actividad:</span>
-                  <span className="text-sm font-semibold">N/A</span> {/* Placeholder */}
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground flex items-center gap-2">
-                    <Fish className="h-4 w-4" /> Comida:
-                  </span>
-                  <span className="text-sm font-semibold">N/A</span> {/* Placeholder */}
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground flex items-center gap-2">
-                    <Droplets className="h-4 w-4" /> Agua:
-                  </span>
-                  <span className="text-sm font-semibold">N/A</span> {/* Placeholder */}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-          {pets?.length === 0 && (
-            <div className="col-span-full text-center space-y-4 py-8">
-              <p className="text-muted-foreground">¡Oh! Parece que aún no tienes compañeros peludos. ¡Añade tu primera mascota!</p>
-              <Button onClick={() => setShowAddPetModal(true)} className="btn-primary">
-                <Plus className="h-4 w-4 mr-2" /> Agregar Mascota
-              </Button>
+              ))}
+              {pets.length === 0 && <p className="text-gray-500 text-center py-4">No hay mascotas registradas</p>}
             </div>
-          )}
-        </div>
-      </div>
-
-      {sensorReadings && sensorReadings.length > 0 ? (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <ActivityChart data={activityChartData} />
-          <ConsumptionChart data={consumptionChartData} />
-        </div>
-      ) : (
-        <Card className="col-span-full text-center p-8 space-y-4">
-          <CardTitle className="text-2xl">¡Esperando datos de tu mascota! 🐾</CardTitle>
-          <CardDescription>Todavía no recibimos información de los sensores de {pets && pets.length > 0 ? pets[0].name : 'tu mascota'}.</CardDescription>
-          <p className="text-muted-foreground">Asegúrate de que tu dispositivo esté conectado y funcionando correctamente.</p>
-          <Button className="btn-primary" onClick={() => setShowLinkDeviceModal(true)}>
-            <Plus className="h-4 w-4 mr-2" /> Vincular Dispositivo
-          </Button>
+          </CardContent>
         </Card>
-      )}
 
-      <div className="space-y-4">
-        <h3 className="text-2xl font-bold">Dispositivos Recientes</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4"> {/* Adjusted lg:grid-cols-6 for better layout */}
-          {devices?.map((device) => {
-            const associatedPet = pets?.find(pet => pet.deviceId === device.id); // Assuming pet.deviceId is device.id
-            const associatedPetName = associatedPet ? associatedPet.name : undefined;
-            return (
-              <DeviceCard
-                key={device.id}
-                id={device.id} // Pass the id prop
-                name={device.name}
-                type={device.deviceType} // Modificado a device.deviceType
-                status={device.status as DeviceCardProps['status']} // Cast status for type compatibility
-                lastUpdate={device.lastSeen ? new Date(device.lastSeen).toLocaleString() : 'N/A'}
-                batteryLevel={device.batteryLevel}
-                associatedPetName={associatedPetName} // Pass associated pet name
-              />
-            );
-          })}
-          {devices?.length === 0 && (
-            <div className="col-span-full text-center space-y-4 py-8">
-              <p className="text-muted-foreground">¿Sin huellitas tecnológicas aún? ¡Vincula tu primer dispositivo para empezar a cuidarlos!</p>
-              <Button onClick={() => setShowLinkDeviceModal(true)} className="btn-primary">
-                <Plus className="h-4 w-4 mr-2" /> Vincular Dispositivo
-              </Button>
+        <Card>
+          <CardHeader><CardTitle>Mis Dispositivos</CardTitle></CardHeader>
+          <CardContent className="space-y-4">
+            <form onSubmit={handleAddDevice} className="flex gap-2">
+              <Input placeholder="Nombre dispositivo" value={deviceName} onChange={e => setDeviceName(e.target.value)} required />
+              <Button type="submit">Agregar</Button>
+            </form>
+            <div className="space-y-2">
+              {devices.map((dev) => (
+                <div key={dev.id} className="p-3 border rounded-lg bg-white dark:bg-gray-800 shadow-sm flex justify-between items-center">
+                  <span className="font-medium">{dev.name}</span>
+                  <span className={`text-xs px-2 py-1 rounded-full ${dev.status === 'online' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
+                    {dev.status || 'offline'}
+                  </span>
+                </div>
+              ))}
+              {devices.length === 0 && <p className="text-gray-500 text-center py-4">No hay dispositivos registrados</p>}
             </div>
-          )}
-        </div>
+          </CardContent>
+        </Card>
       </div>
-
-      <AddPetModal 
-        onPetAdded={() => {
-          refetchDashboardSummary(); // Refresh all dashboard data
-          setShowAddPetModal(false); // Close modal after adding
-        }}
-        isOpen={showAddPetModal}
-        onOpenChange={setShowAddPetModal}
-      />
-
-      <LinkDeviceModal
-        petId={pets && pets.length > 0 ? pets[0].id : null} // Assuming we link to the first pet for simplicity, or add logic to select pet
-        onDeviceLinked={() => {
-          refetchDashboardSummary(); // Refresh all dashboard data
-          setShowLinkDeviceModal(false); // Close modal after linking
-        }}
-        isOpen={showLinkDeviceModal}
-        onOpenChange={setShowLinkDeviceModal}
-      />
     </div>
   );
 }

@@ -46,4 +46,8 @@ export const devicesService = {
   create: async (data: any) => (await api.post('/devices', data)).data,
 };
 
+export const dashboardService = {
+  getRecentEvents: async () => (await api.get('/dashboard/events')).data,
+};
+
 export default api;

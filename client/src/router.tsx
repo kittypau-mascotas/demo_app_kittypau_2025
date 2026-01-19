@@ -3,7 +3,7 @@ import { Switch, Route, Redirect, useLocation } from 'wouter';
 import AppLayout from '@/components/AppLayout';
 import PrivateRoute from '@/components/PrivateRoute';
 import OnboardingGuard from '@/components/OnboardingGuard';
-import { useAuth } from './contexts/AuthContext'; // Relative path for useAuth
+import { useAuth } from '@/hooks/use-auth';
 
 // Lazy load pages
 const NotFound = lazy(() => import('@/pages/not-found'));

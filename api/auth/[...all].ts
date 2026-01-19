@@ -1,5 +1,5 @@
 import { auth } from "./neonAuth";
-import { toWebHeaders } from "../../lib/api-utils";
+import { toWebHeaders } from "@lib/api-utils";
 
 export default async function handler(req: any, res: any) {
   if (!auth) {

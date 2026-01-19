@@ -19,7 +19,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     const result = await client.query('SELECT id FROM users WHERE email = $1', [email]);
     
-    if (result.rowCount > 0) {
+    if ((result.rowCount ?? 0) > 0) {
       const user = result.rows[0];
       const token = randomBytes(32).toString('hex');
       const expiresAt = new Date(Date.now() + 3600000); // 1 hora de validez

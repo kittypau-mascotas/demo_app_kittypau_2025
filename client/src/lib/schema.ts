@@ -5,10 +5,10 @@ export const user = pgTable("user", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
   email: text("email").notNull(),
-  emailVerified: boolean("email_verified"),
+  emailVerified: boolean("email_verified").notNull(),
   image: text("image"),
-  createdAt: timestamp("created_at"),
-  updatedAt: timestamp("updated_at"),
+  createdAt: timestamp("created_at").notNull(),
+  updatedAt: timestamp("updated_at").notNull(),
 });
 
 // Tabela de usuários da Aplicação

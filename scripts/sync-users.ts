@@ -1,6 +1,6 @@
 import { db } from "../lib/db";
 import { user, users } from "../shared/schema";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 
 async function main() {
   console.log("🔄 Iniciando sincronización de usuarios...");
@@ -11,7 +11,7 @@ async function main() {
     const existingAuthIds = new Set(appUsers.map(u => u.authUserId));
     const missingUsers = authUsers.filter(u => !existingAuthIds.has(u.id));
 
-    for (const u of missingUsers as { id: string; email: string; name: string }[]) {
+    for (const u of missingUsers) {
       await db.insert(users).values({
         authUserId: u.id,
         email: u.email,

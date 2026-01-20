@@ -1,78 +1,108 @@
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { useLocation } from 'wouter';
-import { Logo } from '@/components/ui/Logo';
-import { useToast } from '@/hooks/use-toast';
-import { logger } from '@/lib/logger'; // Import logger
-import { authService } from '@/services/api';
+import { useState } from "react";
+import { signIn } from "@/lib/auth-client";
+import { Link } from "wouter";
+import { PawPrint } from "lucide-react";
 
 export default function Login() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [, setLocation] = useLocation();
-  const { toast } = useToast();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    try {
-      await authService.login({ email, password });
-      setLocation('/dashboard');
-    } catch (error: any) { // Catch as any to access error.message
-      logger.error('Failed to login:', { context: 'Login Page', payload: error });
-      toast({
-        title: 'Error de inicio de sesión',
-        description: error.message || 'Verifica tus credenciales y vuelve a intentarlo.', // Use error.message if available
-        variant: 'destructive',
-      });
-    }
+    setError(null);
+    setLoading(true);
+
+    await signIn.email({
+      email,
+      password,
+    }, {
+      onSuccess: () => {
+        window.location.href = "/dashboard";
+      },
+      onError: (ctx) => {
+        setError(ctx.error.message);
+        setLoading(false);
+      }
+    });
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-pink-50 dark:bg-gray-900">
-      <Card className="mx-auto max-w-sm">
-        <CardHeader className="space-y-1 text-center">
-          <Logo className="w-24 h-24 mx-auto" />
-          <CardTitle className="text-2xl font-bold">Welcome to KittyPau</CardTitle>
-          <CardDescription>Enter your credentials to access your account</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-xl shadow-lg border border-gray-100">
+        <div className="text-center">
+          <div className="mx-auto h-12 w-12 bg-primary/10 rounded-full flex items-center justify-center">
+            <PawPrint className="h-8 w-8 text-primary" />
+          </div>
+          <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
+            Bienvenido a KittyPau
+          </h2>
+          <p className="mt-2 text-sm text-gray-600">
+            Ingresa a tu cuenta para ver a tus mascotas
+          </p>
+        </div>
+        
+        <form className="mt-8 space-y-6" onSubmit={handleLogin}>
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md text-sm">
+              {error}
+            </div>
+          )}
+          
+          <div className="space-y-4">
+            <div>
+              <label htmlFor="email-address" className="block text-sm font-medium text-gray-700 mb-1">
+                Correo electrónico
+              </label>
+              <input
+                id="email-address"
+                name="email"
                 type="email"
-                placeholder="m@example.com"
+                autoComplete="email"
                 required
+                className="appearance-none block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
+                placeholder="tu@email.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+                Contraseña
+              </label>
+              <input
                 id="password"
+                name="password"
                 type="password"
+                autoComplete="current-password"
                 required
+                className="appearance-none block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
+                placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
             </div>
-            <Button type="submit" className="w-full bg-pink-500 hover:bg-pink-600 text-white">
-              Login
-            </Button>
-          </form>
-          <div className="mt-4 text-center text-sm">
-            Don't have an account?{' '}
-            <a href="/register" className="text-pink-500 hover:underline">
-              Sign up
-            </a>
           </div>
-        </CardContent>
-      </Card>
+
+          <div>
+            <button
+              type="submit"
+              disabled={loading}
+              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-primary-foreground bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              {loading ? "Ingresando..." : "Iniciar Sesión"}
+            </button>
+          </div>
+          
+          <div className="text-center text-sm">
+            <span className="text-gray-600">¿No tienes cuenta? </span>
+            <Link href="/register" className="font-medium text-primary hover:text-primary/80">
+              Regístrate aquí
+            </Link>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }

@@ -28,6 +28,7 @@ export default defineConfig({
       "@lib": path.resolve(import.meta.dirname, "lib"),
     },
   },
+  envDir: "..",
   root: "client",
   build: {
     outDir: "../dist",

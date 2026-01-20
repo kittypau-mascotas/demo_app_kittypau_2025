@@ -3,8 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
-import ActivityChart from '@/components/ActivityChart'; // Ensure these are correctly imported
-import ConsumptionChart from '@/components/ConsumptionChart'; // Ensure these are correctly imported
+import { ActivityChart } from '@/components/ActivityChart';
+import { ConsumptionChart } from '@/components/ConsumptionChart';
 import { useTelemetry } from '@/hooks/data/useTelemetry';
 import { usePets } from '@/hooks/data/usePets';
 import { useDevices } from '@/hooks/data/useDevices';
@@ -86,7 +86,7 @@ const transformSensorDataForActivityChart = (sensorReadings: SensorReading[], ti
 
   const result: ChartData[] = [];
   dailyActivity.forEach((value, dayKey) => {
-    result.push({ name: dayKey, Activity: value });
+    result.push({ name: dayKey, value: value });
   });
 
   return result.sort((a,b) => a.name.localeCompare(b.name));

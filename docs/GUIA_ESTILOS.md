@@ -94,6 +94,12 @@ El layout principal de la aplicación (`AppLayout.tsx`) se compone de:
 
 ### StatWidgets
 - **Características:** Presentan métricas clave con iconos, valores, descripción y un `statusVariant` para colores semánticos (ok, warning, alert, default), permitiendo una rápida comprensión del estado.
+- **Implementación:** `client/src/components/StatWidget.tsx`
+- **Uso:** Dashboard y detalles de dispositivos para mostrar batería, temperatura, etc.
+
+### LastReadingWidget
+- **Características:** Tarjeta especializada para mostrar la última lectura de telemetría (Temperatura/Humedad) con indicadores visuales de estado (colores de fondo según umbrales).
+- **Uso:** Dashboard principal.
 
 ### Mensajes de Estado (Vacío/Error)
 - **Características:** Mensajes humanizados, centrados en la mascota y con llamadas a la acción claras (CTAs). Utilizan `useToast` para feedback de errores de forma no intrusiva.
@@ -109,6 +115,15 @@ El layout principal de la aplicación (`AppLayout.tsx`) se compone de:
 ## 6. Gráficos y Visualización de Datos
 
 La visualización de datos es una característica clave. Se utiliza la librería **Recharts**.
+
+### Componentes de Gráficos Específicos
+
+1.  **ActivityChart (`client/src/components/ActivityChart.tsx`)**:
+    -   Visualiza eventos de actividad agrupados por hora (24h) o día (7d).
+    -   Usa `BarChart` con barras redondeadas (`radius={[4, 4, 0, 0]}`).
+2.  **ConsumptionChart (`client/src/components/ConsumptionChart.tsx`)**:
+    -   Visualiza el consumo de alimento en gramos.
+    -   Usa `LineChart` con curvas suaves (`type="monotone"`).
 
 ### Estilo General del Gráfico
 

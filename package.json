@@ -5,10 +5,10 @@
   "license": "MIT",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && npm run db:sync-users",
     "check": "tsc",
-    "test": "tsx tests/api.test.ts",
-    "db:push": "drizzle-kit push"
+    "db:push": "drizzle-kit push",
+    "db:sync-users": "tsx scripts/sync-users.ts"
   },
   "dependencies": {
     "@google-ai/generativelanguage": "^3.5.0",

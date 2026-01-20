@@ -10,25 +10,35 @@ Este documento detalla las vistas existentes y propuestas para la aplicación Ki
 - **Propósito:** Permitir a los usuarios existentes acceder a la aplicación, incluyendo manejo de la sesión y perfil del usuario (ej. foto de perfil).
 - **Ruta:** `/login`
 - **Endpoint(s) Asociado(s):**
-    - `POST /api/auth/login`: Autenticación de usuario con credenciales (email/contraseña).
-    - `GET /api/auth/session`: Verificación de sesión activa (utilizado al cargar la app).
+    - `auth-client.signIn.email`: Abstracción del cliente para `POST /api/auth/login`.
 - **Funcionalidad Clave:**
     - Formulario de inicio de sesión (email, contraseña).
     - Redirección a `/register` para nuevos usuarios.
     - Manejo de errores de autenticación.
     - Integración con `AuthContext` para el estado de la sesión.
+- **Variables de Estado (Frontend):**
+    - `email` (string): Input controlado.
+    - `password` (string): Input controlado.
+    - `error` (string | null): Mensaje de error de autenticación.
+    - `loading` (boolean): Estado de carga durante el submit.
 
 ### 1.2. Register (client/src/pages/Register.tsx)
 - **Propósito:** Permitir a nuevos usuarios crear una cuenta en la aplicación. Este es el primer paso en el flujo de incorporación de un nuevo usuario a la plataforma.
 - **Ruta:** `/register`
 - **Endpoint(s) Asociado(s):**
-    - `POST /api/auth/register`: Creación de una nueva cuenta de usuario.
+    - `auth-client.signUp.email`: Abstracción del cliente para `POST /api/auth/register`.
 - **Funcionalidad Clave:**
     - Formulario de registro (nombre, email, contraseña).
     - Almacenamiento persistente de la cuenta de usuario, con los datos iniciales necesarios para el perfil, incluyendo la posibilidad de una foto de perfil.
     - Validación de datos de entrada.
     - Manejo de errores de registro (ej. email ya existente).
     - Redirección a `/login` o `/dashboard` tras el registro exitoso.
+- **Variables de Estado (Frontend):**
+    - `name` (string): Nombre completo del usuario.
+    - `email` (string): Correo electrónico.
+    - `password` (string): Contraseña.
+    - `error` (string | null): Feedback de error.
+    - `isLoading` (boolean): Bloqueo de UI durante el registro.
 
 ---
 
@@ -38,28 +48,31 @@ Este documento detalla las vistas existentes y propuestas para la aplicación Ki
 - **Propósito:** Vista principal del usuario, mostrando un resumen de la actividad de sus mascotas y dispositivos.
 - **Ruta:** `/dashboard`
 - **Endpoint(s) Asociado(s):**
-    - `GET /api/devices`: Obtener una lista de dispositivos del usuario.
-    - `GET /api/pets`: Obtener una lista de mascotas del usuario.
-    - `GET /api/events/summary`: Resumen de eventos recientes (ej. alimentación, actividad).
-    - `GET /api/sensors/readings/summary`: Datos agregados de sensores (ej. consumo de alimento, patrones de actividad).
+    - `api.devices.list` (QueryKey: `["devices"]`): Obtiene dispositivos para determinar el activo.
+    - `api.telemetry.list` (QueryKey: `["telemetry", deviceId]`): Obtiene datos recientes para widgets y gráficos.
 - **Funcionalidad Clave:**
     - Widgets personalizables con información resumida.
     - Vistas rápidas de la salud de la mascota, niveles de alimento, estado de los dispositivos.
     - Navegación rápida a vistas detalladas (ej. perfil de mascota, detalles de dispositivo).
+- **Componentes Principales:**
+    - `LastReadingWidget`: Muestra temperatura y humedad.
+    - `ActivityChart`: Gráfico de barras de actividad reciente.
+    - `WelcomeModal`: Modal de bienvenida para nuevos usuarios.
+- **Lógica de Presentación:**
+    - Selecciona automáticamente el primer dispositivo (`activeDevice`) para mostrar datos.
 
 ### 2.2. Dispositivos (client/src/pages/Devices.tsx)
 - **Propósito:** Gestión y visualización detallada de los dispositivos del usuario.
 - **Ruta:** `/devices`
 - **Endpoint(s) Asociado(s):**
-    - `GET /api/devices`: Obtener todos los dispositivos.
-    - `GET /api/devices/{id}`: Obtener detalles de un dispositivo específico.
-    - `POST /api/devices`: Registrar un nuevo dispositivo.
-    - `PUT /api/devices/{id}`: Actualizar información del dispositivo.
-    - `DELETE /api/devices/{id}`: Eliminar un dispositivo.
+    - `useDevices` (QueryKey: `["devices"]`): Hook para obtener la lista.
+    - `usePets` (QueryKey: `["pets"]`): Para mostrar la mascota asociada en la tarjeta.
 - **Funcionalidad Clave:**
     - Listado de dispositivos con su estado actual.
     - Opciones para añadir, editar o eliminar dispositivos.
     - Vínculo a la vista de configuración del dispositivo.
+- **Componentes:**
+    - `DeviceCard`: Muestra estado (`active`, `offline`, etc.), batería, y nombre de mascota asociada.
 
 ### 2.3. Añadir Dispositivo (client/src/pages/AddDevice.tsx)
 - **Propósito:** Flujo para registrar nuevos dispositivos. Este proceso típicamente sigue al registro de usuario y de mascotas.
@@ -70,47 +83,59 @@ Este documento detalla las vistas existentes y propuestas para la aplicación Ki
     - Formulario paso a paso para la configuración inicial del dispositivo (ej. nombre, tipo, vincular a mascota).
     - Permite vincular dispositivos específicos (ej. KPCL0033, KPCL0034) a una mascota existente.
     - Guía de configuración del dispositivo.
+- **Variables de Estado:**
+    - `deviceId` (string): ID manual del dispositivo (ej. KPCL0001).
+    - `isLoading` (boolean).
 
 ### 2.4. Mascotas (client/src/pages/Mascotas.tsx)
 - **Propósito:** Gestión y visualización detallada de las mascotas del usuario. Tras el registro de usuario, el siguiente paso es añadir las mascotas.
 - **Ruta:** `/mascotas`
 - **Endpoint(s) Asociado(s):**
-    - `GET /api/pets`: Obtener todas las mascotas.
-    - `GET /api/pets/{id}`: Obtener detalles de una mascota específica.
-    - `POST /api/pets`: Añadir una nueva mascota.
-    - `PUT /api/pets/{id}`: Actualizar información de la mascota.
-    - `DELETE /api/pets/{id}`: Eliminar una mascota.
+    - `usePets` (QueryKey: `["pets"]`): Lista principal.
 - **Funcionalidad Clave:**
     - Formulario detallado para registrar mascotas (nombre, tipo, raza, fecha de nacimiento, etc.), incluyendo la subida de una foto para el avatar.
     - Listado de mascotas con su información básica y foto de perfil.
     - Opciones para añadir, editar o eliminar mascotas.
     - Vínculo a la vista de perfil detallado de la mascota.
     - Un usuario debe registrar al menos una mascota antes de poder vincular dispositivos.
+- **Componentes:**
+    - `AddPetModal`: Formulario modal para creación.
+    - `PetAvatar`: Componente visual para la foto/iniciales.
 
 ### 2.5. Perfil de Mascota (Nueva Vista)
 - **Propósito:** Vista detallada de una mascota específica, incluyendo historial de actividad, consumo, etc.
 - **Ruta:** `/mascotas/{id}`
 - **Endpoint(s) Asociado(s):**
-    - `GET /api/pets/{id}`: Detalles de la mascota.
-    - `GET /api/events/pet/{id}`: Historial de eventos de la mascota.
-    - `GET /api/sensors/readings/pet/{id}/activity`: Datos de actividad de la mascota.
-    - `GET /api/sensors/readings/pet/{id}/consumption`: Datos de consumo de la mascota.
+    - `usePet(id)`: Datos de la mascota.
+    - `usePetSensorReadings(id, timeRange)`: Datos agregados para gráficos.
+    - `PUT /api/pets/{id}`: Actualización de datos.
+    - `DELETE /api/pets/{id}`: Eliminación.
 - **Funcionalidad Clave:**
     - Gráficos de actividad y consumo.
     - Historial de eventos (alimentación, medicación, etc.).
     - Información de salud y bienestar.
+- **Variables de Estado (Edición):**
+    - `isEditing` (boolean): Toggle modo edición.
+    - `editedName`, `editedSpecies`, `editedBreed`, `editedBirthDate`: Estado local del formulario.
+    - `selectedTimeRange`: Filtro para gráficos ('24h', '7d', '30d').
+- **Transformación de Datos:**
+    - `transformConsumptionData`: Convierte lecturas de peso en gramos a formato de gráfico.
+    - `transformSensorDataForActivityChart`: Agrupa eventos por intervalo de tiempo.
 
 ### 2.6. Sensores (client/src/pages/Sensors.tsx)
 - **Propósito:** Visualización de datos en tiempo real y históricos de los sensores.
 - **Ruta:** `/sensors`
 - **Endpoint(s) Asociado(s):**
-    - `GET /api/sensors/readings`: Datos de todos los sensores.
-    - `GET /api/sensors/readings/{device_id}`: Datos de sensores de un dispositivo específico.
-    - `WS /api/ws/sensors`: Conexión WebSocket para datos en tiempo real.
+    - `useTelemetry`: Hook personalizado que combina lecturas de sensores.
+    - `usePets`, `useDevices`: Para filtros de selección.
 - **Funcionalidad Clave:**
     - Gráficos interactivos de datos de sensores.
     - Vistas de datos en tiempo real (si aplica).
     - Opciones para filtrar datos por dispositivo, mascota, tipo de sensor y rango de tiempo.
+- **Variables de Estado:**
+    - `selectedPetId` (number | null).
+    - `selectedDeviceId` (number | null).
+    - `selectedTimeRange` ('24h' | '7d' | '30d').
 
 ### 2.7. Analíticas (client/src/pages/Analytics.tsx)
 - **Propósito:** Análisis avanzado de datos y tendencias.
@@ -141,15 +166,18 @@ Este documento detalla las vistas existentes y propuestas para la aplicación Ki
 - **Propósito:** Configuración de la cuenta del usuario y preferencias de la aplicación.
 - **Ruta:** `/settings`
 - **Endpoint(s) Asociado(s):**
-    - `GET /api/users/{id}`: Obtener perfil de usuario.
-    - `PUT /api/users/{id}`: Actualizar perfil de usuario (incluyendo foto de perfil).
-    - `PUT /api/users/{id}/password`: Cambiar contraseña.
-    - `PUT /api/users/{id}/notifications`: Actualizar preferencias de notificación.
+    - `POST /api/auth/change-password`: Endpoint específico para seguridad.
+    - `useActiveSessions`: (Mock) Lista de sesiones activas.
 - **Funcionalidad Clave:**
     - Edición de perfil (nombre, email, gestión de la foto de perfil).
     - Cambio de contraseña.
     - Preferencias de notificación.
     - Configuración de tema (claro/oscuro).
+- **Variables de Estado (Password):**
+    - `currentPassword` (string).
+    - `newPassword` (string).
+    - `confirmNewPassword` (string).
+    - `isChangingPassword` (boolean).
 
 ### 2.10. Planes (client/src/pages/Planes.tsx)
 - **Propósito:** Gestión de la suscripción y visualización de planes disponibles.
@@ -193,7 +221,6 @@ Además de los endpoints específicos de las vistas, se necesitarán otros endpo
 
 -   `GET /api/health`: Endpoint de salud para verificación de estado del servicio.
 -   `GET /api/events`: Endpoints generales para eventos (filtrado, paginación).
--   `GET /api/sensors/readings`: Endpoints generales para lecturas de sensores (filtrado, paginación).
 -   `WS /api/ws/notifications`: WebSocket para notificaciones en tiempo real.
 
 ---
@@ -248,3 +275,30 @@ Para hacer este plan aún más robusto y accionable, se podrían considerar los 
 ### 5.10. Directrices de Accesibilidad (a11y)
 -   Para elementos interactivos críticos, mencionar la adhesión a estándares de accesibilidad (e.g., navegación por teclado, atributos ARIA, contraste de colores).
 
+---
+
+## 6. Referencia de Endpoints Implementados (client/src/lib/api.ts)
+
+Esta sección es un resumen. Para la especificación técnica completa, consultar `docs/API_REFERENCE.md`.
+
+### 6.1. Mascotas (Pets)
+- `GET /api/pets`: Obtener lista de mascotas.
+- `GET /api/pets/{id}`: Obtener detalles de una mascota.
+- `POST /api/pets`: Crear una nueva mascota.
+- `PATCH /api/pets/{id}`: Actualizar una mascota.
+- `DELETE /api/pets/{id}`: Eliminar una mascota.
+- `POST /api/pets/{id}/activate`: Activar una mascota (establecer como activa en la sesión/contexto).
+
+### 6.2. Dispositivos (Devices)
+- `GET /api/devices`: Obtener lista de dispositivos.
+- `POST /api/devices/link`: Vincular un nuevo dispositivo.
+- `PATCH /api/devices/{id}`: Actualizar un dispositivo.
+- `DELETE /api/devices/{id}`: Desvincular/Eliminar un dispositivo.
+
+### 6.3. Telemetría (Telemetry)
+- `GET /api/telemetry`: Obtener datos de telemetría.
+    - **Parámetros de consulta:**
+        - `deviceId`: ID del dispositivo (Requerido).
+        - `start_date`: Fecha de inicio (ISO string, ej. `2023-10-27T10:00:00Z`).
+        - `end_date`: Fecha de fin (ISO string).
+        - `limit`: Límite de resultados (number).

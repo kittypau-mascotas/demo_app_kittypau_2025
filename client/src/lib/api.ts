@@ -3,11 +3,12 @@ const BASE_URL = import.meta.env.VITE_API_URL || '';
 export interface Pet {
   id: number;
   name: string;
-  type: 'cat' | 'dog' | 'other';
+  species: string;
   breed?: string;
   age?: number;
   weight?: number;
-  imageUrl?: string;
+  photoUrl?: string;
+  birthDate?: string;
   createdAt: string;
 }
 
@@ -32,6 +33,13 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
     headers,
     credentials: 'include',
   });
+
+  if (response.status === 401) {
+    if (window.location.pathname !== '/login') {
+      window.location.href = '/login';
+    }
+    throw new Error('Sesión expirada');
+  }
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));

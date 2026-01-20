@@ -31,8 +31,21 @@ Este documento unifica todas las credenciales, claves, certificados, usuarios y 
       "Statement": [
         {
           "Effect": "Allow",
-          "Action": "iot:*",
-          "Resource": "*"
+          "Action": "iot:Connect",
+          "Resource": "arn:aws:iot:us-east-2:440671981849:client/${iot:ClientId}"
+        },
+        {
+          "Effect": "Allow",
+          "Action": "iot:Publish",
+          "Resource": "arn:aws:iot:us-east-2:440671981849:topic/kittypau/${iot:ClientId}/data"
+        },
+        {
+          "Effect": "Allow",
+          "Action": ["iot:Subscribe", "iot:Receive"],
+          "Resource": [
+            "arn:aws:iot:us-east-2:440671981849:topicfilter/kittypau/${iot:ClientId}/command",
+            "arn:aws:iot:us-east-2:440671981849:topic/kittypau/${iot:ClientId}/command"
+          ]
         }
       ]
     }

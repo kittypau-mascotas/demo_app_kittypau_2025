@@ -5,7 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { usePets } from "@/hooks/data/usePets";
+import { Loader2 } from "lucide-react";
 
 interface AddPetModalProps {
   onPetAdded: () => void;
@@ -14,8 +15,7 @@ interface AddPetModalProps {
 }
 
 export default function AddPetModal({ onPetAdded, isOpen, onOpenChange }: AddPetModalProps) {
-  const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(false);
+  const { createPet, isCreating } = usePets();
 
   // Form state
   const [name, setName] = useState('');
@@ -32,58 +32,18 @@ export default function AddPetModal({ onPetAdded, isOpen, onOpenChange }: AddPet
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-
     try {
-      const petData: { name: string; species: string; breed?: string; birthDate?: string } = {
+      await createPet({ 
         name,
         species,
-        breed,
-      };
-
-      if (birthDate) {
-        petData.birthDate = birthDate;
-      }
-
-      const response = await fetch('/api/pets', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify(petData),
+        breed, 
+        birthDate: birthDate || undefined 
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || `Error ${response.status}`);
-      }
-
-            toast({
-
-              title: '¡Mascota agregada!',
-
-              description: `${name} ha sido agregado a tu lista de mascotas.`,
-
-            });
-
       
-
-            onPetAdded();
-
-      
-
-            setOpen(false);
-
-            resetForm();
+      onPetAdded();
+      resetForm();
     } catch (error) {
-      toast({
-        title: 'Error al agregar mascota',
-        description: error instanceof Error ? error.message : 'Ocurrió un error inesperado.',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
+      console.error("Error creating pet:", error);
     }
   };
 
@@ -104,12 +64,12 @@ export default function AddPetModal({ onPetAdded, isOpen, onOpenChange }: AddPet
               placeholder="Ej: Bandida"
               data-testid="input-pet-name"
               required
-              disabled={isLoading}
+              disabled={isCreating}
             />
           </div>
           <div className="space-y-2">
             <Label htmlFor="species">Especie</Label>
-            <Select value={species} onValueChange={setSpecies} required disabled={isLoading}>
+            <Select value={species} onValueChange={setSpecies} required disabled={isCreating}>
               <SelectTrigger id="species" data-testid="select-pet-species">
                 <SelectValue placeholder="Selecciona la especie" />
               </SelectTrigger>
@@ -127,7 +87,7 @@ export default function AddPetModal({ onPetAdded, isOpen, onOpenChange }: AddPet
               onChange={(e) => setBreed(e.target.value)}
               placeholder="Ej: Siamés"
               data-testid="input-pet-breed"
-              disabled={isLoading}
+              disabled={isCreating}
             />
           </div>
           <div className="space-y-2">
@@ -138,15 +98,16 @@ export default function AddPetModal({ onPetAdded, isOpen, onOpenChange }: AddPet
               value={birthDate}
               onChange={(e) => setBirthDate(e.target.value)}
               data-testid="input-pet-birthdate"
-              disabled={isLoading}
+              disabled={isCreating}
             />
           </div>
           <div className="flex gap-2 justify-end">
-            <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={isLoading} data-testid="button-cancel">
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isCreating} data-testid="button-cancel">
               Cancelar
             </Button>
-            <Button type="submit" className="btn-primary" disabled={isLoading} data-testid="button-submit-pet">
-              {isLoading ? 'Agregando...' : 'Agregar'}
+            <Button type="submit" className="btn-primary" disabled={isCreating} data-testid="button-submit-pet">
+              {isCreating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isCreating ? 'Agregando...' : 'Agregar'}
             </Button>
           </div>
         </form>

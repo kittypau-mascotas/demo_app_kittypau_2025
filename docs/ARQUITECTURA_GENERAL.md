@@ -43,11 +43,11 @@ graph LR
 *   **Framework:** React 18
 *   **Lenguaje:** TypeScript
 *   **Build Tool:** Vite
-*   **Routing:** Wouter (centralizado con `router.tsx`, incluyendo `PrivateRoute` y `OnboardingGuard`)
+*   **Routing:** Wouter (Ligero, basado en hooks, usado en `App.tsx` y `Sidebar.tsx`)
 *   **Styling:** Tailwind CSS + Shadcn/ui
 *   **Estado (Server):** TanStack Query
 *   **Autenticación:** Better Auth React (integrado en `AuthContext`)
-*   **Formularios:** React Hook Form + Zod
+*   **Formularios:** React `useState` (Controlados manualmente) / React Hook Form (Planificado para formularios complejos)
 *   **Tiempo Real:** WebSockets nativos (`useWebSocket` hook) para actualizaciones en vivo.
 *   **Gráficas:** Recharts
 *   **Animaciones:** Framer Motion
@@ -63,5 +63,66 @@ graph LR
 *   **Client API Layer:** Capa dedicada para comunicación con el backend, evitando llamadas `fetch` directas en componentes.
 *   **Shared Utilities:** Funciones comunes (como `api-utils`) movidas a `lib/` para mejor organización y resolución de rutas.
 *   **Logging:** `logger` utility para un logging estructurado y centralizado.
+
+## Esquema de Base de Datos (SQL Inferido)
+
+A continuación se detalla el esquema relacional utilizado por la API, basado en las interfaces de TypeScript y el uso en el frontend.
+
+### Tabla `users`
+Almacena la información de autenticación y perfil base.
+```sql
+CREATE TABLE users (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  email TEXT NOT NULL UNIQUE,
+  name TEXT,
+  password_hash TEXT NOT NULL, -- Gestionado por auth
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+```
+
+### Tabla `pets`
+Entidad central de la aplicación.
+```sql
+CREATE TABLE pets (
+  id SERIAL PRIMARY KEY,
+  user_id UUID REFERENCES users(id),
+  name TEXT NOT NULL,
+  species TEXT NOT NULL, -- 'Gato' | 'Perro'
+  breed TEXT,
+  birth_date DATE,
+  photo_url TEXT,
+  device_id TEXT -- Vinculación lógica con dispositivo
+);
+```
+
+### Tabla `devices`
+Hardware físico registrado en la plataforma.
+```sql
+CREATE TABLE devices (
+  id SERIAL PRIMARY KEY,
+  device_id TEXT NOT NULL UNIQUE, -- ID físico (ej. KPCL0001)
+  name TEXT NOT NULL,
+  device_type TEXT,
+  firmware_version TEXT,
+  last_seen TIMESTAMP WITH TIME ZONE,
+  battery_level INTEGER,
+  status TEXT -- 'active' | 'offline' | 'warning' | 'error'
+);
+```
+
+### Tabla `sensor_readings` (Telemetría)
+Series temporales de datos.
+```sql
+CREATE TABLE sensor_readings (
+  id SERIAL PRIMARY KEY,
+  device_id TEXT REFERENCES devices(device_id),
+  ts TIMESTAMP WITH TIME ZONE NOT NULL,
+  temperature NUMERIC,
+  humidity NUMERIC,
+  weight_grams NUMERIC,
+  battery_level INTEGER,
+  activity_level INTEGER -- Métrica derivada
+);
+```
 ```
 I will perform this `write_file` operation now.

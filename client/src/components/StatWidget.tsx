@@ -10,7 +10,7 @@ interface StatWidgetProps {
   statusVariant?: 'ok' | 'warning' | 'alert' | 'default'; // New prop for semantic status
 }
 
-export default function StatWidget({
+export function StatWidget({
   title,
   value,
   description,

@@ -55,3 +55,13 @@ CREATE TABLE IF NOT EXISTS sensor_readings (
   activity_level INTEGER, -- Métrica derivada
   UNIQUE(device_id, ts)
 );
+
+-- Tabla consumption_events
+CREATE TABLE IF NOT EXISTS consumption_events (
+  id SERIAL PRIMARY KEY,
+  device_id TEXT NOT NULL REFERENCES devices(device_id) ON DELETE CASCADE,
+  ts TIMESTAMP WITH TIME ZONE NOT NULL,
+  amount_grams NUMERIC,
+  duration_seconds INTEGER,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);

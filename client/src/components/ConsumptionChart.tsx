@@ -37,7 +37,7 @@ interface ConsumptionChartProps {
   unit?: string; // Unit to display in tooltip
 }
 
-export default function ConsumptionChart({ data, title = 'Consumo de Alimento', unit = 'g' }: ConsumptionChartProps) {
+export function ConsumptionChart({ data, title = 'Consumo de Alimento', unit = 'g' }: ConsumptionChartProps) {
   const { theme } = useTheme(); // Get current theme
   const strokeColor = theme === 'dark' ? 'hsl(var(--foreground))' : 'hsl(var(--foreground))'; // Adjust based on your theme vars
 

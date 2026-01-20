@@ -8,7 +8,8 @@
     "build": "vite build && npm run db:sync-users",
     "check": "tsc",
     "db:push": "drizzle-kit push",
-    "db:sync-users": "tsx scripts/sync-users.ts"
+    "db:sync-users": "tsx scripts/sync-users.ts",
+    "db:migrate": "psql $DATABASE_URL -f migrations/0000_initial_schema.sql"
   },
   "dependencies": {
     "@google-ai/generativelanguage": "^3.5.0",

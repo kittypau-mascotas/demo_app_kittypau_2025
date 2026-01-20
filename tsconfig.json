@@ -20,11 +20,11 @@
     /* Aliases: This is the part that fixes your error */
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./*"],
-      "@shared/*": ["shared/*"],
-      "@lib/*": ["lib/*"]
+      "@/*": ["./client/src/*"],
+      "@shared/*": ["./shared/*"],
+      "@lib/*": ["./lib/*"]
     }
   },
-  "include": ["client/src", "shared", "api", "lib"],
+  "include": ["client/src", "shared", "server", "scripts", "api", "lib"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

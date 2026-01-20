@@ -136,16 +136,16 @@ Este documento unifica todas las credenciales, claves, certificados, usuarios y 
         3XLuVTteVHG0d9PyXlaDQ750WBOh1SAqdBzdPzk38gkuPEhePOurD7C4IyVN
         -----END CERTIFICATE-----
         ```
-    *   **`DATABASE_URL` (Development):** `postgresql://neondb_owner:npg_iVL1xhT6ICwp@ep-polished-art-adllyxom-pooler.c-2.us-east-1.aws.neon.tech/neondb?channel_binding=require&sslmode=require`
-    *   **`DATABASE_URL_UNPOOLED` (Development):** `postgresql://neondb_owner:npg_iVL1xhT6ICwp@ep-polished-art-adllyxom.c-2.us-east-1.aws.neon.tech/neondb?channel_binding=require&sslmode=require`
-    *   **`DATABASE_URL` (Production):** `postgresql://neondb_owner:npg_iVL1xhT6ICwp@ep-twilight-unit-adjpwtmn-pooler.c-2.us-east-1.aws.neon.tech/neondb?channel_binding=require&sslmode=require`
-    *   **`DATABASE_URL_UNPOOLED` (Production):** `postgresql://neondb_owner:npg_iVL1xhT6ICwp@ep-twilight-unit-adjpwtmn.c-2.us-east-1.aws.neon.tech/neondb?channel_binding=require&sslmode=require`
+    *   **`DATABASE_URL` (Development):** `postgresql://neondb_owner:npg_iVL1xhT6ICwp@ep-restless-wave-ad7zlaq8-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require`
+    *   **`DATABASE_URL_UNPOOLED` (Development):** `postgresql://neondb_owner:npg_iVL1xhT6ICwp@ep-restless-wave-ad7zlaq8-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require`
+    *   **`DATABASE_URL` (Production):** `postgresql://neondb_owner:npg_iVL1xhT6ICwp@ep-restless-wave-ad7zlaq8-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require`
+    *   **`DATABASE_URL_UNPOOLED` (Production):** `postgresql://neondb_owner:npg_iVL1xhT6ICwp@ep-restless-wave-ad7zlaq8-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require`
 
 ## 4. Detalles de Neon Database
 
 *   **Nombre de Proyecto Neon:** `kittypau_a1`
 *   **Usuario de Base de Datos (Owner):** `neondb_owner`
-*   **Cadena de Conexión (ejemplo con contraseña):** `postgresql://neondb_owner:npg_iVL1xhT6ICwp@ep-polished-art-adllyxom-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require`
+*   **Cadena de Conexión (ejemplo con contraseña):** `postgresql://neondb_owner:npg_iVL1xhT6ICwp@ep-restless-wave-ad7zlaq8-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require`
 *   **Correo Electrónico de Usuario (Neon Auth):** `kittypau.mascotas@gmail.com`
 *   **ID de Usuario (Neon Auth):** `cae561a4-ac62-45f0-9cf4-891f54c42729`
 

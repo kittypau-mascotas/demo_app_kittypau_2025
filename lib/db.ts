@@ -9,5 +9,5 @@ if (!databaseUrl) {
   console.warn("⚠️ DATABASE_URL is missing! DB operations will fail.");
 }
 
-const sql = neon(databaseUrl || "postgres://placeholder:placeholder@placeholder.neondatabase.cloud/placeholder");
+const sql = neon(databaseUrl || "postgresql://neondb_owner:npg_iVL1xhT6ICwp@ep-restless-wave-ad7zlaq8-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require");
 export const db = drizzle(sql, { schema });

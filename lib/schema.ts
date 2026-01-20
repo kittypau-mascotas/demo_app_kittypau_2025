@@ -132,6 +132,17 @@ export const sensorReadings = pgTable("sensor_readings", {
   };
 });
 
+// Tabla de configuración de alertas
+export const alertSettings = pgTable("alert_settings", {
+  id: serial("id").primaryKey(),
+  userId: text("user_id").notNull(),
+  temperatureMax: numeric("temperature_max"),
+  temperatureMin: numeric("temperature_min"),
+  notificationsEnabled: boolean("notifications_enabled").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Exportar tipos inferidos de Drizzle
 export type User = InferSelectModel<typeof users>;
 export type InsertUser = InferInsertModel<typeof users>;
@@ -147,3 +158,6 @@ export type InsertSensorReading = InferInsertModel<typeof sensorReadings>;
 
 export type DeviceEvent = InferSelectModel<typeof deviceEvents>;
 export type InsertDeviceEvent = InferInsertModel<typeof deviceEvents>;
+
+// Alias para compatibilidad con API existente
+export const telemetry = sensorReadings;

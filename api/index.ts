@@ -95,15 +95,15 @@ export default async function handler(req: Request) {
 
     const filters = [eq(telemetry.deviceId, deviceId!)];
 
-    if (startDate) filters.push(gte(telemetry.createdAt, new Date(startDate)));
-    if (endDate) filters.push(lte(telemetry.createdAt, new Date(endDate)));
+    if (startDate) filters.push(gte(telemetry.ts, new Date(startDate)));
+    if (endDate) filters.push(lte(telemetry.ts, new Date(endDate)));
 
     // EXPORTAR CSV
     if (format === "csv") {
       const data = await db.select().from(telemetry)
         // @ts-ignore
         .where(and(...filters))
-        .orderBy(desc(telemetry.createdAt))
+        .orderBy(desc(telemetry.ts))
         .limit(5000); // Límite de seguridad para evitar timeouts en Vercel
 
       if (data.length === 0) {
@@ -136,7 +136,7 @@ export default async function handler(req: Request) {
         db.select().from(telemetry)
           // @ts-ignore
           .where(and(...filters))
-          .orderBy(desc(telemetry.createdAt))
+          .orderBy(desc(telemetry.ts))
           .limit(pageSize)
           .offset(offset),
         db.select({ count: sql<number>`count(*)` }).from(telemetry)
@@ -159,7 +159,7 @@ export default async function handler(req: Request) {
     const data = await db.select().from(telemetry)
       // @ts-ignore
       .where(and(...filters))
-      .orderBy(desc(telemetry.createdAt))
+      .orderBy(desc(telemetry.ts))
       .limit(limit);
 
     return Response.json(data);

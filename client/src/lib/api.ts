@@ -65,4 +65,13 @@ export const api = {
     unlink: (id: number) => 
       request<void>(`/api/devices/${id}`, { method: 'DELETE' }),
   },
+  telemetry: {
+    list: (deviceId: string, options?: { startDate?: string; endDate?: string; limit?: number }) => {
+      const params = new URLSearchParams({ deviceId });
+      if (options?.startDate) params.append('start_date', options.startDate);
+      if (options?.endDate) params.append('end_date', options.endDate);
+      if (options?.limit) params.append('limit', options.limit.toString());
+      return request<any[]>(`/api/telemetry?${params.toString()}`);
+    },
+  },
 };

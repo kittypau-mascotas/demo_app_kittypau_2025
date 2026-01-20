@@ -1,6 +1,6 @@
 import { getUser } from "@/lib/api-utils";
 import { db } from "@/lib/db";
-import { telemetry, devices, deviceEvents, alertSettings } from "@/lib/schema";
+import { telemetry, devices, deviceEvents, alertSettings, users, user as userSchema } from "@/lib/schema";
 import { eq, and, sql, desc, gte, lte } from "drizzle-orm";
 
 export default async function handler(req: Request) {
@@ -22,6 +22,23 @@ export default async function handler(req: Request) {
 
   if (!user) {
     return new Response("Unauthorized", { status: 401 });
+  }
+
+  // GESTIÓN DE USUARIO
+  if (url.pathname === "/api/user") {
+    if (req.method === "DELETE") {
+      // 1. Eliminar de la tabla de aplicación 'users' (esto debería borrar en cascada mascotas/dispositivos si está configurado en DB)
+      // @ts-ignore
+      await db.delete(users).where(eq(users.authUserId, user.id));
+
+      // 2. Eliminar de la tabla de autenticación 'user'
+      // @ts-ignore
+      await db.delete(userSchema).where(eq(userSchema.id, user.id));
+
+      return new Response(JSON.stringify({ success: true }), {
+        headers: { "Content-Type": "application/json" }
+      });
+    }
   }
 
   // ROUTING INTERNO

@@ -9,7 +9,9 @@ export const {
   signIn, 
   signOut, 
   useSession, 
-  signUp 
+  signUp,
+  changePassword,
+  updateUser
 } = authClient;
 
 export type AuthClient = typeof authClient;

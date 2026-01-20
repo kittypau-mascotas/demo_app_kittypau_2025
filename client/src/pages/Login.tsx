@@ -1,31 +1,47 @@
 import { useState } from "react";
-import { signIn } from "@/lib/auth-client";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { PawPrint } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [, setLocation] = useLocation();
+  const queryClient = useQueryClient();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setLoading(true);
 
-    await signIn.email({
-      email,
-      password,
-    }, {
-      onSuccess: () => {
-        window.location.href = "/dashboard";
-      },
-      onError: (ctx) => {
-        setError(ctx.error.message);
-        setLoading(false);
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include", // 👈 CLAVE para cookies/sesión
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Error al iniciar sesión");
       }
-    });
+
+      // Login exitoso: invalidar query de sesión para que la app se actualice
+      await queryClient.invalidateQueries({ queryKey: ["session"] });
+
+      // Redirigir al dashboard
+      setLocation("/dashboard");
+    } catch (err: any) {
+      setError(err.message || "Error inesperado");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -42,17 +58,20 @@ export default function Login() {
             Ingresa a tu cuenta para ver a tus mascotas
           </p>
         </div>
-        
+
         <form className="mt-8 space-y-6" onSubmit={handleLogin}>
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md text-sm">
               {error}
             </div>
           )}
-          
+
           <div className="space-y-4">
             <div>
-              <label htmlFor="email-address" className="block text-sm font-medium text-gray-700 mb-1">
+              <label
+                htmlFor="email-address"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
                 Correo electrónico
               </label>
               <input
@@ -67,8 +86,12 @@ export default function Login() {
                 onChange={(e) => setEmail(e.target.value)}
               />
             </div>
+
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
                 Contraseña
               </label>
               <input
@@ -94,10 +117,13 @@ export default function Login() {
               {loading ? "Ingresando..." : "Iniciar Sesión"}
             </button>
           </div>
-          
+
           <div className="text-center text-sm">
             <span className="text-gray-600">¿No tienes cuenta? </span>
-            <Link href="/register" className="font-medium text-primary hover:text-primary/80">
+            <Link
+              href="/register"
+              className="font-medium text-primary hover:text-primary/80"
+            >
               Regístrate aquí
             </Link>
           </div>

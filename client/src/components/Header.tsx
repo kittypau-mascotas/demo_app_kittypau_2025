@@ -1,9 +1,8 @@
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Menu, LogOut, PawPrint } from 'lucide-react'; // Add PawPrint icon
-import { useAuth } from '@/contexts/AuthContext';
-import { useLocation } from 'wouter';
+import { Menu, PawPrint } from 'lucide-react'; // Add PawPrint icon
 import { usePets } from '@/hooks/data/usePets'; // Import usePets to get the list of pets
+import { useSession, useSignOut } from '@/lib/auth-client';
 // import logo from '@assets/generated_images/KittyPau_app_logo_icon_4a2bd296.png'; // No longer needed directly here
 
 interface HeaderProps {
@@ -11,15 +10,16 @@ interface HeaderProps {
 }
 
 export default function Header({ onMenuToggle }: HeaderProps) {
-  const { logout, user } = useAuth();
-  const [, setLocation] = useLocation();
+  const { data: session } = useSession();
+  const { data: pets } = usePets();
+  const { mutate: signOut } = useSignOut();
+  const user = session?.user;
 
-  const handleLogout = async () => {
-    await logout(); // Call the new logout function from AuthContext
-    setLocation('/'); // Redirect to the root path, which will show AuthView
+  const handleLogout = () => {
+    signOut();
   };
 
-  const displayName = user?.fullName || user?.email || 'User';
+  const displayName = user?.name || user?.email || 'Usuario';
 
   return (
     <header className="navbar px-6 py-4 lg:px-8 border-b">
@@ -55,7 +55,11 @@ export default function Header({ onMenuToggle }: HeaderProps) {
 
           {/* Pet Selector */}
           {pets && pets.length > 0 && (
-            <Select onValueChange={(petId) => setActivePet(parseInt(petId))} value={session?.user?.activePetId?.toString() || (pets.length > 0 ? pets[0].id.toString() : '')}>
+            <Select
+              // La lógica para la mascota activa se reimplementará.
+              // onValueChange={(petId) => setActivePet(parseInt(petId))}
+              // value={session?.user?.activePetId?.toString() || (pets.length > 0 ? pets[0].id.toString() : '')}
+            >
               <SelectTrigger className="w-[180px]">
                 <PawPrint className="h-4 w-4 mr-2" />
                 <SelectValue placeholder="Seleccionar Mascota" />

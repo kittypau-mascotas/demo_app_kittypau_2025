@@ -77,22 +77,20 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             const isActive = location === item.href;
 
             return (
-              <Link key={item.href} href={item.href}>
-                <a
-                  className={cn(
-                    "flex items-center w-full p-3 rounded-lg text-sm font-medium transition-colors",
-                    isActive 
-                      ? "bg-primary/10 text-primary" 
-                      : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-                  )}
-                  onClick={() => {
-                    if (window.innerWidth < 1024) onClose();
-                  }}
-                  data-testid={`link-${item.label.toLowerCase()}`}
-                >
-                  <Icon className="h-5 w-5 mr-3" />
-                  {item.label}
-                </a>
+              <Link
+                key={item.href}
+                href={item.href}
+                className={cn(
+                  "flex items-center w-full p-3 rounded-lg text-sm font-medium transition-colors",
+                  isActive
+                    ? "bg-primary/10 text-primary"
+                    : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                )}
+                onClick={() => { if (window.innerWidth < 1024) onClose(); }}
+                data-testid={`link-${item.label.toLowerCase()}`}
+              >
+                <Icon className="h-5 w-5 mr-3" />
+                {item.label}
               </Link>
             );
           })}
@@ -101,7 +99,6 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         {/* User Profile & Logout */}
         <div className="p-4 border-t border-border">
           {session?.user && (
-            <Link href="/profile">
               <div className="flex items-center gap-3 mb-4 px-2 cursor-pointer hover:bg-accent rounded-lg p-2 transition-colors">                
                 <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold shrink-0">
                   {session.user.name?.charAt(0).toUpperCase() || 'U'}
@@ -115,7 +112,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                   </p>
                 </div>
               </div>
-            </Link>
+
           )}
           
           <Button 

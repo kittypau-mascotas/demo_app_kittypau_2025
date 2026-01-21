@@ -92,7 +92,7 @@ El layout principal de la aplicación (`AppLayout.tsx`) se compone de:
 ### Avatares (PetAvatar)
 - **Características:** Muestra la foto de la mascota o sus iniciales como fallback. Incluye `aria-label` para accesibilidad.
 
-### StatWidgets
+### StatWidgets (client/src/components/StatWidget.tsx)
 - **Características:** Presentan métricas clave con iconos, valores, descripción y un `statusVariant` para colores semánticos (ok, warning, alert, default), permitiendo una rápida comprensión del estado.
 - **Implementación:** `client/src/components/StatWidget.tsx`
 - **Uso:** Dashboard y detalles de dispositivos para mostrar batería, temperatura, etc.
@@ -156,11 +156,11 @@ La interactividad y el movimiento son cruciales para que los datos se sientan vi
 **Estado:** Completado (Requiere movimiento manual de archivos y actualización de rutas).
 
 **Imágenes movidas:**
-- `client/public/graficas/bandida.jpg`
-- `client/public/graficas/bruno.jpg`
-- `client/public/graficas/favicon.png`
-- `client/public/graficas/kitty-logo.jpg`
-- `client/public/graficas/kitty-logo.svg`
+- `client/public/graficas/bandida.jpg` (Mascota de ejemplo)
+- `client/public/graficas/bruno.jpg` (Mascota de ejemplo)
+- `client/public/graficas/favicon.png` (Favicon de la aplicación)
+- `client/public/graficas/kitty-logo.jpg` (Logo principal de la aplicación)
+- `client/public/graficas/kitty-logo.svg` (Logo principal de la aplicación)
 
 **Acción realizada:**
 Se han movido los archivos especificados a la carpeta `graficas/` dentro de `client/public/` y se han actualizado sus rutas en el código fuente.

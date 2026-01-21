@@ -20,7 +20,7 @@ El sistema KittyPau está diseñado como una plataforma IoT desacoplada y escala
     
 5.  **Backend API (Lógica de Negocio)**: Un conjunto de Vercel Serverless Functions escritas en TypeScript. Exponen una API RESTful que el frontend consume. Estas funciones se conectan a la base de datos Neon para leer o modificar datos, siempre aplicando estrictas reglas de negocio y seguridad.
     
-6.  **Frontend Web (Interfaz de Usuario)**: Una aplicación de página única (SPA) desarrollada con Vite, React 18 y TypeScript. Utiliza Tailwind CSS y Shadcn/ui para un diseño moderno y responsive. La gestión del estado del servidor se realiza con TanStack Query, y la autenticación a través de Better Auth React. Se despliega en Vercel y se sirve globalmente a través de su CDN. Los usuarios interactúan con esta interfaz para ver los datos de sus mascotas, gestionar dispositivos y configurar alertas.
+6.  **Frontend Web (Interfaz de Usuario)**: Una aplicación de página única (SPA) desarrollada con Vite, React 18 y TypeScript. Utiliza Tailwind CSS y Shadcn/ui para un diseño moderno y responsive. La gestión del estado del servidor se realiza con TanStack Query, y la autenticación a través de un **sistema propio de email/contraseña con cookies HttpOnly**. Se despliega en Vercel y se sirve globalmente a través de su CDN. Los usuarios interactúan con esta interfaz para ver los datos de sus mascotas, gestionar dispositivos y configurar alertas.
     
 7.  **Usuario Autenticado**: El usuario final que accede a la plataforma a través de un navegador web. La autenticación se gestiona a través de un sistema de cookies seguras y rutas protegidas en el frontend (`PrivateRoute`, `OnboardingGuard`).
 
@@ -46,7 +46,7 @@ graph LR
 *   **Routing:** Wouter (Ligero, basado en hooks, usado en `App.tsx` y `Sidebar.tsx`)
 *   **Styling:** Tailwind CSS + Shadcn/ui
 *   **Estado (Server):** TanStack Query
-*   **Autenticación:** Better Auth React (integrado en `AuthContext`)
+*   **Autenticación:** Sistema propio de email/contraseña con hooks (`useSession`, `useSignOut`) y cookies HttpOnly.
 *   **Formularios:** React `useState` (Controlados manualmente) / React Hook Form (Planificado para formularios complejos)
 *   **Tiempo Real:** WebSockets nativos (`useWebSocket` hook) para actualizaciones en vivo.
 *   **Gráficas:** Recharts
@@ -60,7 +60,7 @@ graph LR
 *   **Feature-based Architecture:** Organización por dominios funcionales (e.g., `features/pets`, `features/devices`).
 *   **Global Providers:** `AuthProvider`, `QueryClientProvider`, `ThemeProvider` gestionan el estado global.
 *   **Centralized Router:** Lógica de ruteo y guards encapsulada para una gestión de flujo de usuario clara.
-*   **Client API Layer:** Capa dedicada para comunicación con el backend, evitando llamadas `fetch` directas en componentes.
+*   **Client API Layer:** Capa dedicada para comunicación con el backend, utilizando `fetch` con `credentials: 'include'`.
 *   **Shared Utilities:** Funciones comunes (como `api-utils`) movidas a `lib/` para mejor organización y resolución de rutas.
 *   **Logging:** `logger` utility para un logging estructurado y centralizado.
 
@@ -71,12 +71,15 @@ A continuación se detalla el esquema relacional utilizado por la API, basado en
 ### Tabla `users`
 Almacena la información de autenticación y perfil base.
 ```sql
-CREATE TABLE users (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+CREATE TABLE users ( -- Corresponde a shared/schema.ts
+  id SERIAL PRIMARY KEY,
+  auth_user_id TEXT NOT NULL UNIQUE, -- ID de usuario de autenticación externa (si aplica)
   email TEXT NOT NULL UNIQUE,
   name TEXT,
-  password_hash TEXT NOT NULL, -- Gestionado por auth
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+  password TEXT, -- Hash de la contraseña (gestionado por auth propio)
+  full_name TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 ```
 

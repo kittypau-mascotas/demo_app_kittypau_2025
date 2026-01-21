@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Settings, WifiOff, Wifi } from 'lucide-react';
 import { Link } from 'wouter'; // Import Link
 
-interface DeviceCardProps {
+export interface DeviceCardProps {
   id: number; // Add id prop for navigation
   name: string;
   type: string;
@@ -39,6 +39,7 @@ export default function DeviceCard({
   lastUpdate,
   batteryLevel,
   imageUrl,
+  associatedPetName,
 }: DeviceCardProps) {
   return (
     <Link href={`/devices/${id}`}> {/* Wrap entire card with Link */}

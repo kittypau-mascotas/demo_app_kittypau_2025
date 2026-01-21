@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { Link } from "wouter";
-import { signOut, useSession } from "@/lib/auth-client";
+import { useSession, useSignOut } from "@/lib/auth-client";
 import { LogOut, PawPrint, Loader2 } from "lucide-react";
 import { ModeToggle } from "./mode-toggle";
 
@@ -9,16 +9,11 @@ interface LayoutProps {
 }
 
 export function Layout({ children }: LayoutProps) {
-  const { isPending } = useSession();
+  const { isPending: isSessionLoading } = useSession();
+  const { mutate: signOut } = useSignOut();
 
-  const handleLogout = async () => {
-    await signOut({
-      fetchOptions: {
-        onSuccess: () => {
-          window.location.href = "/login";
-        },
-      },
-    });
+  const handleLogout = () => {
+    signOut();
   };
 
   return (
@@ -38,7 +33,7 @@ export function Layout({ children }: LayoutProps) {
             </Link>
 
             <div className="flex items-center gap-4">
-              {isPending && (
+              {isSessionLoading && (
                 <Loader2 className="w-5 h-5 text-primary animate-spin" />
               )}
 

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useParams, Redirect, useLocation } from 'wouter';
 import { useDevice } from '@/hooks/data/useDevice';
-import { useAuth } from '@/contexts/AuthContext';
+import { useSession } from '@/lib/auth-client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { Edit, Trash2, Save, X, Wifi, WifiOff, Clock } from 'lucide-react'; // Add Clock icon
-import { DeviceCardProps } from '@/components/DeviceCard'; // For status types
+import type { DeviceCardProps } from '@/components/DeviceCard'; // For status types
 import { usePets } from '@/hooks/data/usePets'; // To get pet data for associated pet
 import { logger } from '@/lib/logger'; // Import logger
 import { useDeviceEvents } from '@/hooks/data/useDeviceEvents'; // Import useDeviceEvents
@@ -17,7 +17,7 @@ import { useDeviceEvents } from '@/hooks/data/useDeviceEvents'; // Import useDev
 export default function DeviceDetail() {
   const params = useParams();
   const deviceId = params.id ? parseInt(params.id) : null;
-  const { session } = useAuth();
+  const { data: session } = useSession();
   const { data: device, isLoading, isError, error, refetch } = useDevice(deviceId);
   const { data: pets, isLoading: isLoadingPets } = usePets(); // Fetch all pets to find associated one
   const { data: deviceEvents, isLoading: isLoadingDeviceEvents, isError: isErrorDeviceEvents } = useDeviceEvents(deviceId); // Fetch device events
@@ -33,11 +33,11 @@ export default function DeviceDetail() {
     if (device) {
       setEditedName(device.name);
       setEditedType(device.deviceType || '');
-      setEditedFirmware(device.firmwareVersion || '');
+      setEditedFirmware((device as any).firmwareVersion || '');
     }
   }, [device]);
 
-  const associatedPet = pets?.find(pet => pet.deviceId === device?.id); // Find associated pet
+  const associatedPet = pets?.find((pet: any) => pet.deviceId === device?.id); // Find associated pet
   const associatedPetName = associatedPet ? associatedPet.name : 'N/A';
 
   const handleUpdateDevice = async () => {
@@ -188,7 +188,7 @@ export default function DeviceDetail() {
               {isEditing ? (
                 <Input id="firmware" value={editedFirmware} onChange={(e) => setEditedFirmware(e.target.value)} />
               ) : (
-                <p className="text-lg font-semibold">{device.firmwareVersion || 'N/A'}</p>
+                <p className="text-lg font-semibold">{(device as any).firmwareVersion || 'N/A'}</p>
               )}
             </div>
             <div>
@@ -201,7 +201,7 @@ export default function DeviceDetail() {
             </div>
             <div>
               <Label>Nivel de Batería</Label>
-              <p className="text-lg font-semibold">{device.batteryLevel ? `${device.batteryLevel}%` : 'N/A'}</p>
+              <p className="text-lg font-semibold">{(device as any).batteryLevel ? `${(device as any).batteryLevel}%` : 'N/A'}</p>
             </div>
           </div>
 
@@ -213,8 +213,8 @@ export default function DeviceDetail() {
               {deviceEvents.map((event) => (
                 <div key={event.id} className="flex items-center space-x-2 text-sm">
                   <Clock className="h-4 w-4 text-muted-foreground" />
-                  <span>{new Date(event.ts).toLocaleString()} - {event.eventType}</span>
-                  {event.payload && <span className="text-xs text-muted-foreground">({JSON.stringify(event.payload)})</span>}
+                  <span>{event.ts ? new Date(event.ts).toLocaleString() : 'N/A'} - {event.eventType}</span>
+                  {event.payload != null && <span className="text-xs text-muted-foreground">({String(JSON.stringify(event.payload))})</span>}
                 </div>
               ))}
             </div>

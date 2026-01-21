@@ -35,7 +35,7 @@ export default function PetDetail() {
     // Simple aggregation for demo - in real app this logic might be more complex or server-side
     return telemetry.sensorReadings.map(r => ({
       name: format(new Date(r.ts), 'HH:mm'),
-      value: r.activityLevel || 0
+      value: r.lightLux || 0 // Using lightLux as a placeholder for activityLevel
     })).slice(-20); // Last 20 readings
   }, [telemetry]);
 

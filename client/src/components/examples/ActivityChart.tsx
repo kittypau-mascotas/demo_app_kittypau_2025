@@ -1,4 +1,4 @@
-import ActivityChart from '../ActivityChart';
+import { ActivityChart } from '../ActivityChart';
 
 export default function ActivityChartExample() {
   return (

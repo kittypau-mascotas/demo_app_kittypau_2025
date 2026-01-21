@@ -11,7 +11,7 @@ import {
   X,
   LogOut
 } from 'lucide-react';
-import { useSession, signOut } from '@/lib/auth-client';
+import { useSession, useSignOut } from '@/lib/auth-client';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -30,15 +30,10 @@ const menuItems = [
 export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const [location] = useLocation();
   const { data: session } = useSession();
+  const { mutate: signOut } = useSignOut();
 
-  const handleLogout = async () => {
-    await signOut({
-      fetchOptions: {
-        onSuccess: () => {
-          window.location.href = "/login";
-        },
-      },
-    });
+  const handleLogout = () => {
+    signOut();
   };
 
   return (
@@ -107,14 +102,10 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         <div className="p-4 border-t border-border">
           {session?.user && (
             <Link href="/profile">
-              <div className="flex items-center gap-3 mb-4 px-2 cursor-pointer hover:bg-accent rounded-lg p-2 transition-colors">
-                {session.user.image ? (
-                  <img src={session.user.image} alt={session.user.name} className="w-8 h-8 rounded-full object-cover shrink-0 border border-border" />
-                ) : (
-                  <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold shrink-0">
-                    {session.user.name?.charAt(0).toUpperCase() || 'U'}
-                  </div>
-                )}
+              <div className="flex items-center gap-3 mb-4 px-2 cursor-pointer hover:bg-accent rounded-lg p-2 transition-colors">                
+                <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold shrink-0">
+                  {session.user.name?.charAt(0).toUpperCase() || 'U'}
+                </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-foreground truncate">
                     {session.user.name}

@@ -1,4 +1,4 @@
-import StatWidget from '../StatWidget';
+import { StatWidget } from '../StatWidget';
 import { Activity, Home, AlertTriangle, Users } from 'lucide-react';
 
 export default function StatWidgetExample() {
@@ -9,29 +9,28 @@ export default function StatWidgetExample() {
         value="3"
         description="Todas saludables"
         icon={Activity}
-        variant="data"
+        statusVariant="ok"
       />
       <StatWidget
         title="Dispositivos"
         value="5"
         description="4 activos, 1 inactivo"
         icon={Home}
-        variant="device"
-        trend={{ value: 12, isPositive: true }}
+        statusVariant="default"
       />
       <StatWidget
         title="Alertas"
         value="2"
         description="Requieren atención"
         icon={AlertTriangle}
-        variant="info"
+        statusVariant="warning"
       />
       <StatWidget
         title="Usuarios"
         value="1"
         description="Plan Plus"
         icon={Users}
-        variant="data"
+        statusVariant="default"
       />
     </div>
   );

@@ -1,9 +1,9 @@
-import ConsumptionChart from '../ConsumptionChart';
+import { ConsumptionChart } from '../ConsumptionChart';
 
 export default function ConsumptionChartExample() {
   return (
     <div className="p-4">
-      <ConsumptionChart />
+      <ConsumptionChart data={[]} />
     </div>
   );
 }

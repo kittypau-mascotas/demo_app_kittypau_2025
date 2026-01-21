@@ -1,6 +1,6 @@
 import React from 'react';
 import { Redirect } from 'wouter';
-import { useAuth } from '@/contexts/AuthContext';
+import { useSession } from '@/lib/auth-client';
 import { useOnboardingStatus } from '@/hooks/useOnboardingStatus';
 
 interface OnboardingGuardProps {
@@ -8,7 +8,7 @@ interface OnboardingGuardProps {
 }
 
 const OnboardingGuard: React.FC<OnboardingGuardProps> = ({ children }) => {
-  const { session, isLoading: isAuthLoading } = useAuth();
+  const { data: session, isPending: isAuthLoading } = useSession();
   const { data: onboardingStatus, isLoading: isOnboardingStatusLoading } = useOnboardingStatus();
 
   // If auth is loading, or onboarding status is loading, show loading indicator
@@ -17,7 +17,7 @@ const OnboardingGuard: React.FC<OnboardingGuardProps> = ({ children }) => {
   }
 
   // If not authenticated, redirect to login (AuthGuard should ideally handle this first)
-  if (!session) {
+  if (!session?.user) {
     return <Redirect to="/login" />;
   }
 

@@ -1,14 +1,16 @@
 import { Button } from '@/components/ui/button';
 import DeviceCard from '@/components/DeviceCard';
+import type { DeviceCardProps } from '@/components/DeviceCard';
 import { Plus } from 'lucide-react';
 import { useLocation } from 'wouter';
 import { useDevices } from '@/hooks/data/useDevices';
-import { usePets } from '@/hooks/data/usePets'; // Import usePets
+import { usePets } from '@/hooks/data/usePets';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function Devices() {
   const [, setLocation] = useLocation();
   const { data: devices, isLoading, isError } = useDevices();
+  const { data: pets } = usePets();
 
   if (isLoading) {
     return (
@@ -60,18 +62,18 @@ export default function Devices() {
           </div>
         )}
         {devices?.map((device) => {
-          const associatedPet = pets?.find(pet => pet.deviceId === device.id);
+          const associatedPet = pets?.find((pet: any) => pet.deviceId === device.id);
           const associatedPetName = associatedPet ? associatedPet.name : undefined;
 
           return (
             <DeviceCard 
               key={device.id} 
-              id={device.id} // Pass the id prop
+              id={Number(device.id)} // Pass the id prop
               name={device.name}
               type={device.deviceType}
               status={device.status as DeviceCardProps['status']} // Cast status for type compatibility
               lastUpdate={device.lastSeen ? new Date(device.lastSeen).toLocaleString() : 'N/A'}
-              batteryLevel={device.batteryLevel}
+              batteryLevel={(device as any).batteryLevel}
               associatedPetName={associatedPetName} // Pass associated pet name
               // Add imageUrl if available
             />

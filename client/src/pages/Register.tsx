@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { signUp } from "@/lib/auth-client";
 import { Link } from "wouter";
 import { PawPrint } from "lucide-react";
 
@@ -15,19 +14,25 @@ export default function Register() {
     setError(null);
     setIsLoading(true);
 
-    await signUp.email({
-      email,
-      password,
-      name,
-    }, {
-      onSuccess: () => {
-        window.location.href = "/dashboard";
-      },
-      onError: (ctx) => {
-        setError(ctx.error.message);
-        setIsLoading(false);
+    try {
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fullName: name, email, password }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Error en el registro');
       }
-    });
+
+      // On success, redirect to dashboard
+        window.location.href = "/dashboard";
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

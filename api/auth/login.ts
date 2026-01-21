@@ -26,6 +26,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(401).json({ error: "Credenciales inválidas" });
     }
 
+    if (!user.password) {
+      return res.status(401).json({ error: "La cuenta no tiene una contraseña configurada." });
+    }
+
     // NOTA: Tu schema 'users' debe tener un campo 'password' con el hash para que esto funcione.
     const valid = await bcrypt.compare(password, user.password);
 

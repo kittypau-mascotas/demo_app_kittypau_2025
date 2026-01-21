@@ -5,6 +5,7 @@ export default function DeviceCardExample() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
       <DeviceCard
+        id={1}
         name="Comedero Principal"
         type="Dispensador de Comida"
         status="active"
@@ -13,6 +14,7 @@ export default function DeviceCardExample() {
         imageUrl={feederImage}
       />
       <DeviceCard
+        id={2}
         name="Arenero Inteligente"
         type="Monitor de Arenero"
         status="warning"
@@ -20,6 +22,7 @@ export default function DeviceCardExample() {
         batteryLevel={45}
       />
       <DeviceCard
+        id={3}
         name="Bebedero Automático"
         type="Dispensador de Agua"
         status="error"

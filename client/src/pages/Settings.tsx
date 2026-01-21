@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch'; // Add Switch component
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/contexts/AuthContext';
+import { useSession } from '@/lib/auth-client';
 import { Link } from 'wouter'; // For linking to other sections if needed
 import { Loader2 } from 'lucide-react';
 import { logger } from '@/lib/logger'; // Import logger
@@ -27,7 +27,7 @@ const useActiveSessions = () => {
 };
 
 export default function Settings() {
-  const { session } = useAuth();
+  const { data: session } = useSession();
   const { toast } = useToast();
   const { data: activeSessions, isLoading: isLoadingSessions } = useActiveSessions();
 

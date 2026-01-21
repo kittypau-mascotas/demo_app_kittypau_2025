@@ -1,15 +1,20 @@
 import React from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useSession } from '@/lib/auth-client';
 import { Redirect } from 'wouter';
+import { Loader2 } from 'lucide-react';
 
 const PrivateRoute = ({ component: Component, ...rest }: { component: React.ComponentType<any>; [key: string]: any }) => {
-  const { user, loading } = useAuth();
+  const { data: session, isPending } = useSession();
 
-  if (loading) {
-    return <div className="flex items-center justify-center h-screen">Loading authentication...</div>;
+  if (isPending) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
   }
 
-  if (!user) {
+  if (!session?.user) {
     return <Redirect to="/login" />;
   }
 

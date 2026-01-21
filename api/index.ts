@@ -1,11 +1,11 @@
-import { db } from "../lib/db";
+import { db } from "@lib/db";
 import {
   sensorReadings as telemetry,
   devices,
   deviceEvents,
   alertSettings,
   users,
-} from "../shared/schema";
+} from "@shared/schema";
 import { eq, and, sql, desc, gte, lte } from "drizzle-orm";
 
 export default async function handler(req: Request) {

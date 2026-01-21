@@ -20,7 +20,7 @@ El sistema KittyPau está diseñado como una plataforma IoT desacoplada y escala
     
 5.  **Backend API (Lógica de Negocio)**: Un conjunto de Vercel Serverless Functions escritas en TypeScript. Exponen una API RESTful que el frontend consume. Estas funciones se conectan a la base de datos Neon para leer o modificar datos, siempre aplicando estrictas reglas de negocio y seguridad.
     
-6.  **Frontend Web (Interfaz de Usuario)**: Una aplicación de página única (SPA) desarrollada con Vite, React 18 y TypeScript. Utiliza Tailwind CSS y Shadcn/ui para un diseño moderno y responsive. La gestión del estado del servidor se realiza con TanStack Query, y la autenticación a través de un **sistema propio de email/contraseña con cookies HttpOnly**. Se despliega en Vercel y se sirve globalmente a través de su CDN. Los usuarios interactúan con esta interfaz para ver los datos de sus mascotas, gestionar dispositivos y configurar alertas.
+6.  **Frontend Web (Interfaz de Usuario)**: Una aplicación de página única (SPA) desarrollada con Vite, React 18 y TypeScript. Utiliza Tailwind CSS y Shadcn/ui. La gestión del estado del servidor se realiza con TanStack Query, y la autenticación a través de un **sistema propio de email/contraseña con cookies HttpOnly**. Se despliega en Vercel.
     
 7.  **Usuario Autenticado**: El usuario final que accede a la plataforma a través de un navegador web. La autenticación se gestiona a través de un sistema de cookies seguras y rutas protegidas en el frontend (`PrivateRoute`, `OnboardingGuard`).
 

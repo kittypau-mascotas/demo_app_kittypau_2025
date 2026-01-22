@@ -1,0 +1,16 @@
+# Archivos ignorados para no superar el límite de 12 funciones en Vercel
+# Se mantienen activos: Auth (Login/Register), Users, Pets, Devices, Telemetry
+
+# Funciones secundarias deshabilitadas en producción:
+api/auth/change-password.ts
+api/auth/forgot-password.ts
+api/auth/reset-password.ts
+api/auth/verify-email.ts
+api/user/delete-account.ts
+api/user/export-data.ts
+
+api/onboarding
+api/analytics
+api/alerts
+api/subscriptions
+api/dashboard

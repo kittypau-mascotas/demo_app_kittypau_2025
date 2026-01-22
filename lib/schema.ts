@@ -1,107 +1,118 @@
-import { sql, InferSelectModel, InferInsertModel } from "drizzle-orm";
-import { pgTable, serial, text, varchar, timestamp, integer, date, boolean, pgEnum, primaryKey, numeric, jsonb, index } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, timestamp, integer, date, boolean, pgEnum, uuid, real, primaryKey } from "drizzle-orm/pg-core";
+import { InferSelectModel, InferInsertModel } from "drizzle-orm";
 
 // --- Enums ---
-// Corresponds to: CREATE TYPE device_event_type AS ENUM (...)
-export const deviceEventTypeEnum = pgEnum('device_event_type', [
-  'online',
-  'offline',
-  'reboot',
-  'error',
-  'low_battery',
-  'sensor_error'
-]);
+export const deviceModeEnum = pgEnum('device_mode', ['comedero', 'bebedero', 'collar', 'unknown']);
+export const userRoleEnum = pgEnum('user_role', ['owner', 'carer']);
 
 // --- Tablas ---
 
 // Tabla de usuarios (users)
 export const users = pgTable("users", {
-  id: serial("id").primaryKey(),
-  authUserId: text("auth_user_id").notNull().unique(), // Changed to text to match Better Auth ID
-  email: varchar("email", { length: 255 }).unique(),
-  password: text("password"),
-  fullName: varchar("full_name", { length: 255 }),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
-});
-
-// Tabla de dispositivos (devices)
-export const devices = pgTable("devices", {
-  id: serial("id").primaryKey(),
-  deviceId: varchar("device_id", { length: 50 }).notNull().unique(), // Physical device ID from MQTT
-  userId: integer("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
-  name: varchar("name", { length: 100 }).notNull().default('Mi Dispositivo KittyPaw'),
-  deviceType: varchar("device_type", { length: 50 }).notNull(),
-  mqttTopic: varchar("mqtt_topic", { length: 255 }).notNull(),
-  status: varchar("status", { length: 50 }).default('offline'),
-  lastSeen: timestamp("last_seen", { withTimezone: true }),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
-}, (table) => {
-  return {
-    userIdx: index("devices_user_id_idx").on(table.userId),
-  };
+  id: uuid("id").defaultRandom().primaryKey(),
+  email: text("email").notNull().unique(),
+  password: text("password").notNull(),
+  name: text("name"),
+  avatarUrl: text("avatar_url"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 // Tabla de mascotas (pets)
 export const pets = pgTable("pets", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
-  deviceId: integer("device_id").unique().references(() => devices.id, { onDelete: 'set null' }),
-  name: varchar("name", { length: 100 }).notNull(),
-  species: varchar("species", { length: 50 }),
-  breed: varchar("breed", { length: 100 }),
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  name: text("name").notNull(),
+  species: text("species").notNull(),
+  breed: text("breed"),
   birthDate: date("birth_date"),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
-}, (table) => {
-  return {
-    userIdx: index("pets_user_id_idx").on(table.userId),
-  };
+  weight: real("weight"),
+  photoUrl: text("photo_url"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-// Tabla de eventos de dispositivo (device_events)
+// Tabla de dispositivos (devices)
+export const devices = pgTable("devices", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  deviceId: text("device_id").notNull().unique(), // The physical device ID like 'KPCL0033'
+  petId: uuid("pet_id").references(() => pets.id, { onDelete: 'set null' }),
+  name: text("name").notNull(),
+  type: text("type").notNull(),
+  status: text("status").default('offline'),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Tabla de lecturas de sensores (sensor_readings) - Alineado con docs/ARQUITECTURA_GENERAL.md
+export const sensorReadings = pgTable("sensor_readings", {
+  id: serial("id").primaryKey(),
+  deviceId: text("device_id").notNull(),
+  ts: timestamp("ts", { withTimezone: true }).defaultNow().notNull(),
+  temperature: real("temperature"),
+  humidity: real("humidity"),
+  weightGrams: real("weight_grams"),
+  batteryLevel: integer("battery_level"),
+  ldr: integer("ldr"),
+});
+
+// Tabla de estado del dispositivo (device_status)
+export const deviceStatus = pgTable("device_status", {
+  id: serial("id").primaryKey(),
+  deviceId: text("device_id").notNull(),
+  state: text("state"),
+  firmware: text("firmware"),
+  uptime: integer("uptime"),
+  createdAt: timestamp("created_at").defaultNow(),
+  wifiStatus: text("wifi_status"),
+  sensorHealth: text("sensor_health"),
+});
+
+// Tabla de configuración de usuario (user_settings)
+export const userSettings = pgTable("user_settings", {
+  userId: uuid("user_id").primaryKey().references(() => users.id, { onDelete: 'cascade' }),
+  activePetId: uuid("active_pet_id"),
+  theme: text("theme").default('light'),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Tabla de eventos de dispositivo (device_events) - Necesaria para api/index.ts
 export const deviceEvents = pgTable("device_events", {
   id: serial("id").primaryKey(),
-  deviceId: varchar("device_id", { length: 50 }).notNull(), // From MQTT, not a FK
-  eventType: deviceEventTypeEnum("event_type").notNull(),
-  payload: jsonb("payload"),
+  deviceId: text("device_id").notNull(),
+  eventType: text("event_type").notNull(),
+  payload: text("payload"), // JSON stringified
   ts: timestamp("ts", { withTimezone: true }).defaultNow(),
-}, (table) => {
-  return {
-    deviceIdIdx: index("events_device_id_idx").on(table.deviceId),
-    timestampIdx: index("events_timestamp_idx").on(table.ts),
-  };
 });
 
-// Tabla de lecturas de sensores (sensor_readings)
-export const sensorReadings = pgTable("sensor_readings", {
-  ts: timestamp("ts", { withTimezone: true }).notNull(), // Timestamp from device
-  receivedAt: timestamp("received_at", { withTimezone: true }).defaultNow(), // Timestamp from server
-  deviceId: varchar("device_id", { length: 50 }).notNull(), // From MQTT, not a FK
-  temperatureCelsius: numeric("temperature_celsius", { precision: 5, scale: 2 }),
-  humidityPercent: numeric("humidity_percent", { precision: 5, scale: 2 }),
-  lightLux: integer("light_lux"),
-  weightGrams: numeric("weight_grams", { precision: 8, scale: 2 }),
-}, (table) => {
-  return {
-    pk: primaryKey({ columns: [table.deviceId, table.ts] }),
-  };
+// Tabla de configuración de alertas - Necesaria para api/index.ts
+export const alertSettings = pgTable("alert_settings", {
+  id: serial("id").primaryKey(),
+  userId: text("user_id").notNull(), // Se mantiene como text por compatibilidad con auth
+  temperatureMax: real("temperature_max"),
+  temperatureMin: real("temperature_min"),
+  notificationsEnabled: boolean("notifications_enabled").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 // Exportar tipos inferidos de Drizzle
 export type User = InferSelectModel<typeof users>;
 export type InsertUser = InferInsertModel<typeof users>;
 
-export type Device = InferSelectModel<typeof devices>;
-export type InsertDevice = InferInsertModel<typeof devices>;
-
 export type Pet = InferSelectModel<typeof pets>;
 export type InsertPet = InferInsertModel<typeof pets>;
+
+export type Device = InferSelectModel<typeof devices>;
+export type InsertDevice = InferInsertModel<typeof devices>;
 
 export type SensorReading = InferSelectModel<typeof sensorReadings>;
 export type InsertSensorReading = InferInsertModel<typeof sensorReadings>;
 
-export type DeviceEvent = InferSelectModel<typeof deviceEvents>;
-export type InsertDeviceEvent = InferInsertModel<typeof deviceEvents>;
+export type DeviceStatus = InferSelectModel<typeof deviceStatus>;
+export type InsertDeviceStatus = InferInsertModel<typeof deviceStatus>;
+
+export type UserSettings = InferSelectModel<typeof userSettings>;
+export type InsertUserSettings = InferInsertModel<typeof userSettings>;
 
 // Alias para compatibilidad con API existente
 export const telemetry = sensorReadings;

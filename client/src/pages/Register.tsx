@@ -17,7 +17,7 @@ export default function Register() {
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fullName: name, email, password }),
+        body: JSON.stringify({ name, email, password }),
       });
 
       const data = await res.json();
@@ -25,8 +25,9 @@ export default function Register() {
         throw new Error(data.error || 'Error en el registro');
       }
 
-      // On success, redirect to dashboard
-        window.location.href = "/dashboard";
+      // Registro exitoso, redirigir al dashboard (o login si prefieres que inicien sesión)
+      window.location.href = "/dashboard";
+      
     } catch (err: any) {
       setError(err.message);
     } finally {

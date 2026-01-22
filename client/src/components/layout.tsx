@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 import { Link } from "wouter";
 import { useSession, useSignOut } from "@/lib/auth-client";
-import { LogOut, PawPrint, Loader2 } from "lucide-react";
+import { LogOut, Loader2 } from "lucide-react";
 import { ModeToggle } from "./mode-toggle";
 
 interface LayoutProps {
@@ -24,9 +24,7 @@ export function Layout({ children }: LayoutProps) {
           <div className="flex justify-between h-16 items-center">
             {/* Logo */}
             <Link href="/dashboard" className="flex items-center gap-2 cursor-pointer group">
-              <div className="bg-primary/10 p-2 rounded-full transition-transform duration-300 ease-in-out group-hover:rotate-[20deg] group-hover:scale-110">
-                <PawPrint className="w-6 h-6 text-primary" />
-              </div>
+              <img src="/kitty-logo.jpg" alt="KittyPaw" className="w-8 h-8 rounded-full transition-transform duration-300 ease-in-out group-hover:rotate-[20deg] group-hover:scale-110" />
               <span className="text-xl font-bold text-foreground font-display">
                 KittyPaw
               </span>

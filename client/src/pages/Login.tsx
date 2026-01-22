@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { PawPrint } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 
 export default function Login() {
@@ -46,10 +45,10 @@ export default function Login() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-xl shadow-lg border border-gray-100">
+      <div className="max-w-md w-full space-y-8 bg-primary/10 p-8 rounded-xl shadow-lg border border-gray-100">
         <div className="text-center">
-          <div className="mx-auto h-12 w-12 bg-primary/10 rounded-full flex items-center justify-center">
-            <PawPrint className="h-8 w-8 text-primary" />
+          <div className="mx-auto h-32 w-32 bg-white rounded-full flex items-center justify-center">
+            <img src="/kitty-logo.jpg" alt="KittyPaw" className="h-24 w-24 object-contain" />
           </div>
           <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
             Bienvenido a KittyPau

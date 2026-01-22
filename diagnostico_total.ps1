@@ -3,7 +3,7 @@
 # Detecta errores de entorno, red, configuración y dependencias.
 
 Write-Host "==========================================" -ForegroundColor Cyan
-Write-Host "   DIAGNÓSTICO TOTAL DEL SISTEMA KITTYPAU   " -ForegroundColor Cyan
+Write-Host "   DIAGNOSTICO TOTAL DEL SISTEMA KITTYPAU   " -ForegroundColor Cyan
 Write-Host "==========================================" -ForegroundColor Cyan
 Write-Host ""
 
@@ -63,13 +63,14 @@ if (Test-Path "yarn.lock") {
 Write-Host ""
 
 # 2. Verificación de Configuración y Red
-Write-Host "2. CONFIGURACIÓN Y RED" -ForegroundColor Yellow
+Write-Host "2. CONFIGURACION Y RED" -ForegroundColor Yellow
 Write-Host "----------------------"
 
 # Puertos
 $portsToCheck = @(3000, 5173)
 foreach ($port in $portsToCheck) {
-    $tcpConn = Test-NetConnection -ComputerName localhost -Port $port -InformationLevel Quiet
+    # Usamos -WarningAction SilentlyContinue para evitar el texto rojo confuso cuando el puerto está libre
+    $tcpConn = Test-NetConnection -ComputerName localhost -Port $port -InformationLevel Quiet -WarningAction SilentlyContinue
     if ($tcpConn) {
         Write-Host "Puerto ${port}: OCUPADO (Puede impedir que arranque el servidor)" -ForegroundColor Yellow
         $advertencias += "El puerto ${port} está en uso. Asegúrate de no tener otros procesos corriendo."
@@ -86,9 +87,10 @@ if (Test-Path ".env") {
     if ($dbUrlLine) {
         Write-Host "DATABASE_URL: Configurada" -ForegroundColor Green
         # Extraer host y puerto de la URL (formato postgres://user:pass@host:port/db)
-        if ($dbUrlLine -match "@([^:/]+):(\d+)") {
+        # Regex mejorado para soportar URLs sin puerto explícito o con parámetros extra
+        if ($dbUrlLine -match "@([^:/]+)(?::(\d+))?") {
             $dbHost = $matches[1]
-            $dbPort = $matches[2]
+            $dbPort = if ($matches[2]) { $matches[2] } else { "5432" } # Puerto por defecto 5432 si no se especifica
             
             Write-Host "  -> Host Neon: $dbHost"
             Write-Host "  -> Puerto Neon: $dbPort"
@@ -97,14 +99,14 @@ if (Test-Path ".env") {
                 $tcpClient = New-Object System.Net.Sockets.TcpClient
                 $connectTask = $tcpClient.ConnectAsync($dbHost, [int]$dbPort)
                 if ($connectTask.Wait(3000)) { # Timeout de 3 segundos
-                    Write-Host "  -> Conexión TCP a Neon: EXITOSA" -ForegroundColor Green
+                    Write-Host "  -> Conexion TCP a Neon: EXITOSA" -ForegroundColor Green
                     $tcpClient.Close()
                 } else {
-                    Write-Host "  -> Conexión TCP a Neon: TIMEOUT" -ForegroundColor Red
+                    Write-Host "  -> Conexion TCP a Neon: TIMEOUT" -ForegroundColor Red
                     $errores += "No se puede conectar a Neon ($dbHost). Revisa tu internet o firewall."
                 }
             } catch {
-                Write-Host "  -> Conexión TCP a Neon: FALLIDA ($($_.Exception.Message))" -ForegroundColor Red
+                Write-Host "  -> Conexion TCP a Neon: FALLIDA ($($_.Exception.Message))" -ForegroundColor Red
                 $errores += "Error de conexión a Neon: $($_.Exception.Message)"
             }
         } else {
@@ -121,7 +123,7 @@ if (Test-Path ".env") {
 Write-Host ""
 
 # 3. Estado del Proyecto (TypeScript/Build)
-Write-Host "3. INTEGRIDAD DEL CÓDIGO" -ForegroundColor Yellow
+Write-Host "3. INTEGRIDAD DEL CODIGO" -ForegroundColor Yellow
 Write-Host "------------------------"
 
 # Scripts en package.json
@@ -139,14 +141,18 @@ if (Test-Path "package.json") {
     }
 }
 
-Write-Host "Ejecutando verificación de tipos (npm run check)..."
+Write-Host "Ejecutando verificacion de tipos (npm run check)..."
 # Ejecutar npm run check y capturar salida y error
-$checkProcess = Start-Process -FilePath "npm" -ArgumentList "run check" -NoNewWindow -PassThru -Wait
-if ($checkProcess.ExitCode -eq 0) {
-    Write-Host "TypeScript Check: OK (Sin errores)" -ForegroundColor Green
-} else {
-    Write-Host "TypeScript Check: ERRORES DETECTADOS" -ForegroundColor Red
-    $errores += "El código tiene errores de TypeScript (ejecuta 'npm run check' para verlos)."
+try {
+    $checkProcess = Start-Process -FilePath "npm" -ArgumentList "run check" -NoNewWindow -PassThru -Wait
+    if ($checkProcess.ExitCode -eq 0) {
+        Write-Host "TypeScript Check: OK (Sin errores)" -ForegroundColor Green
+    } else {
+        Write-Host "TypeScript Check: ERRORES DETECTADOS" -ForegroundColor Red
+        $errores += "El código tiene errores de TypeScript (ejecuta 'npm run check' para verlos)."
+    }
+} catch {
+    Write-Host "No se pudo ejecutar npm run check" -ForegroundColor Red
 }
 
 Write-Host ""
@@ -157,7 +163,7 @@ Write-Host "==========================================" -ForegroundColor Cyan
 if ($errores.Count -eq 0) {
     Write-Host "✅ TODO PARECE CORRECTO. El sistema está listo para ejecutarse." -ForegroundColor Green
 } else {
-    Write-Host "❌ SE ENCONTRARON PROBLEMAS CRÍTICOS:" -ForegroundColor Red
+    Write-Host "❌ SE ENCONTRARON PROBLEMAS CRITICOS:" -ForegroundColor Red
     foreach ($err in $errores) {
         Write-Host "  - $err" -ForegroundColor Red
     }

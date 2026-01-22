@@ -23,14 +23,14 @@ El sistema utiliza un esquema de colores basado en variables HSL, con soporte pa
 
 | Nombre Variable       | Valor HSL                | Preview                                                                                   | Uso Principal                                     |
 | --------------------- | ------------------------ | ----------------------------------------------------------------------------------------- | ------------------------------------------------- |
-| `--background`        | `30 12% 97%`             | <div style="width:50px;height:20px;background-color:hsl(30 12% 97%);border:1px solid #ccc;"></div> | Fondo principal de la aplicación.                 |
-| `--foreground`        | `200 15% 15%`            | <div style="width:50px;height:20px;background-color:hsl(200 15% 15%);"></div>                    | Texto principal.                                  |
+| `--background`        | `12 100% 98%`            | <div style="width:50px;height:20px;background-color:hsl(12 100% 98%);border:1px solid #ccc;"></div> | Fondo principal de la aplicación.                 |
+| `--foreground`        | `0 0% 23%`               | <div style="width:50px;height:20px;background-color:hsl(0 0% 23%);"></div>                       | Texto principal.                                  |
 | `--card`              | `0 0% 100%`              | <div style="width:50px;height:20px;background-color:hsl(0 0% 100%);border:1px solid #ccc;"></div>  | Fondo de componentes tipo "tarjeta".            |
-| `--primary`           | `6 100% 74%`             | <div style="width:50px;height:20px;background-color:hsl(6 100% 74%);"></div>                     | Botones principales, acentos, iconos activos.     |
-| `--primary-foreground`| `0 0% 100%`              | <div style="width:50px;height:20px;background-color:hsl(0 0% 100%);border:1px solid #ccc;"></div>  | Texto sobre elementos con fondo `--primary`.      |
-| `--secondary`         | `24 28% 86%`             | <div style="width:50px;height:20px;background-color:hsl(24 28% 86%);"></div>                     | Botones y elementos secundarios.                  |
-| `--destructive`       | `354 70% 54%`            | <div style="width:50px;height:20px;background-color:hsl(354 70% 54%);"></div>                    | Acciones de peligro (borrar, eliminar).           |
-| `--ring`              | `6 100% 74%`             | <div style="width:50px;height:20px;background-color:hsl(6 100% 74%);"></div>                     | Anillo de foco en elementos interactivos.         |
+| `--primary`           | `12 61% 79%`             | <div style="width:50px;height:20px;background-color:hsl(12 61% 79%);"></div>                     | Botones principales, acentos, iconos activos.     |
+| `--primary-foreground`| `14 22% 19%`             | <div style="width:50px;height:20px;background-color:hsl(14 22% 19%);border:1px solid #ccc;"></div> | Texto sobre elementos con fondo `--primary`.      |
+| `--secondary`         | `27 96% 88%`             | <div style="width:50px;height:20px;background-color:hsl(27 96% 88%);"></div>                     | Botones y elementos secundarios.                  |
+| `--destructive`       | `11 95% 62%`             | <div style="width:50px;height:20px;background-color:hsl(11 95% 62%);"></div>                     | Acciones de peligro (borrar, eliminar).           |
+| `--ring`              | `12 61% 79%`             | <div style="width:50px;height:20px;background-color:hsl(12 61% 79%);"></div>                     | Anillo de foco en elementos interactivos.         |
 
 ### Modo Oscuro (Dark Mode)
 
@@ -60,8 +60,8 @@ Se utilizan dos fuentes principales importadas desde Google Fonts:
 
 ### Jerarquía de Texto
 
-- **Título Principal (`.titulo`):** 40px, bold, color `--primary`, font-family `Titan One`.
-- **Títulos de Tarjeta (`CardTitle`):** 24px, bold, color `--primary`, font-family `Titan One`.
+- **Título Principal (`.titulo`):** 40px, bold, color `--primary-foreground`, font-family `Titan One`.
+- **Títulos de Tarjeta (`CardTitle`):** 24px, bold, color `--primary-foreground`, font-family `Titan One`.
 - **Texto de Navegación (`.nav-item`):** 20px, normal, color `--foreground`, font-family `Varela Round`.
 - **Texto de Cuerpo:** 16px (base), normal, color `--foreground`, font-family `Varela Round`.
 - **Descripciones/Texto Muted:** 14px, normal, color `--muted-foreground`, font-family `Varela Round`.

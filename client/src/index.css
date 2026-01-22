@@ -15,68 +15,68 @@
   --elevate-1: rgba(0,0,0, .03);
   --elevate-2: rgba(0,0,0, .08);
 
-  --background: 30 12% 97%;
+  --background: 12 100% 98%;
 
-  --foreground: 200 15% 15%;
+  --foreground: 0 0% 23%;
 
-  --border: 30 8% 88%;
+  --border: 15 15% 89%;
 
   --card: 0 0% 100%;
 
-  --card-foreground: 200 15% 15%;
+  --card-foreground: 0 0% 18%;
 
-  --card-border: 28 10% 90%;
+  --card-border: 15 15% 89%;
 
-  --sidebar: 26 18% 93%;
+  --sidebar: 27 96% 88%;
 
-  --sidebar-foreground: 200 15% 15%;
+  --sidebar-foreground: 16 17% 25%;
 
-  --sidebar-border: 26 12% 87%;
+  --sidebar-border: 15 15% 89%;
 
-  --sidebar-primary: 25 95% 50%;
+  --sidebar-primary: 12 61% 79%;
 
-  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-primary-foreground: 14 22% 19%;
 
-  --sidebar-accent: 24 25% 88%;
+  --sidebar-accent: 165 36% 79%;
 
-  --sidebar-accent-foreground: 200 15% 15%;
+  --sidebar-accent-foreground: 168 31% 18%;
 
-  --sidebar-ring: 25 95% 50%;
+  --sidebar-ring: 12 61% 79%;
 
-  --popover: 25 20% 91%;
+  --popover: 0 0% 100%;
 
-  --popover-foreground: 200 15% 15%;
+  --popover-foreground: 0 0% 18%;
 
-  --popover-border: 25 15% 85%;
+  --popover-border: 15 15% 89%;
 
-  --primary: 25 95% 50%;
+  --primary: 12 61% 79%;
 
-  --primary-foreground: 0 0% 100%;
+  --primary-foreground: 14 22% 19%;
 
-  --secondary: 24 28% 86%;
+  --secondary: 27 96% 88%;
 
-  --secondary-foreground: 200 15% 15%;
+  --secondary-foreground: 16 17% 25%;
 
-  --muted: 22 18% 89%;
+  --muted: 12 27% 94%;
 
-  --muted-foreground: 200 12% 35%;
+  --muted-foreground: 16 6% 51%;
 
-  --accent: 26 20% 87%;
+  --accent: 165 36% 79%;
 
-  --accent-foreground: 200 15% 15%;
+  --accent-foreground: 168 31% 18%;
 
-  --destructive: 354 70% 54%;
+  --destructive: 11 95% 62%;
 
   --destructive-foreground: 0 0% 100%;
 
-  --input: 200 15% 35%;
-  --ring: 25 95% 50%;
+  --input: 15 15% 89%;
+  --ring: 12 61% 79%;
 
-  --chart-1: 6 100% 68%;
-  --chart-2: 25 65% 72%;
-  --chart-3: 145 35% 62%;
-  --chart-4: 35 80% 65%;
-  --chart-5: 354 65% 58%;
+  --chart-1: 12 61% 79%;
+  --chart-2: 157 93% 53%;
+  --chart-3: 208 79% 65%;
+  --chart-4: 330 98% 67%;
+  --chart-5: 43 100% 51%;
 
   --font-sans: 'Varela Round', sans-serif;
   --font-serif: Georgia, serif;

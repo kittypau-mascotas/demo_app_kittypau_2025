@@ -50,7 +50,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
       {/* Sidebar */}
       <aside
         className={cn(
-          'fixed lg:static inset-y-0 left-0 z-50 w-64 bg-card border-r border-border transform transition-transform duration-200 ease-in-out lg:translate-x-0 flex flex-col',
+          'fixed lg:static inset-y-0 left-0 z-[100] w-64 bg-card border-r border-border transform transition-transform duration-200 ease-in-out lg:translate-x-0 flex flex-col',
           isOpen ? 'translate-x-0' : '-translate-x-full',
         )}
         data-testid="sidebar"
@@ -59,7 +59,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         <div className="flex items-center justify-between p-6 border-b border-border h-16">
           <div className="flex items-center gap-2">
             <div className="bg-primary/10 p-1.5 rounded-full">
-              <img src="/graficas/kitty-logo.svg" alt="KittyPaw" className="w-8 h-8" />
+              <img src="/kitty-logo.jpg" alt="KittyPaw" className="w-8 h-8 rounded-full" />
             </div>
             <span className="text-xl font-bold text-foreground font-display">
               KittyPaw

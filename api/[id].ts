@@ -1,4 +1,4 @@
-import type { VercelRequest, VercelResponse } from "@vercel/node";
+﻿import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { db } from "@lib/db";
 import { pets } from "@shared/schema";
 import { eq, and } from "drizzle-orm";
@@ -22,7 +22,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method === "PATCH" || req.method === "PUT") {
     const { name, species, breed, birthDate } = req.body;
     const [updatedPet] = await db.update(pets)
-      .set({ name, species, breed, birthDate: birthDate ? new Date(birthDate) : undefined })
+      .set({ name, species, breed, birthDate: birthDate ? new Date(birthDate).toISOString() : undefined })
       .where(and(eq(pets.id, petId), eq(pets.userId, userId)))
       .returning();
     return res.status(200).json(updatedPet);

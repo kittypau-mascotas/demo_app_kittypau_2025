@@ -35,7 +35,7 @@ export default function Header({ onMenuToggle }: HeaderProps) {
             <Menu className="h-6 w-6" />
           </Button>
           <img 
-            src="/graficas/kitty-logo.jpg" 
+            src="/kitty-logo.jpg" 
             alt="KittyPau Logo" 
             className="w-16 h-16 object-contain"
           />

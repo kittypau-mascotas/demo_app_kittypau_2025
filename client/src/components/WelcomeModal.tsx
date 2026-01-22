@@ -8,7 +8,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { PawPrint } from "lucide-react";
 
 export function WelcomeModal() {
   const [isOpen, setIsOpen] = useState(false);
@@ -31,9 +30,7 @@ export function WelcomeModal() {
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <div className="mx-auto bg-primary/10 p-3 rounded-full mb-4 w-fit">
-            <PawPrint className="w-8 h-8 text-primary" />
-          </div>
+          <img src="/kitty-logo.jpg" alt="KittyPaw" className="mx-auto w-16 h-16 rounded-full mb-4" />
           <DialogTitle className="text-center text-2xl font-display">
             ¡Bienvenido a KittyPau!
           </DialogTitle>

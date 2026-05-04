@@ -1,6 +1,6 @@
-# Plan de Vistas y Endpoints para KittyPaw
+# Plan de Vistas y Endpoints para KittyPau
 
-Este documento detalla las vistas existentes y propuestas para la aplicación KittyPaw, junto con sus rutas/endpoints asociados y las funcionalidades clave. El objetivo es asegurar un funcionamiento coherente y escalable de la aplicación.
+Este documento detalla las vistas existentes y propuestas para la aplicación KittyPau, junto con sus rutas/endpoints asociados y las funcionalidades clave. El objetivo es asegurar un funcionamiento coherente y escalable de la aplicación.
 
 ---
 

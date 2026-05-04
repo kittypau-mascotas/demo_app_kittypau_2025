@@ -1,6 +1,6 @@
-# Guía de Estilo y Diseño de KittyPaw
+# Guía de Estilo y Diseño de KittyPau
 
-Este documento sirve como referencia central para todos los aspectos visuales y de diseño de la aplicación KittyPaw. El objetivo es mantener una experiencia de usuario coherente, limpia y moderna en todos los dispositivos.
+Este documento sirve como referencia central para todos los aspectos visuales y de diseño de la aplicación KittyPau. El objetivo es mantener una experiencia de usuario coherente, limpia y moderna en todos los dispositivos.
 
 *Este es un documento vivo y se actualizará a medida que el sistema de diseño evolucione.*
 

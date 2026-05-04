@@ -2,6 +2,10 @@
 
 Este documento unifica todas las credenciales, claves, certificados, usuarios y variables de entorno identificadas en el proyecto. Es crucial mantener esta información segura y actualizada.
 
+## Repositorios y Despliegue
+*   **GitHub:** `https://github.com/kittypau-mascotas/kittypau_landingpage_2026`
+*   **Vercel:** `https://vercel.com/kittypaus-projects/kittypau_landingpage_2026`
+
 ## 1. Detalles de Instancia AWS EC2 (kittypau-iot-bridge)
 
 *   **Nombre de Instancia:** `kittypau-iot-bridge`

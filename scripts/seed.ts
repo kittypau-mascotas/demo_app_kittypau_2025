@@ -50,6 +50,31 @@ async function main() {
       petId: bandida.id
     }).onConflictDoNothing();
 
+    // 5. Restaurar Telemetría para KPCL0033 (Datos de los últimos 2 días)
+    console.log("📊 Restaurando telemetría histórica para KPCL0033...");
+    const telemetryData = [];
+    const now = new Date();
+    // Generar un punto de datos cada hora durante las últimas 48 horas
+    for (let i = 0; i < 48; i++) {
+      const date = new Date(now.getTime() - i * 60 * 60 * 1000);
+      // Simular variaciones naturales
+      const temp = 22 + Math.random() * 5; // 22-27°C
+      const hum = 40 + Math.random() * 20; // 40-60%
+      const weight = 500 - (i % 12) * 10; // El peso baja al comer y sube al rellenar
+      const ldr = i % 24 > 12 ? 0 : 100; // Luz: día/noche
+
+      telemetryData.push({
+        deviceId: 'KPCL0033',
+        temperature: temp,
+        humidity: hum,
+        weightGrams: weight,
+        ldr: ldr,
+        ts: date,
+        batteryLevel: 100
+      });
+    }
+    await db.insert(sensorReadings).values(telemetryData);
+
     console.log("✅ ¡Estructura base creada! Usuarios Admin/Test y Dispositivo KPCL0033 listos.");
     console.log("👉 Ahora puedes importar tu backup de telemetría en la tabla 'sensor_readings'.");
     process.exit(0);

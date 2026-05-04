@@ -2,6 +2,10 @@
 
 ⚠️ **CONFIDENCIAL:** Este archivo contiene detalles de arquitectura interna y seguridad. No publicar.
 
+## Repositorios
+*   **GitHub:** `https://github.com/kittypau-mascotas/kittypau_landingpage_2026`
+*   **Vercel:** `https://vercel.com/kittypaus-projects/kittypau_landingpage_2026`
+
 ## Arquitectura Completa
 
 ```mermaid

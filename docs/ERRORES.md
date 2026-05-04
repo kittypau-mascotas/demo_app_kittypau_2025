@@ -1,4 +1,4 @@
-# Registro de Errores y Soluciones - KittyPaw
+# Registro de Errores y Soluciones - KittyPau
 
 Este documento recopila los errores técnicos encontrados durante el desarrollo y sus respectivas soluciones para referencia futura.
 

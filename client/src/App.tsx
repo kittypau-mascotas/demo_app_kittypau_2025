@@ -1,24 +1,57 @@
-import React from 'react';
-import { Toaster } from '@/components/ui/toaster';
-import { ThemeProvider } from 'next-themes';
-import { TooltipProvider } from '@/components/ui/tooltip';
-import { WebSocketProvider } from '@/hooks/use-websocket';
-import AppRouter from './router'; // Import the new router component
-import ErrorBoundary from '@/components/ErrorBoundary'; // Import ErrorBoundary
+import { Switch, Route } from "wouter";
+import { queryClient } from "./lib/queryClient";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { Toaster } from "@/components/ui/toaster";
 
-function App() {
+// Importación de Páginas
+import LandingPage from "@/pages/LandingPage";
+import Login from "@/pages/Login";
+import Register from "@/pages/Register";
+import Dashboard from "@/pages/Dashboard";
+import Mascotas from "@/pages/Mascotas";
+import PetDetail from "@/pages/PetDetail";
+import Devices from "@/pages/Devices";
+import AddDevice from "@/pages/AddDevice";
+import Sensors from "@/pages/Sensors";
+import Analytics from "@/pages/Analytics";
+import Alerts from "@/pages/Alerts";
+import Planes from "@/pages/Planes";
+import Settings from "@/pages/Settings";
+import NotFound from "@/pages/not-found";
+
+function Router() {
   return (
-    <ErrorBoundary> {/* Wrap the entire app with ErrorBoundary */}
-      <ThemeProvider defaultTheme="system" attribute="class" enableSystem>
-        <TooltipProvider>
-          <WebSocketProvider url={import.meta.env.VITE_WS_URL}>
-            <AppRouter /> {/* Use the new AppRouter component */}
-            <Toaster />
-          </WebSocketProvider>
-        </TooltipProvider>
-      </ThemeProvider>
-    </ErrorBoundary>
+    <Switch>
+      {/* Ruta Raíz: Landing Page Comercial 2026 */}
+      <Route path="/" component={LandingPage} />
+
+      {/* Rutas de Autenticación */}
+      <Route path="/login" component={Login} />
+      <Route path="/register" component={Register} />
+
+      {/* Rutas de la Aplicación (Protegidas) */}
+      <Route path="/dashboard" component={Dashboard} />
+      <Route path="/mascotas" component={Mascotas} />
+      <Route path="/mascotas/:id" component={PetDetail} />
+      <Route path="/devices" component={Devices} />
+      <Route path="/devices/add" component={AddDevice} />
+      <Route path="/sensors" component={Sensors} />
+      <Route path="/analytics" component={Analytics} />
+      <Route path="/alerts" component={Alerts} />
+      <Route path="/planes" component={Planes} />
+      <Route path="/settings" component={Settings} />
+
+      {/* Fallback: 404 */}
+      <Route component={NotFound} />
+    </Switch>
   );
 }
 
-export default App;
+export default function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <Router />
+      <Toaster />
+    </QueryClientProvider>
+  );
+}

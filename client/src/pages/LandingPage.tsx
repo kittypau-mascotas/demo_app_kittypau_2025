@@ -3,6 +3,7 @@ import HeroSection from "@/components/landing/HeroSection";
 import FeaturesSection from "@/components/landing/FeaturesSection";
 import DashboardPreview from "@/components/landing/DashboardPreview";
 import HowItWorksSection from "@/components/landing/HowItWorksSection";
+import PlanesSection from "@/components/landing/PlanesSection";
 import Footer from "@/components/landing/Footer";
 import { useEffect } from "react";
 
@@ -23,6 +24,7 @@ export default function LandingPage() {
         <FeaturesSection />
         <DashboardPreview />
         <HowItWorksSection />
+        <PlanesSection />
       </main>
       <Footer />
     </div>
